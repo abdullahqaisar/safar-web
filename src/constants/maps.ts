@@ -1,5 +1,5 @@
 export const MAPS_CONFIG = {
-  islamabadRawalpindiBoundsCoords: {
+  islamabadRawalpindiBounds: {
     south: 33.363984,
     west: 73.021009,
     north: 33.7839,
