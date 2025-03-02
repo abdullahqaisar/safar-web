@@ -1,273 +1,188 @@
-import { metroLines, MetroLineColor, stationCoordinates } from './metro-data';
+import {
+  MetroLine,
+  Station,
+  metroLines,
+  findStation,
+  getAllStations,
+} from './metro-data';
 
 export interface RouteSegment {
-  line: MetroLineColor;
-  from: string;
-  to: string;
-  stations: string[];
+  line: MetroLine;
+  stations: Station[];
 }
 
 export interface Route {
   segments: RouteSegment[];
   totalStops: number;
+  totalDistance: number;
 }
 
-// Find lines that contain a specific station
-export function findLinesForStation(station: string): MetroLineColor[] {
-  const lines: MetroLineColor[] = [];
+// Helper function to calculate distance between two points
+function calculateDistance(
+  from: Station | { coordinates: { lat: number; lng: number } },
+  to: Station
+): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(to.coordinates.lat - from.coordinates.lat);
+  const dLng = toRad(to.coordinates.lng - from.coordinates.lng);
+  const lat1 = toRad(from.coordinates.lat);
+  const lat2 = toRad(to.coordinates.lat);
 
-  for (const lineKey in metroLines) {
-    const line = metroLines[lineKey];
-    if (line.stations.includes(station)) {
-      lines.push(lineKey as MetroLineColor);
-    }
-  }
-
-  return lines;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
-// Find interchange stations between two lines
-export function findInterchanges(
-  line1: MetroLineColor,
-  line2: MetroLineColor
-): string[] {
-  const interchangeStations: string[] = [];
-
-  const line1Stations = metroLines[line1].stations;
-  const line2Stations = metroLines[line2].stations;
-
-  for (const station of line1Stations) {
-    if (line2Stations.includes(station)) {
-      interchangeStations.push(station);
-    }
-  }
-
-  return interchangeStations;
+function toRad(value: number): number {
+  return (value * Math.PI) / 180;
 }
 
-// Find all possible routes between two stations
-export function findTransferRoutes(
-  fromStation: string,
-  toStation: string,
+function getStationsBetween(
+  line: MetroLine,
+  fromStation: Station,
+  toStation: Station
+): Station[] {
+  const fromIndex = line.stations.findIndex((s) => s.id === fromStation.id);
+  const toIndex = line.stations.findIndex((s) => s.id === toStation.id);
+
+  if (fromIndex === -1 || toIndex === -1) return [];
+
+  return fromIndex < toIndex
+    ? line.stations.slice(fromIndex, toIndex + 1)
+    : line.stations.slice(toIndex, fromIndex + 1).reverse();
+}
+
+function findDirectRoute(
+  fromStation: Station,
+  toStation: Station
+): Route | null {
+  const commonLine = metroLines.find(
+    (line) =>
+      line.stations.some((s) => s.id === fromStation.id) &&
+      line.stations.some((s) => s.id === toStation.id)
+  );
+
+  if (!commonLine) return null;
+
+  const stations = getStationsBetween(commonLine, fromStation, toStation);
+  const totalDistance = stations.reduce((acc, station, i) => {
+    if (i === 0) return 0;
+    return acc + calculateDistance(stations[i - 1], station);
+  }, 0);
+
+  return {
+    segments: [
+      {
+        line: commonLine,
+        stations: stations,
+      },
+    ],
+    totalStops: stations.length - 1,
+    totalDistance,
+  };
+}
+
+function findInterchanges(line1: MetroLine, line2: MetroLine): Station[] {
+  return line1.stations.filter((station) =>
+    line2.stations.some((s) => s.id === station.id)
+  );
+}
+
+function findTransferRoutes(
+  fromStation: Station,
+  toStation: Station,
   maxTransfers = 2
 ): Route[] {
-  const possibleRoutes: Route[] = [];
+  const routes: Route[] = [];
+  const fromLines = metroLines.filter((line) =>
+    line.stations.some((s) => s.id === fromStation.id)
+  );
+  const toLines = metroLines.filter((line) =>
+    line.stations.some((s) => s.id === toStation.id)
+  );
 
-  // Get lines for start and end stations
-  const fromLines = findLinesForStation(fromStation);
-  const toLines = findLinesForStation(toStation);
-
-  // Try direct routes with one transfer
+  // Try single transfer routes
   for (const fromLine of fromLines) {
     for (const toLine of toLines) {
-      if (fromLine === toLine) {
-        // Direct route on same line - we handle this elsewhere
-        continue;
-      }
+      if (fromLine.id === toLine.id) continue;
 
-      // Find interchange stations between these lines
-      const transfers = findInterchanges(fromLine, toLine);
+      const interchangeStations = findInterchanges(fromLine, toLine);
 
-      for (const transfer of transfers) {
-        const fromLineStations = metroLines[fromLine].stations;
-        const toLineStations = metroLines[toLine].stations;
+      for (const transfer of interchangeStations) {
+        const segment1 = getStationsBetween(fromLine, fromStation, transfer);
+        const segment2 = getStationsBetween(toLine, transfer, toStation);
 
-        const fromIndex = fromLineStations.indexOf(fromStation);
-        const transferIndexOnFromLine = fromLineStations.indexOf(transfer);
-        const transferIndexOnToLine = toLineStations.indexOf(transfer);
-        const toIndex = toLineStations.indexOf(toStation);
+        if (segment1.length > 0 && segment2.length > 0) {
+          const totalDistance =
+            calculateSegmentDistance(segment1) +
+            calculateSegmentDistance(segment2);
 
-        // If all stations are found
-        if (
-          fromIndex !== -1 &&
-          transferIndexOnFromLine !== -1 &&
-          transferIndexOnToLine !== -1 &&
-          toIndex !== -1
-        ) {
-          // Generate route segments
-          const segments: RouteSegment[] = [];
-
-          // First segment: from start to transfer
-          let segment1Stations: string[] = [];
-          if (fromIndex < transferIndexOnFromLine) {
-            segment1Stations = fromLineStations.slice(
-              fromIndex,
-              transferIndexOnFromLine + 1
-            );
-          } else {
-            segment1Stations = fromLineStations
-              .slice(transferIndexOnFromLine, fromIndex + 1)
-              .reverse();
-          }
-
-          segments.push({
-            line: fromLine,
-            from: fromStation,
-            to: transfer,
-            stations: segment1Stations,
-          });
-
-          // Second segment: from transfer to destination
-          let segment2Stations: string[] = [];
-          if (transferIndexOnToLine < toIndex) {
-            segment2Stations = toLineStations.slice(
-              transferIndexOnToLine,
-              toIndex + 1
-            );
-          } else {
-            segment2Stations = toLineStations
-              .slice(toIndex, transferIndexOnToLine + 1)
-              .reverse();
-          }
-
-          segments.push({
-            line: toLine,
-            from: transfer,
-            to: toStation,
-            stations: segment2Stations,
-          });
-
-          // Calculate total stops
-          const totalStops =
-            segment1Stations.length + segment2Stations.length - 2; // -2 because we don't want to count transfer stations twice
-
-          possibleRoutes.push({
-            segments: segments,
-            totalStops: totalStops,
+          routes.push({
+            segments: [
+              { line: fromLine, stations: segment1 },
+              { line: toLine, stations: segment2 },
+            ],
+            totalStops: segment1.length + segment2.length - 2,
+            totalDistance,
           });
         }
       }
     }
   }
 
-  // If no direct transfer routes found and we can try more transfers
-  if (possibleRoutes.length === 0 && maxTransfers > 1) {
-    // Try routes with two transfers
-    const secondDegreeLines = new Set<string>();
+  // Try double transfer routes if needed
+  if (routes.length === 0 && maxTransfers > 1) {
+    const allLines = new Set(metroLines);
 
-    // Find all lines that connect to start lines
-    for (const fromLine of fromLines) {
-      for (const lineKey in metroLines) {
-        const line = lineKey as MetroLineColor;
-        if (fromLine !== line && findInterchanges(fromLine, line).length > 0) {
-          secondDegreeLines.add(line);
-        }
-      }
-    }
+    for (const middleLine of Array.from(allLines)) {
+      if (fromLines.includes(middleLine) || toLines.includes(middleLine))
+        continue;
 
-    // For each second degree line, try to find a path to destination lines
-    for (const middleLine of Array.from(
-      secondDegreeLines
-    ) as MetroLineColor[]) {
-      for (const toLine of toLines) {
-        if (middleLine === toLine) continue;
+      for (const fromLine of fromLines) {
+        for (const toLine of toLines) {
+          const firstTransfers = findInterchanges(fromLine, middleLine);
+          const secondTransfers = findInterchanges(middleLine, toLine);
 
-        const transfers = findInterchanges(middleLine, toLine);
-        if (transfers.length > 0) {
-          // For each fromLine to middleLine connection
-          for (const fromLine of fromLines) {
-            const firstTransfers = findInterchanges(fromLine, middleLine);
+          for (const firstTransfer of firstTransfers) {
+            for (const secondTransfer of secondTransfers) {
+              const segment1 = getStationsBetween(
+                fromLine,
+                fromStation,
+                firstTransfer
+              );
+              const segment2 = getStationsBetween(
+                middleLine,
+                firstTransfer,
+                secondTransfer
+              );
+              const segment3 = getStationsBetween(
+                toLine,
+                secondTransfer,
+                toStation
+              );
 
-            for (const firstTransfer of firstTransfers) {
-              for (const secondTransfer of transfers) {
-                // Build the 3-segment route
-                try {
-                  const segments: RouteSegment[] = [];
+              if (
+                segment1.length > 0 &&
+                segment2.length > 0 &&
+                segment3.length > 0
+              ) {
+                const totalDistance =
+                  calculateSegmentDistance(segment1) +
+                  calculateSegmentDistance(segment2) +
+                  calculateSegmentDistance(segment3);
 
-                  // First segment: from start to first transfer
-                  const fromLineStations = metroLines[fromLine].stations;
-                  const fromIndex = fromLineStations.indexOf(fromStation);
-                  const transferIndexOnFromLine =
-                    fromLineStations.indexOf(firstTransfer);
-
-                  let segment1Stations: string[] = [];
-                  if (fromIndex < transferIndexOnFromLine) {
-                    segment1Stations = fromLineStations.slice(
-                      fromIndex,
-                      transferIndexOnFromLine + 1
-                    );
-                  } else {
-                    segment1Stations = fromLineStations
-                      .slice(transferIndexOnFromLine, fromIndex + 1)
-                      .reverse();
-                  }
-
-                  segments.push({
-                    line: fromLine,
-                    from: fromStation,
-                    to: firstTransfer,
-                    stations: segment1Stations,
-                  });
-
-                  // Second segment: from first transfer to second transfer
-                  const middleLineStations = metroLines[middleLine].stations;
-                  const firstTransferOnMiddleLine =
-                    middleLineStations.indexOf(firstTransfer);
-                  const secondTransferOnMiddleLine =
-                    middleLineStations.indexOf(secondTransfer);
-
-                  let segment2Stations: string[] = [];
-                  if (firstTransferOnMiddleLine < secondTransferOnMiddleLine) {
-                    segment2Stations = middleLineStations.slice(
-                      firstTransferOnMiddleLine,
-                      secondTransferOnMiddleLine + 1
-                    );
-                  } else {
-                    segment2Stations = middleLineStations
-                      .slice(
-                        secondTransferOnMiddleLine,
-                        firstTransferOnMiddleLine + 1
-                      )
-                      .reverse();
-                  }
-
-                  segments.push({
-                    line: middleLine,
-                    from: firstTransfer,
-                    to: secondTransfer,
-                    stations: segment2Stations,
-                  });
-
-                  // Third segment: from second transfer to destination
-                  const toLineStations = metroLines[toLine].stations;
-                  const secondTransferOnToLine =
-                    toLineStations.indexOf(secondTransfer);
-                  const toIndex = toLineStations.indexOf(toStation);
-
-                  let segment3Stations: string[] = [];
-                  if (secondTransferOnToLine < toIndex) {
-                    segment3Stations = toLineStations.slice(
-                      secondTransferOnToLine,
-                      toIndex + 1
-                    );
-                  } else {
-                    segment3Stations = toLineStations
-                      .slice(toIndex, secondTransferOnToLine + 1)
-                      .reverse();
-                  }
-
-                  segments.push({
-                    line: toLine,
-                    from: secondTransfer,
-                    to: toStation,
-                    stations: segment3Stations,
-                  });
-
-                  // Calculate total stops
-                  const totalStops =
-                    segment1Stations.length +
-                    segment2Stations.length +
-                    segment3Stations.length -
-                    4;
-
-                  possibleRoutes.push({
-                    segments: segments,
-                    totalStops: totalStops,
-                  });
-                } catch (e) {
-                  // Skip this route if there's an error
-                  console.error('Error building route', e);
-                }
+                routes.push({
+                  segments: [
+                    { line: fromLine, stations: segment1 },
+                    { line: middleLine, stations: segment2 },
+                    { line: toLine, stations: segment3 },
+                  ],
+                  totalStops:
+                    segment1.length + segment2.length + segment3.length - 3,
+                  totalDistance,
+                });
               }
             }
           }
@@ -276,116 +191,59 @@ export function findTransferRoutes(
     }
   }
 
-  return possibleRoutes;
+  return routes;
 }
 
-// Find a direct route between two stations on the same line
-export function findDirectRoute(
-  fromStation: string,
-  toStation: string
-): Route | null {
-  const fromLines = findLinesForStation(fromStation);
-  const toLines = findLinesForStation(toStation);
-
-  // Check if stations are on the same line
-  const commonLine = fromLines.find((line) => toLines.includes(line));
-
-  if (commonLine) {
-    const line = metroLines[commonLine];
-    const fromIndex = line.stations.indexOf(fromStation);
-    const toIndex = line.stations.indexOf(toStation);
-
-    let routeStations: string[] = [];
-
-    if (fromIndex < toIndex) {
-      // Forward direction
-      routeStations = line.stations.slice(fromIndex, toIndex + 1);
-    } else {
-      // Backward direction
-      routeStations = line.stations.slice(toIndex, fromIndex + 1).reverse();
-    }
-
-    return {
-      segments: [
-        {
-          line: commonLine,
-          from: fromStation,
-          to: toStation,
-          stations: routeStations,
-        },
-      ],
-      totalStops: Math.abs(toIndex - fromIndex),
-    };
-  }
-
-  return null;
+function calculateSegmentDistance(stations: Station[]): number {
+  return stations.reduce((acc, station, i) => {
+    if (i === 0) return 0;
+    return acc + calculateDistance(stations[i - 1], station);
+  }, 0);
 }
 
-// Find the best route between two stations
 export function findBestRoute(
-  fromStation: string,
-  toStation: string
+  fromStationId: string,
+  toStationId: string
 ): Route | null {
-  // Check for direct route first
+  const fromStation = findStation(fromStationId);
+  const toStation = findStation(toStationId);
+
+  if (!fromStation || !toStation) return null;
+
   const directRoute = findDirectRoute(fromStation, toStation);
-  if (directRoute) {
-    return directRoute;
-  }
+  if (directRoute) return directRoute;
 
-  // Find transfer routes
   const transferRoutes = findTransferRoutes(fromStation, toStation);
+  if (transferRoutes.length === 0) return null;
 
-  if (transferRoutes.length > 0) {
-    // Sort transfer routes by number of transfers and total stops
-    transferRoutes.sort((a, b) => {
-      // Sort by number of transfers first
-      if (a.segments.length !== b.segments.length) {
-        return a.segments.length - b.segments.length;
-      }
-      // Then by total stops
+  return transferRoutes.sort((a, b) => {
+    if (a.segments.length !== b.segments.length) {
+      return a.segments.length - b.segments.length;
+    }
+    if (a.totalStops !== b.totalStops) {
       return a.totalStops - b.totalStops;
-    });
-
-    return transferRoutes[0];
-  }
-
-  return null;
+    }
+    return a.totalDistance - b.totalDistance;
+  })[0];
 }
 
-interface Coordinates {
+export function findNearestStation(location: {
   lat: number;
   lng: number;
-}
+}): Station | null {
+  const stations = getAllStations();
+  if (stations.length === 0) return null;
 
-function calculateDistance(point1: Coordinates, point2: Coordinates): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = ((point2.lat - point1.lat) * Math.PI) / 180;
-  const dLng = ((point2.lng - point1.lng) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((point1.lat * Math.PI) / 180) *
-      Math.cos((point2.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+  let nearest = stations[0];
+  let shortestDistance = calculateDistance({ coordinates: location }, nearest);
 
-export function findNearestStation(location: Coordinates): string {
-  let nearestStation = '';
-  let shortestDistance = Infinity;
-
-  for (const lineKey in metroLines) {
-    const line = metroLines[lineKey];
-    for (const station of line.stations) {
-      // You'll need to add station coordinates to your metro-data
-      const distance = calculateDistance(location, stationCoordinates[station]);
-      if (distance < shortestDistance) {
-        shortestDistance = distance;
-        nearestStation = station;
-      }
+  for (const station of stations) {
+    const distance = calculateDistance({ coordinates: location }, station);
+    if (distance < shortestDistance) {
+      shortestDistance = distance;
+      nearest = station;
     }
   }
 
-  return nearestStation;
+  return shortestDistance <= 2 ? nearest : null;
 }

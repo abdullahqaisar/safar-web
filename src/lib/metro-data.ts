@@ -1,101 +1,358 @@
 export type MetroLineColor = 'red' | 'orange' | 'green' | 'blue';
 
-export interface MetroLine {
+export interface Station {
+  id: string;
   name: string;
-  color: MetroLineColor;
-  stations: string[];
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
 }
 
-export interface MetroNetwork {
-  [key: string]: MetroLine;
+export interface MetroLine {
+  id: MetroLineColor;
+  name: string;
+  stations: Station[];
 }
 
-export const metroLines: MetroNetwork = {
-  red: {
-    name: 'Red Line (Secretariat to Saddar)',
-    color: 'red',
-    stations: [
-      'Secretariat',
-      'Parade Ground',
-      'Shaheed-E-Millat',
-      '7th Avenue',
-      'Stock Exchange',
-      'PIMS',
-      'Karchery',
-      'Ibn-e-Sina',
-      'Chaman',
-      'Kashmir Highway',
-      'Faiz Ahmad Faiz',
-      'Khayaban-e-Johar',
-      'Potohar',
-      'IJ Principal',
-      'Faizabad',
-      'Shamsabad',
-      '6th Road',
-      'Rehmanabad',
-      'Chandani Chowk',
-      'Waris Khan',
-      'Committee Chowk',
-      'Liaquat Bagh',
-      'Marrir Chowk',
-      'Saddar',
-    ],
+const stationData: Record<string, Station> = {
+  secretariat: {
+    id: 'secretariat',
+    name: 'Secretariat',
+    coordinates: { lat: 33.736213104501985, lng: 73.09159035101419 },
   },
-  orange: {
-    name: 'Orange Line (FAF to Airport)',
-    color: 'orange',
-    stations: [
-      'Faiz Ahmad Faiz',
-      'G-10',
-      'G-9',
-      'NIHA',
-      'Police Foundation',
-      'NUST',
-      'G-13',
-      'Golra Morr',
-      'N-5',
-      'Airport',
-    ],
+  paradeGround: {
+    id: 'paradeGround',
+    name: 'Parade Ground',
+    coordinates: { lat: 33.72500523070584, lng: 73.08471819822587 },
   },
-  green: {
-    name: 'Green Line (PIMS to Bharakau)',
-    color: 'green',
-    stations: [
-      'PIMS',
-      'G7/G8',
-      'CDA',
-      'Aabpara',
-      'Foreign Office',
-      'Lakeview Park',
-      'Malpur',
-      'Bharakau',
-    ],
+  shaheedEMillat: {
+    id: 'shaheedEMillat',
+    name: 'Shaheed-E-Millat',
+    coordinates: { lat: 33.72174068068394, lng: 73.07877749292581 },
   },
-  blue: {
-    name: 'Blue Line (PIMS to Koral Chowk)',
-    color: 'blue',
-    stations: [
-      'PIMS',
-      'G7/G8',
-      'H-8 / Shakarparia',
-      'I-8/Parade Ground',
-      'Faizabad',
-      'Sohan',
-      'Iqbal Town',
-      'Kuri Road',
-      'Zia Masjid',
-      'Khanna Pul',
-      'Fazaia',
-      'Gandal',
-      'Koral Chowk',
-    ],
+  seventhAvenue: {
+    id: 'seventhAvenue',
+    name: '7th Avenue',
+    coordinates: { lat: 33.718077437572234, lng: 73.07177960456261 },
+  },
+  stockExchange: {
+    id: 'stockExchange',
+    name: 'Stock Exchange',
+    coordinates: { lat: 33.71176846947479, lng: 73.06033196357797 },
+  },
+  pims: {
+    id: 'pims',
+    name: 'PIMS',
+    coordinates: { lat: 33.705834978100135, lng: 73.04839610641643 },
+  },
+  kachehry: {
+    id: 'kachehry',
+    name: 'Kachehry',
+    coordinates: { lat: 33.702506917209504, lng: 73.04205536965178 },
+  },
+  ibnESina: {
+    id: 'ibnESina',
+    name: 'Ibn-e-Sina',
+    coordinates: { lat: 33.696377646408166, lng: 73.03860710034219 },
+  },
+  chaman: {
+    id: 'chaman',
+    name: 'Chaman',
+    coordinates: { lat: 33.69018093106195, lng: 73.04354130034186 },
+  },
+  kashmirHighway: {
+    id: 'kashmirHighway',
+    name: 'Kashmir Highway',
+    coordinates: { lat: 33.6861871107659, lng: 73.048283867797 },
+  },
+  faizAhmadFaiz: {
+    id: 'faizAhmadFaiz',
+    name: 'Faiz Ahmad Faiz',
+    coordinates: { lat: 33.676229226018755, lng: 73.05499703947167 },
+  },
+  khayabanEJohar: {
+    id: 'khayabanEJohar',
+    name: 'Khayaban-e-Johar',
+    coordinates: { lat: 33.669400089439776, lng: 73.059124979335 },
+  },
+  potohar: {
+    id: 'potohar',
+    name: 'Potohar',
+    coordinates: { lat: 33.66052867450109, lng: 73.06457403868524 },
+  },
+  ijPrincipal: {
+    id: 'ijPrincipal',
+    name: 'IJ Principal',
+    coordinates: { lat: 33.651, lng: 73.074 },
+  },
+  faizabad: {
+    id: 'faizabad',
+    name: 'Faizabad',
+    coordinates: { lat: 33.66128301347426, lng: 73.08280889714392 },
+  },
+  shamsabad: {
+    id: 'shamsabad',
+    name: 'Shamsabad',
+    coordinates: { lat: 33.65013878009155, lng: 73.07990132597995 },
+  },
+  sixthRoad: {
+    id: 'sixthRoad',
+    name: '6th Road',
+    coordinates: { lat: 33.6433588097611, lng: 73.0777363548161 },
+  },
+  rehmanabad: {
+    id: 'rehmanabad',
+    name: 'Rehmanabad',
+    coordinates: { lat: 33.636256275776354, lng: 73.07492419714325 },
+  },
+  chandaniChowk: {
+    id: 'chandaniChowk',
+    name: 'Chandani Chowk',
+    coordinates: { lat: 33.630129735354465, lng: 73.0719579326242 },
+  },
+  warisKhan: {
+    id: 'warisKhan',
+    name: 'Waris Khan',
+    coordinates: { lat: 33.62056260504173, lng: 73.06609199714276 },
+  },
+  committeeChowk: {
+    id: 'committeeChowk',
+    name: 'Committee Chowk',
+    coordinates: { lat: 33.613116268587156, lng: 73.06521072597887 },
+  },
+  liaquatBagh: {
+    id: 'liaquatBagh',
+    name: 'Liaquat Bagh',
+    coordinates: { lat: 33.60622912247219, lng: 73.06569902597865 },
+  },
+  marrirChowk: {
+    id: 'marrirChowk',
+    name: 'Marrir Chowk',
+    coordinates: { lat: 33.5995017433237, lng: 73.06257952994271 },
+  },
+  saddar: {
+    id: 'saddar',
+    name: 'Saddar',
+    coordinates: { lat: 33.593644284775294, lng: 73.05605302755386 },
+  },
+  g10: {
+    id: 'g10',
+    name: 'G-10',
+    coordinates: { lat: 33.66702433588719, lng: 73.0154890342314 },
+  },
+  g9: {
+    id: 'g9',
+    name: 'G-9',
+    coordinates: { lat: 33.679234, lng: 73.031789 },
+  },
+  niha: {
+    id: 'niha',
+    name: 'NIHA',
+    coordinates: { lat: 33.651, lng: 73.029 },
+  },
+  policeFoundation: {
+    id: 'policeFoundation',
+    name: 'Police Foundation',
+    coordinates: { lat: 33.651, lng: 73.038 },
+  },
+  nust: {
+    id: 'nust',
+    name: 'NUST',
+    coordinates: { lat: 33.642891, lng: 72.990432 },
+  },
+  g13: {
+    id: 'g13',
+    name: 'G-13',
+    coordinates: { lat: 33.651, lng: 73.056 },
+  },
+  golraMorr: {
+    id: 'golraMorr',
+    name: 'Golra Morr',
+    coordinates: { lat: 33.651, lng: 73.065 },
+  },
+  n5: {
+    id: 'n5',
+    name: 'N-5',
+    coordinates: { lat: 33.651, lng: 73.074 },
+  },
+  airport: {
+    id: 'airport',
+    name: 'Airport',
+    coordinates: { lat: 33.616234, lng: 73.099123 },
+  },
+  g7g8: {
+    id: 'g7g8',
+    name: 'G7/G8',
+    coordinates: { lat: 33.709123, lng: 73.065789 },
+  },
+  cda: {
+    id: 'cda',
+    name: 'CDA',
+    coordinates: { lat: 33.7021, lng: 73.0567 },
+  },
+  aabpara: {
+    id: 'aabpara',
+    name: 'Aabpara',
+    coordinates: { lat: 33.702345, lng: 73.058901 },
+  },
+  foreignOffice: {
+    id: 'foreignOffice',
+    name: 'Foreign Office',
+    coordinates: { lat: 33.6897, lng: 73.0412 },
+  },
+  lakeviewPark: {
+    id: 'lakeviewPark',
+    name: 'Lakeview Park',
+    coordinates: { lat: 33.684, lng: 73.0335 },
+  },
+  malpur: {
+    id: 'malpur',
+    name: 'Malpur',
+    coordinates: { lat: 33.6783, lng: 73.0258 },
+  },
+  bharakau: {
+    id: 'bharakau',
+    name: 'Bharakau',
+    coordinates: { lat: 33.695678, lng: 73.041234 },
+  },
+  h8Shakarparia: {
+    id: 'h8Shakarparia',
+    name: 'H-8 / Shakarparia',
+    coordinates: { lat: 33.694567, lng: 73.055678 },
+  },
+  i8ParadeGround: {
+    id: 'i8ParadeGround',
+    name: 'I-8/Parade Ground',
+    coordinates: { lat: 33.6612, lng: 73.0027 },
+  },
+  sohan: {
+    id: 'sohan',
+    name: 'Sohan',
+    coordinates: { lat: 33.674567, lng: 73.012345 },
+  },
+  iqbalTown: {
+    id: 'iqbalTown',
+    name: 'Iqbal Town',
+    coordinates: { lat: 33.6498, lng: 72.9873 },
+  },
+  kuriRoad: {
+    id: 'kuriRoad',
+    name: 'Kuri Road',
+    coordinates: { lat: 33.6441, lng: 72.9796 },
+  },
+  ziaMasjid: {
+    id: 'ziaMasjid',
+    name: 'Zia Masjid',
+    coordinates: { lat: 33.6384, lng: 72.9719 },
+  },
+  khannaPul: {
+    id: 'khannaPul',
+    name: 'Khanna Pul',
+    coordinates: { lat: 33.6327, lng: 72.9642 },
+  },
+  fazaia: {
+    id: 'fazaia',
+    name: 'Fazaia',
+    coordinates: { lat: 33.627, lng: 72.9565 },
+  },
+  gandal: {
+    id: 'gandal',
+    name: 'Gandal',
+    coordinates: { lat: 33.6213, lng: 72.9488 },
+  },
+  koralChowk: {
+    id: 'koralChowk',
+    name: 'Koral Chowk',
+    coordinates: { lat: 33.615678, lng: 73.134567 },
   },
 };
+
+export const metroLines: MetroLine[] = [
+  {
+    id: 'red',
+    name: 'Red Line (Secretariat to Saddar)',
+    stations: [
+      stationData.secretariat,
+      stationData.paradeGround,
+      stationData.shaheedEMillat,
+      stationData.seventhAvenue,
+      stationData.stockExchange,
+      stationData.pims,
+      stationData.kachehry,
+      stationData.ibnESina,
+      stationData.chaman,
+      stationData.kashmirHighway,
+      stationData.faizAhmadFaiz,
+      stationData.khayabanEJohar,
+      stationData.potohar,
+      stationData.ijPrincipal,
+      stationData.faizabad,
+      stationData.shamsabad,
+      stationData.sixthRoad,
+      stationData.rehmanabad,
+      stationData.chandaniChowk,
+      stationData.warisKhan,
+      stationData.committeeChowk,
+      stationData.liaquatBagh,
+      stationData.marrirChowk,
+      stationData.saddar,
+    ],
+  },
+  {
+    id: 'orange',
+    name: 'Orange Line (FAF to Airport)',
+    stations: [
+      stationData.faizAhmadFaiz,
+      stationData.g10,
+      stationData.g9,
+      stationData.niha,
+      stationData.policeFoundation,
+      stationData.nust,
+      stationData.g13,
+      stationData.golraMorr,
+      stationData.n5,
+      stationData.airport,
+    ],
+  },
+  {
+    id: 'green',
+    name: 'Green Line (PIMS to Bharakau)',
+    stations: [
+      stationData.pims,
+      stationData.g7g8,
+      stationData.cda,
+      stationData.aabpara,
+      stationData.foreignOffice,
+      stationData.lakeviewPark,
+      stationData.malpur,
+      stationData.bharakau,
+    ],
+  },
+  {
+    id: 'blue',
+    name: 'Blue Line (PIMS to Koral Chowk)',
+    stations: [
+      stationData.pims,
+      stationData.g7g8,
+      stationData.h8Shakarparia,
+      stationData.i8ParadeGround,
+      stationData.faizabad,
+      stationData.sohan,
+      stationData.iqbalTown,
+      stationData.kuriRoad,
+      stationData.ziaMasjid,
+      stationData.khannaPul,
+      stationData.fazaia,
+      stationData.gandal,
+      stationData.koralChowk,
+    ],
+  },
+];
 
 // Well-known interchange stations
 export const interchanges: Record<string, MetroLineColor[]> = {
   PIMS: ['red', 'green', 'blue'],
-  'PIMS Hospital': ['green', 'blue', 'red'],
   'G7/G8': ['green', 'blue'],
   'Parade Ground': ['red', 'blue'],
   'Kashmir Highway': ['red', 'orange'],
@@ -103,26 +360,14 @@ export const interchanges: Record<string, MetroLineColor[]> = {
   Faizabad: ['red', 'blue'],
 };
 
-// Get unique stations from all lines
-export const getAllStations = (): string[] => {
-  const uniqueStations = new Set<string>();
+// Helper functions
+export const getAllStations = (): Station[] =>
+  Array.from(new Set(metroLines.flatMap((line) => line.stations)));
 
-  Object.values(metroLines).forEach((line) => {
-    line.stations.forEach((station) => uniqueStations.add(station));
-  });
+export const findStation = (id: string | Station): Station | undefined =>
+  getAllStations().find((s) => s.id === id);
 
-  return Array.from(uniqueStations).sort();
-};
-
-export const stationCoordinates: Record<string, { lat: number; lng: number }> =
-  {
-    Station1: { lat: 33.6844, lng: 73.0479 },
-    Station2: { lat: 33.6924, lng: 73.0479 },
-    // Add coordinates for all your stations
-  };
-
-// stationCoordinates:
-//   {
-//     Station1: { lat: 33.6844, lng: 73.0479 },
-//     Station2: { lat: 33.6924, lng: 73.0479 },
-//     // Add coordinates for all  stations
+export const getStationLines = (stationId: string): MetroLine[] =>
+  metroLines.filter((line) =>
+    line.stations.some((station) => station.id === stationId)
+  );
