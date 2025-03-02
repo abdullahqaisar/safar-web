@@ -3,7 +3,7 @@
 import { MetroLine, Station } from '@/types/metro';
 import { getBgColorForLine, getBorderColorForLine } from '@/utils/route';
 
-export interface RouteSegmentProps {
+interface RouteSegmentProps {
   segment: {
     line: MetroLine;
     stations: Station[];
