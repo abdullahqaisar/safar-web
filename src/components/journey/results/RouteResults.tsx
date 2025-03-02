@@ -1,6 +1,6 @@
 'use client';
 
-import { Route } from '@/lib/route-finder';
+import { Route } from '@/types/metro';
 import { RouteSegment } from './RouteSegment';
 
 interface RouteResultsProps {
@@ -31,7 +31,7 @@ export function RouteResults({ route }: RouteResultsProps) {
           <RouteSegment
             key={`segment-${index}`}
             segment={segment}
-            isLast={index === route.segments.length - 1}
+            isFirst={index === route.segments.length - 1}
           />
         ))}
       </div>

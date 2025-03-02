@@ -8,7 +8,7 @@ interface PlacesAutocompleteProps {
   onValueChange?: (value: string) => void;
 }
 
-export default function PlacesAutocomplete({
+export default function MapSearchInput({
   onSelectPlace,
   placeholder,
   value,

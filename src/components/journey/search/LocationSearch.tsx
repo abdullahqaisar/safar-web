@@ -1,6 +1,6 @@
 import { useLoadScript } from '@react-google-maps/api';
 import { useState } from 'react';
-import PlacesAutocomplete from './PlacesAutocomplete';
+import MapSearchInput from './MapSearchInput';
 
 interface GoogleMapsLocationProps {
   onLocationSelect: (locations: {
@@ -9,7 +9,7 @@ interface GoogleMapsLocationProps {
   }) => void;
 }
 
-export default function GoogleMapsLocation({
+export default function LocationSearch({
   onLocationSelect,
 }: GoogleMapsLocationProps) {
   const [pickup, setPickup] = useState<google.maps.LatLngLiteral | null>(null);
@@ -38,13 +38,13 @@ export default function GoogleMapsLocation({
   return (
     <div className="w-full">
       <div className="p-4 space-y-4">
-        <PlacesAutocomplete
+        <MapSearchInput
           onSelectPlace={handlePickupSelect}
           placeholder="Enter pickup location"
           value={pickupValue}
           onValueChange={setPickupValue}
         />
-        <PlacesAutocomplete
+        <MapSearchInput
           onSelectPlace={handleDestinationSelect}
           placeholder="Enter destination"
           value={destinationValue}

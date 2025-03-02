@@ -1,9 +1,9 @@
 'use client';
 
-import { MetroLine } from '@/lib/metro-data';
 import { RouteSegmentProps } from '@/types/metro';
+import { getBgColorForLine, getBorderColorForLine } from '@/utils/route';
 
-export function RouteSegment({ segment, isLast }: RouteSegmentProps) {
+export function RouteSegment({ segment, isFirst }: RouteSegmentProps) {
   return (
     <div
       className={`p-4 border-l-4 ${getBorderColorForLine(
@@ -11,7 +11,7 @@ export function RouteSegment({ segment, isLast }: RouteSegmentProps) {
       )} ${getBgColorForLine(segment.line.id)} rounded-md relative`}
     >
       <h3 className="font-bold text-lg">
-        {isLast
+        {isFirst
           ? `Board ${segment.line.name} at ${segment.stations[0].name}`
           : `Transfer to ${segment.line.name} at ${segment.stations[0].name}`}
       </h3>
@@ -31,32 +31,12 @@ export function RouteSegment({ segment, isLast }: RouteSegmentProps) {
         </p>
       )}
 
-      {!isLast && (
+      {!isFirst && (
         <div
-          className="absolute left-4 h-8 w-0.5 bg-gray-300"
-          style={{ top: '100%' }}
+          className="absolute left-4 h-6 w-0.5 bg-gray-300"
+          style={{ bottom: '100%' }}
         ></div>
       )}
     </div>
   );
-}
-
-function getBorderColorForLine(lineId: MetroLine['id']): string {
-  const colors = {
-    red: 'border-red-500',
-    blue: 'border-blue-500',
-    green: 'border-green-500',
-    orange: 'border-orange-500',
-  };
-  return colors[lineId] || 'border-gray-500';
-}
-
-function getBgColorForLine(lineId: MetroLine['id']): string {
-  const colors = {
-    red: 'bg-red-50',
-    blue: 'bg-blue-50',
-    green: 'bg-green-50',
-    orange: 'bg-orange-50',
-  };
-  return colors[lineId] || 'bg-gray-50';
 }
