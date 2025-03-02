@@ -1,19 +1,4 @@
-export type MetroLineColor = 'red' | 'orange' | 'green' | 'blue';
-
-export interface Station {
-  id: string;
-  name: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-}
-
-export interface MetroLine {
-  id: MetroLineColor;
-  name: string;
-  stations: Station[];
-}
+import { MetroLine, MetroLineColor, Station } from '@/types/metro';
 
 const stationData: Record<string, Station> = {
   secretariat: {
@@ -141,30 +126,25 @@ const stationData: Record<string, Station> = {
     name: 'G-10',
     coordinates: { lat: 33.66702433588719, lng: 73.0154890342314 },
   },
-  g9: {
-    id: 'g9',
-    name: 'G-9',
-    coordinates: { lat: 33.679234, lng: 73.031789 },
-  },
-  niha: {
-    id: 'niha',
-    name: 'NIHA',
-    coordinates: { lat: 33.651, lng: 73.029 },
+  nha: {
+    id: 'nha',
+    name: 'NHA/G-9',
+    coordinates: { lat: 33.684, lng: 73.0335 },
   },
   policeFoundation: {
     id: 'policeFoundation',
     name: 'Police Foundation',
-    coordinates: { lat: 33.651, lng: 73.038 },
+    coordinates: { lat: 33.6612, lng: 73.0027 },
   },
   nust: {
     id: 'nust',
     name: 'NUST',
-    coordinates: { lat: 33.642891, lng: 72.990432 },
+    coordinates: { lat: 33.6498, lng: 72.9873 },
   },
   g13: {
     id: 'g13',
     name: 'G-13',
-    coordinates: { lat: 33.651, lng: 73.056 },
+    coordinates: { lat: 33.6327, lng: 72.9642 },
   },
   golraMorr: {
     id: 'golraMorr',
@@ -174,97 +154,102 @@ const stationData: Record<string, Station> = {
   n5: {
     id: 'n5',
     name: 'N-5',
-    coordinates: { lat: 33.651, lng: 73.074 },
+    coordinates: { lat: 33.627, lng: 72.9565 },
   },
   airport: {
     id: 'airport',
     name: 'Airport',
-    coordinates: { lat: 33.616234, lng: 73.099123 },
+    coordinates: { lat: 33.55595323251649, lng: 72.83735356830452 },
   },
   g7g8: {
     id: 'g7g8',
     name: 'G7/G8',
-    coordinates: { lat: 33.709123, lng: 73.065789 },
+    coordinates: { lat: 33.69765640152494, lng: 73.06192245759635 },
   },
   cda: {
     id: 'cda',
     name: 'CDA',
-    coordinates: { lat: 33.7021, lng: 73.0567 },
+    coordinates: { lat: 33.70026269568505, lng: 73.07816222598147 },
   },
   aabpara: {
     id: 'aabpara',
     name: 'Aabpara',
-    coordinates: { lat: 33.702345, lng: 73.058901 },
+    coordinates: { lat: 33.70587017153255, lng: 73.088788480754 },
   },
   foreignOffice: {
     id: 'foreignOffice',
     name: 'Foreign Office',
-    coordinates: { lat: 33.6897, lng: 73.0412 },
+    coordinates: { lat: 33.71253396928778, lng: 73.10147021235335 },
   },
   lakeviewPark: {
     id: 'lakeviewPark',
     name: 'Lakeview Park',
-    coordinates: { lat: 33.684, lng: 73.0335 },
+    coordinates: { lat: 33.7230059572911, lng: 73.13539361588158 },
   },
   malpur: {
     id: 'malpur',
     name: 'Malpur',
-    coordinates: { lat: 33.6783, lng: 73.0258 },
+    coordinates: { lat: 33.729778587260185, lng: 73.14452185146958 },
+  },
+  shahdara: {
+    id: 'shahdara',
+    name: 'Shahdara',
+    coordinates: { lat: 33.73476959678367, lng: 73.15926194293299 },
   },
   bharakau: {
     id: 'bharakau',
     name: 'Bharakau',
-    coordinates: { lat: 33.695678, lng: 73.041234 },
+    coordinates: { lat: 33.73545330312739, lng: 73.16534652238195 },
   },
   h8Shakarparia: {
     id: 'h8Shakarparia',
     name: 'H-8 / Shakarparia',
-    coordinates: { lat: 33.694567, lng: 73.055678 },
+    coordinates: { lat: 33.683907271374636, lng: 73.055678 },
   },
   i8ParadeGround: {
     id: 'i8ParadeGround',
     name: 'I-8/Parade Ground',
-    coordinates: { lat: 33.6612, lng: 73.0027 },
+    coordinates: { lat: 33.67327094873524, lng: 73.08056387534658 },
   },
   sohan: {
     id: 'sohan',
     name: 'Sohan',
-    coordinates: { lat: 33.674567, lng: 73.012345 },
+    coordinates: { lat: 33.65010625365016, lng: 73.09838026200707 },
   },
   iqbalTown: {
     id: 'iqbalTown',
     name: 'Iqbal Town',
-    coordinates: { lat: 33.6498, lng: 72.9873 },
+    coordinates: { lat: 33.645789656066505, lng: 73.10088498639699 },
   },
   kuriRoad: {
     id: 'kuriRoad',
     name: 'Kuri Road',
-    coordinates: { lat: 33.6441, lng: 72.9796 },
+    coordinates: { lat: 33.64217419506025, lng: 73.10352144794746 },
   },
   ziaMasjid: {
     id: 'ziaMasjid',
     name: 'Zia Masjid',
-    coordinates: { lat: 33.6384, lng: 72.9719 },
+    coordinates: { lat: 33.63666729372628, lng: 73.10764972498504 },
   },
   khannaPul: {
     id: 'khannaPul',
     name: 'Khanna Pul',
-    coordinates: { lat: 33.6327, lng: 72.9642 },
+    coordinates: { lat: 33.62585038147842, lng: 73.11554358446452 },
   },
   fazaia: {
     id: 'fazaia',
     name: 'Fazaia',
-    coordinates: { lat: 33.627, lng: 72.9565 },
+    coordinates: { lat: 33.62094759803972, lng: 73.11937715608676 },
   },
-  gandal: {
-    id: 'gandal',
-    name: 'Gandal',
-    coordinates: { lat: 33.6213, lng: 72.9488 },
+  gangal: {
+    id: 'gangal',
+    name: 'Gangal',
+    coordinates: { lat: 33.61244250465781, lng: 73.12606611655178 },
   },
   koralChowk: {
     id: 'koralChowk',
     name: 'Koral Chowk',
-    coordinates: { lat: 33.615678, lng: 73.134567 },
+    coordinates: { lat: 33.603225129723704, lng: 73.13299865331676 },
   },
 };
 
@@ -305,8 +290,7 @@ export const metroLines: MetroLine[] = [
     stations: [
       stationData.faizAhmadFaiz,
       stationData.g10,
-      stationData.g9,
-      stationData.niha,
+      stationData.nha,
       stationData.policeFoundation,
       stationData.nust,
       stationData.g13,
@@ -326,6 +310,7 @@ export const metroLines: MetroLine[] = [
       stationData.foreignOffice,
       stationData.lakeviewPark,
       stationData.malpur,
+      stationData.shahdara,
       stationData.bharakau,
     ],
   },
@@ -344,7 +329,7 @@ export const metroLines: MetroLine[] = [
       stationData.ziaMasjid,
       stationData.khannaPul,
       stationData.fazaia,
-      stationData.gandal,
+      stationData.gangal,
       stationData.koralChowk,
     ],
   },
@@ -359,15 +344,3 @@ export const interchanges: Record<string, MetroLineColor[]> = {
   'Faiz Ahmad Faiz': ['orange', 'red'],
   Faizabad: ['red', 'blue'],
 };
-
-// Helper functions
-export const getAllStations = (): Station[] =>
-  Array.from(new Set(metroLines.flatMap((line) => line.stations)));
-
-export const findStation = (id: string | Station): Station | undefined =>
-  getAllStations().find((s) => s.id === id);
-
-export const getStationLines = (stationId: string): MetroLine[] =>
-  metroLines.filter((line) =>
-    line.stations.some((station) => station.id === stationId)
-  );
