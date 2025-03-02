@@ -3,13 +3,6 @@ export interface LocationSelectProps {
   destination: google.maps.LatLngLiteral | null;
 }
 
-export interface RouteSegmentProps {
-  segment: {
-    line: MetroLine;
-    stations: Station[];
-  };
-  isFirst: boolean;
-}
 export interface Coordinates {
   lat: number;
   lng: number;

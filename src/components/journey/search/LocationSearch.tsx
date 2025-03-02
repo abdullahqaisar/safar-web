@@ -2,7 +2,7 @@ import { useLoadScript } from '@react-google-maps/api';
 import { useState } from 'react';
 import MapSearchInput from './MapSearchInput';
 
-interface GoogleMapsLocationProps {
+interface LocationSearchProps {
   onLocationSelect: (locations: {
     pickup: google.maps.LatLngLiteral | null;
     destination: google.maps.LatLngLiteral | null;
@@ -11,7 +11,7 @@ interface GoogleMapsLocationProps {
 
 export default function LocationSearch({
   onLocationSelect,
-}: GoogleMapsLocationProps) {
+}: LocationSearchProps) {
   const [pickup, setPickup] = useState<google.maps.LatLngLiteral | null>(null);
   const [destination, setDestination] =
     useState<google.maps.LatLngLiteral | null>(null);

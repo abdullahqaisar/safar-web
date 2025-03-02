@@ -1,7 +1,15 @@
 'use client';
 
-import { RouteSegmentProps } from '@/types/metro';
+import { MetroLine, Station } from '@/types/metro';
 import { getBgColorForLine, getBorderColorForLine } from '@/utils/route';
+
+export interface RouteSegmentProps {
+  segment: {
+    line: MetroLine;
+    stations: Station[];
+  };
+  isFirst: boolean;
+}
 
 export function RouteSegment({ segment, isFirst }: RouteSegmentProps) {
   return (

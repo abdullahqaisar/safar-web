@@ -1,7 +1,7 @@
 import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
 
-interface PlacesAutocompleteProps {
+interface MapSearchInputProps {
   onSelectPlace: (location: google.maps.LatLngLiteral) => void;
   placeholder: string;
   value?: string;
@@ -13,7 +13,7 @@ export default function MapSearchInput({
   placeholder,
   value,
   onValueChange,
-}: PlacesAutocompleteProps) {
+}: MapSearchInputProps) {
   const {
     ready,
     value: inputValue,
