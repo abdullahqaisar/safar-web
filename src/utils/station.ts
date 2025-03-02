@@ -3,7 +3,7 @@ import { calculateDistance } from './geo';
 import { MAX_STATION_DISTANCE } from '@/constants/config';
 import { metroLines } from '@/constants/metro-data';
 
-const getAllStations = (): Station[] =>
+export const getAllStations = (): Station[] =>
   Array.from(new Set(metroLines.flatMap((line) => line.stations)));
 
 export const findStation = (id: string | Station): Station | undefined =>

@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import {
   findBestRoute,
-  Route,
   findNearestStation,
 } from '@/lib/route-finder/route-finder';
-import { LocationSelectProps, Station } from '@/types/metro';
+import { LocationSelectProps, Route, Station } from '@/types/metro';
 import { MAX_STATION_DISTANCE } from '@/constants/config';
 import LocationSearch from './search/LocationSearch';
 import { RouteResults } from './results/RouteResults';

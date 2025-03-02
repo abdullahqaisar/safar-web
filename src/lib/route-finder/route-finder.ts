@@ -1,4 +1,4 @@
-import { MetroLine, Route, RouteSegment, Station } from '@/types/metro';
+import { Route } from '@/types/metro';
 import { findNearestStation, findStation } from '@/utils/station';
 import { findDirectRoute } from './direct-route';
 import { findTransferRoutes } from './transfer-route';
@@ -37,4 +37,3 @@ export function findBestRoute(
 
 // Re-export needed functions and types
 export { findNearestStation };
-export type { Route, RouteSegment, Station, MetroLine };
