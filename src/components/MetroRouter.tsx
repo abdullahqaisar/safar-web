@@ -68,7 +68,7 @@ export function MetroRouter() {
         <GoogleMapsLocation onLocationSelect={handleLocationSelect} />
         {fromStation && (
           <div className="mt-2 text-sm text-gray-600">
-            {`{ lat: ${fromStation.coordinates.lat}, lng: ${fromStation.coordinates.lng} }`}
+            Form station: {fromStation.name}
           </div>
         )}
         {toStation && (
