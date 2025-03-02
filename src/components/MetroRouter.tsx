@@ -60,9 +60,12 @@ export function MetroRouter() {
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <h1 className="text-3xl font-bold text-center text-green-600 mb-8">
-        Islamabad Metro Router
+      <h1 className="text-4xl font-semibold text-center text-green-700 mb-4">
+        سفر
       </h1>
+      <p className="text-xl text-center mb-6 text-gray-600">
+        Find the best route in Islamabad&apos;s Confusing Metro System
+      </p>
 
       <div className="mb-6">
         <GoogleMapsLocation onLocationSelect={handleLocationSelect} />
