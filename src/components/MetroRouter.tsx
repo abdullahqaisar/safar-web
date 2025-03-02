@@ -68,7 +68,7 @@ export function MetroRouter() {
         <GoogleMapsLocation onLocationSelect={handleLocationSelect} />
         {fromStation && (
           <div className="mt-2 text-sm text-gray-600">
-            Form station: {fromStation.name}
+            From station: {fromStation.name}
           </div>
         )}
         {toStation && (
