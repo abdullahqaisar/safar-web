@@ -1,4 +1,4 @@
-import { JourneyPlanner } from '@/components/journey/JourneyPlanner';
+import { Journey } from '@/components/features/journey/Journey';
 import Script from 'next/script';
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
           }
         `}
       </Script>
-      <JourneyPlanner />
+      <Journey />
     </main>
   );
 }

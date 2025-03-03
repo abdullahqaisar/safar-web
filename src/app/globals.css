@@ -19,5 +19,96 @@
 
 body {
   background-color: #f5f5f5;
+  min-height: 100vh;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  body {
+    padding: 20px;
+  }
+}
+
+.app-container {
+  @apply bg-white min-h-screen;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    min-height: auto;
+    @apply rounded-lg shadow-lg my-8;
+  }
+}
+
+.route-results {
   padding: 20px;
+}
+
+.results-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+.filter-btn {
+  @apply px-3 py-2 border rounded-lg text-sm flex items-center gap-2 text-gray-600 hover:bg-gray-50;
+}
+
+.route-card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden mb-4 hover:transform hover:-translate-y-1 transition-transform;
+}
+
+.route-header {
+  @apply p-4 bg-gray-50 border-b-gray-800 flex justify-between items-center;
+}
+
+.route-time {
+  @apply font-bold text-base;
+}
+
+
+
+.route-duration {
+  @apply text-gray-600 text-sm;
+}
+
+.route-details {
+  @apply p-4;
+}
+
+.route-segment {
+  @apply flex relative mb-6;
+}
+
+.route-icon {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 z-10;
+}
+
+.route-text {
+  @apply ml-4 flex-grow flex justify-between items-start;
+}
+
+.route-text h4 {
+  @apply font-medium text-base mb-1;
+}
+
+.route-text p {
+  @apply text-sm text-gray-600;
+}
+
+.bus-badge {
+  @apply text-xs px-3 py-1 rounded-full text-white font-medium shadow-sm;
+}
+
+.segment-connector {
+  @apply absolute left-4 w-0.5 bg-gray-300;
+  top: 32px;
+  bottom: -24px;
+  transform: translateX(-50%);
+}
+
+.fare-info {
+  @apply mt-6 bg-green-50 p-3 rounded-lg flex items-center gap-3 text-green-600;
+}
+
+.fare-amount {
+  @apply font-bold;
 }

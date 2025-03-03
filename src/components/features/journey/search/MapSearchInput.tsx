@@ -1,11 +1,13 @@
 import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
+import { useEffect } from 'react';
 
 interface MapSearchInputProps {
   onSelectPlace: (location: google.maps.LatLngLiteral) => void;
   placeholder: string;
   value?: string;
   onValueChange?: (value: string) => void;
+  icon: string;
 }
 
 export default function MapSearchInput({
@@ -13,6 +15,7 @@ export default function MapSearchInput({
   placeholder,
   value,
   onValueChange,
+  icon,
 }: MapSearchInputProps) {
   const {
     ready,
@@ -28,6 +31,13 @@ export default function MapSearchInput({
     defaultValue: value,
     debounce: 300,
   });
+
+  // Add effect to sync external value changes
+  useEffect(() => {
+    if (value !== undefined && value !== inputValue) {
+      setValue(value, false);
+    }
+  }, [value, setValue, inputValue]);
 
   const handleSelect = async (address: string) => {
     setValue(address, false);
@@ -53,9 +63,12 @@ export default function MapSearchInput({
 
   return (
     <div className="relative">
+      <i
+        className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 text-gray-400`}
+      ></i>
       <input
         type="text"
-        className="w-full p-2 border border-gray-300 rounded"
+        className="w-full p-3 pl-12 border border-gray-300 rounded-lg text-base"
         value={inputValue}
         onChange={(e) => {
           setValue(e.target.value);
@@ -65,11 +78,11 @@ export default function MapSearchInput({
         placeholder={placeholder}
       />
       {status === 'OK' && (
-        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-auto">
+        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-auto shadow-lg">
           {data.map(({ place_id, description }) => (
             <li
               key={place_id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
+              className="p-3 cursor-pointer hover:bg-gray-100"
               onClick={() => handleSelect(description)}
             >
               {description}
