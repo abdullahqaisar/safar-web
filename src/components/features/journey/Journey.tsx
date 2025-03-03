@@ -39,14 +39,18 @@ export function Journey() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto  my-8 rounded-lg">
+    <div className="w-full max-w-[1200px] mx-auto mt-20 sm:mt-8 rounded-lg">
       <Header />
-      <SearchForm
-        onSearch={handleSearch}
-        onError={handleError}
-        errorMessage={errorMessage}
-      />
-      {!errorMessage && showResults && route && <RouteResults route={route} />}
+      <div className="px-4 sm:px-0">
+        <SearchForm
+          onSearch={handleSearch}
+          onError={handleError}
+          errorMessage={errorMessage}
+        />
+        {!errorMessage && showResults && route && (
+          <RouteResults route={route} />
+        )}
+      </div>
     </div>
   );
 }
