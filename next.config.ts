@@ -1,13 +1,13 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
+  output: 'standalone',
   poweredByHeader: false,
+  compress: true,
   images: {
-    domains: [], // Add allowed image domains
+    domains: [],
   },
-  // Enable source maps in production
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;
