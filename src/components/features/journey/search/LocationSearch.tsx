@@ -33,40 +33,6 @@ export default function LocationSearch({
     onLocationSelect({ pickup, destination: location });
   };
 
-  const handleExchange = () => {
-    if (pickupValue && destinationValue && pickup && destination) {
-      // Create temporary variables to hold current values
-      const tempPickup = pickup;
-      const tempPickupValue = pickupValue;
-
-      // Update pickup with destination values
-      setPickup(destination);
-      setPickupValue(destinationValue);
-
-      // Update destination with pickup values
-      setDestination(tempPickup);
-      setDestinationValue(tempPickupValue);
-
-      // Notify parent with swapped locations
-      onLocationSelect({
-        pickup: destination,
-        destination: tempPickup,
-      });
-
-      // Force refresh the input components
-      const pickupInput = document.querySelector(
-        'input[placeholder*="From"]'
-      ) as HTMLInputElement;
-      const destInput = document.querySelector(
-        'input[placeholder*="To"]'
-      ) as HTMLInputElement;
-      if (pickupInput && destInput) {
-        pickupInput.value = destinationValue;
-        destInput.value = tempPickupValue;
-      }
-    }
-  };
-
   if (!isLoaded) return <div>Loading...</div>;
 
   return (
@@ -79,16 +45,6 @@ export default function LocationSearch({
           onValueChange={setPickupValue}
           icon="fas fa-circle"
         />
-
-        <div className="relative">
-          <button
-            onClick={handleExchange}
-            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-[#0da84e] transition-colors z-10"
-            disabled={!pickupValue || !destinationValue}
-          >
-            <i className="fas fa-exchange-alt"></i>
-          </button>
-        </div>
 
         <MapSearchInput
           onSelectPlace={handleDestinationSelect}
