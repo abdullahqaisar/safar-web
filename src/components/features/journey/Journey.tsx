@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { findBestRoute } from '@/lib/route-finder/route-finder';
 import { Route, Station } from '@/types/metro';
 import { Header } from '../../layouts/Header';
-import { Tabs } from '../../layouts/Tabs';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
 
@@ -40,9 +39,8 @@ export function Journey() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto bg-white shadow-lg my-8 rounded-lg">
+    <div className="w-full max-w-[1200px] mx-auto  my-8 rounded-lg">
       <Header />
-      <Tabs />
       <SearchForm
         onSearch={handleSearch}
         onError={handleError}

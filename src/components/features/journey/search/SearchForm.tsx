@@ -90,7 +90,7 @@ export function SearchForm({
     (fromStation && toStation && fromStation.id === toStation.id);
 
   return (
-    <div className="p-6 bg-gray-50">
+    <div className="p-6 bg-white rounded-t-xl mb-6">
       <LocationSearch onLocationSelect={handleLocationSelect} />
       {errorMessage && <Alert message={errorMessage} />}
       <SearchButton onClick={handleFindRoute} disabled={isSearchDisabled} />

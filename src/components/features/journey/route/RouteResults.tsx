@@ -13,7 +13,7 @@ interface RouteResultsProps {
 
 export function RouteResults({ route }: RouteResultsProps) {
   return (
-    <div className="route-results">
+    <div className="route-results bg-white rounded-b-2xl">
       <div className="results-header">
         <div>
           <h3 className="font-bold text-lg">Suggested Routes</h3>
