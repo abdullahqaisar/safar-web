@@ -31,7 +31,7 @@ export function RouteResults({ route }: RouteResultsProps) {
           <RouteSegment
             key={`segment-${index}`}
             segment={segment}
-            isFirst={index === route.segments.length - 1}
+            isFirst={index === 0}
           />
         ))}
       </div>
