@@ -33,12 +33,7 @@ export function JourneySegment({
         {badges && (
           <div className="flex gap-2 ml-4">
             {badges.map((badge, index) => (
-              <Badge
-                key={index}
-                text={badge.text}
-                color={iconBgColor}
-                className="bus-badge"
-              />
+              <Badge key={index} text={badge.text} color={iconBgColor} />
             ))}
           </div>
         )}

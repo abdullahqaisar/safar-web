@@ -8,11 +8,13 @@ interface BadgeProps {
 }
 
 const Badge: React.FC<BadgeProps> = ({ text, color, className = '' }) => {
-  const baseClasses = 'inline-flex items-center rounded-full font-medium';
+  const baseClasses =
+    'hidden sm:inline-flex items-center rounded-full font-medium';
 
   return (
     <span
       className={`
+        bus-badge
         ${baseClasses}
         ${color}
         ${className}
