@@ -6,7 +6,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Islamabad Metro Route Finder | Rawalpindi Metro Bus Routes',
+  title:
+    'Safar.fyi | Islamabad Metro Route Finder | Rawalpindi Metro Bus Routes',
   description:
     'Find the best metro and bus routes in Islamabad and Rawalpindi. Plan your journey with our route finder for Metro Bus, Orange Line, Blue Line and Green Line routes.',
   keywords:
