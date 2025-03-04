@@ -23,18 +23,18 @@ export interface MetroLine {
 
 export interface RouteSegment {
   type: 'walk' | 'transit';
-  line?: MetroLine; // optional since walking segments don't have a line
+  line?: MetroLine;
   stations: Station[];
-  duration: number; // in seconds
-  walkingTime?: number; // in seconds
-  walkingDistance?: number; // in meters
+  duration: number;
+  walkingTime?: number;
+  walkingDistance?: number;
 }
 
 export interface Route {
   segments: RouteSegment[];
   totalStops: number;
   totalDistance: number;
-  totalDuration: number; // in seconds
+  totalDuration: number;
 }
 
 export type MetroLineColor = 'red' | 'orange' | 'green' | 'blue';
