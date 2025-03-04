@@ -1,32 +1,12 @@
-import { Route, RouteSegment, Station } from '@/types/metro';
+import { MetroLine, Route, RouteSegment, Station } from '@/types/metro';
 import { metroLines } from '../../constants/metro-data';
 import {
   calculateSegmentDistance,
   findInterchanges,
   getStationsBetween,
 } from '@/utils/station';
-import { calculateTransitTime, calculateWalkingTime } from '@/utils/maps';
-
-async function createWalkingSegment(
-  from: Station,
-  to: Station,
-  fromCoords: google.maps.LatLngLiteral,
-  toCoords: google.maps.LatLngLiteral
-): Promise<RouteSegment | null> {
-  const walkResult = await calculateWalkingTime(fromCoords, toCoords);
-  if (!walkResult) return null;
-
-  return {
-    type: 'walk',
-    stations: [
-      { ...from, coordinates: fromCoords },
-      { ...to, coordinates: toCoords },
-    ],
-    duration: walkResult.duration,
-    walkingTime: walkResult.duration,
-    walkingDistance: walkResult.distance,
-  };
-}
+import { calculateTransitTime } from '@/utils/maps';
+import { calculateRouteTimes, createWalkingSegment } from './walk-routes';
 
 /**
  * Finds all possible routes including direct and transfer routes
@@ -36,9 +16,65 @@ export async function findRoutes(
   toLocation: google.maps.LatLngLiteral,
   fromStation: Station,
   toStation: Station,
-  maxTransfers = 2
+  maxTransfers = Infinity
 ): Promise<Route[]> {
   const routes: Route[] = [];
+
+  // Find direct route
+  const directRoute = await findDirectRoute(
+    fromLocation,
+    toLocation,
+    fromStation,
+    toStation
+  );
+
+  if (directRoute) {
+    routes.push(directRoute);
+  }
+
+  // Find all possible transfer routes
+  const fromLines = metroLines.filter((line) =>
+    line.stations.some((s) => s.id === fromStation.id)
+  );
+
+  // Initialize a path tracking structure for BFS/DFS
+  const transferRoutes = await findAllTransferRoutes(
+    fromStation,
+    toStation,
+    fromLines,
+    maxTransfers,
+    fromLocation,
+    toLocation
+  );
+
+  routes.push(...transferRoutes);
+
+  // Calculate times for each route
+  const calculatedRoutes = await calculateRouteTimes(routes);
+
+  return calculatedRoutes
+    .filter((route) => route.totalDuration > 0)
+    .sort((a, b) => {
+      // Sort by duration first, then number of segments (transfers), then stops
+      if (a.totalDuration !== b.totalDuration) {
+        return a.totalDuration - b.totalDuration;
+      }
+      if (a.segments.length !== b.segments.length) {
+        return a.segments.length - b.segments.length;
+      }
+      return a.totalStops - b.totalStops;
+    });
+}
+
+/**
+ * Find a direct route between two stations
+ */
+async function findDirectRoute(
+  fromLocation: google.maps.LatLngLiteral,
+  toLocation: google.maps.LatLngLiteral,
+  fromStation: Station,
+  toStation: Station
+): Promise<Route | null> {
   const fromLines = metroLines.filter((line) =>
     line.stations.some((s) => s.id === fromStation.id)
   );
@@ -46,301 +82,246 @@ export async function findRoutes(
     line.stations.some((s) => s.id === toStation.id)
   );
 
-  // Try direct route first
+  // Check if there's a direct line
   const directLine = fromLines.find((line) => toLines.includes(line));
-  if (directLine) {
-    const stations = getStationsBetween(directLine, fromStation, toStation);
-    if (stations.length > 0) {
-      const segments: RouteSegment[] = [];
+  if (!directLine) return null;
 
-      // Initial walk
-      const initialWalk = await createWalkingSegment(
-        fromStation,
-        stations[0],
-        fromLocation,
-        stations[0].coordinates
-      );
-      if (initialWalk) segments.push(initialWalk);
+  const stations = getStationsBetween(directLine, fromStation, toStation);
+  if (stations.length === 0) return null;
 
-      // Transit segment
-      const transitTime = await calculateTransitTime(
-        stations[0],
-        stations[stations.length - 1]
-      );
-      segments.push({
-        type: 'transit',
-        line: directLine,
-        stations,
-        duration: transitTime,
-      });
+  const segments: RouteSegment[] = [];
 
-      // Final walk
-      const finalWalk = await createWalkingSegment(
-        stations[stations.length - 1],
-        toStation,
-        stations[stations.length - 1].coordinates,
-        toLocation
-      );
-      if (finalWalk) segments.push(finalWalk);
+  // Initial walk to the first station
+  const initialWalk = await createWalkingSegment(
+    fromStation,
+    stations[0],
+    fromLocation,
+    stations[0].coordinates
+  );
+  if (initialWalk) segments.push(initialWalk);
 
-      const totalDuration = segments.reduce(
-        (total, seg) => total + seg.duration,
-        0
-      );
-      routes.push({
-        segments,
-        totalStops: stations.length - 1,
-        totalDistance: calculateSegmentDistance(stations),
-        totalDuration,
-      });
-    }
+  // Transit segment
+  const transitTime = await calculateTransitTime(
+    stations[0],
+    stations[stations.length - 1]
+  );
+  segments.push({
+    type: 'transit',
+    line: directLine,
+    stations,
+    duration: transitTime,
+  });
+
+  // Final walk from the last station
+  const finalWalk = await createWalkingSegment(
+    stations[stations.length - 1],
+    toStation,
+    stations[stations.length - 1].coordinates,
+    toLocation
+  );
+  if (finalWalk) segments.push(finalWalk);
+
+  const totalDuration = segments.reduce(
+    (total, seg) => total + seg.duration,
+    0
+  );
+
+  return {
+    segments,
+    totalStops: stations.length - 1,
+    totalDistance: calculateSegmentDistance(stations),
+    totalDuration,
+  };
+}
+
+/**
+ * Find all possible transfer routes using breadth-first search
+ */
+async function findAllTransferRoutes(
+  fromStation: Station,
+  toStation: Station,
+  fromLines: MetroLine[],
+  maxTransfers: number,
+  fromLocation: google.maps.LatLngLiteral,
+  toLocation: google.maps.LatLngLiteral
+): Promise<Route[]> {
+  const routes: Route[] = [];
+
+  // Using BFS to find all possible routes with transfers up to maxTransfers
+  const queue: {
+    station: Station;
+    lines: MetroLine[];
+    visitedLines: Set<string>;
+    segments: RouteSegment[];
+    transfers: number;
+  }[] = [];
+
+  // Initialize the queue with starting station
+  for (const line of fromLines) {
+    queue.push({
+      station: fromStation,
+      lines: [line],
+      visitedLines: new Set([line.id]),
+      segments: [],
+      transfers: 0,
+    });
   }
 
-  // Try transfer routes
-  // Try single transfer routes
-  for (const fromLine of fromLines) {
-    for (const toLine of toLines) {
-      if (fromLine.id === toLine.id) continue;
+  while (queue.length > 0) {
+    const { station, lines, visitedLines, segments, transfers } =
+      queue.shift()!;
 
-      const interchangeStations = findInterchanges(fromLine, toLine);
+    for (const currentLine of lines) {
+      // Skip if we've already processed this line
+      if (
+        segments.length > 0 &&
+        segments[segments.length - 1].type === 'transit' &&
+        'line' in segments[segments.length - 1] &&
+        segments[segments.length - 1].line?.id === currentLine.id
+      ) {
+        continue;
+      }
 
-      for (const transfer of interchangeStations) {
-        const segment1 = getStationsBetween(fromLine, fromStation, transfer);
-        const segment2 = getStationsBetween(toLine, transfer, toStation);
+      // Check if we can reach the destination directly from here
+      if (currentLine.stations.some((s) => s.id === toStation.id)) {
+        const directSegment = getStationsBetween(
+          currentLine,
+          station,
+          toStation
+        );
+        if (directSegment.length > 0) {
+          const newSegments = [...segments];
 
-        if (segment1.length > 0 && segment2.length > 0) {
-          const totalDistance =
-            calculateSegmentDistance(segment1) +
-            calculateSegmentDistance(segment2);
+          // Add initial walking segment if this is the first segment
+          if (segments.length === 0) {
+            const walkSegment = await createWalkingSegment(
+              station,
+              directSegment[0],
+              fromLocation,
+              directSegment[0].coordinates
+            );
+            if (walkSegment) newSegments.push(walkSegment);
+          }
 
-          const segments: RouteSegment[] = [];
-
-          // Add initial walking segment
-          const walkToFirstStation = await createWalkingSegment(
-            fromStation,
-            segment1[0],
-            fromLocation,
-            {
-              lat: segment1[0].coordinates.lat,
-              lng: segment1[0].coordinates.lng,
-            }
-          );
-
-          if (!walkToFirstStation) continue;
-
-          segments.push(walkToFirstStation);
-
-          // Add first transit segment
-          segments.push({
+          // Add the transit segment
+          newSegments.push({
             type: 'transit',
-            line: fromLine,
-            stations: segment1,
-            duration: 0,
-          });
-
-          // Add second transit segment
-          segments.push({
-            type: 'transit',
-            line: toLine,
-            stations: segment2,
-            duration: 0,
+            line: currentLine,
+            stations: directSegment,
+            duration: 0, // Will be calculated later
           });
 
           // Add final walking segment
-          const walkToDestination = await createWalkingSegment(
-            segment2[segment2.length - 1],
+          const finalWalk = await createWalkingSegment(
+            directSegment[directSegment.length - 1],
             toStation,
-            {
-              lat: segment2[segment2.length - 1].coordinates.lat,
-              lng: segment2[segment2.length - 1].coordinates.lng,
-            },
+            directSegment[directSegment.length - 1].coordinates,
             toLocation
           );
+          if (finalWalk) newSegments.push(finalWalk);
 
-          if (!walkToDestination) continue;
+          // Calculate route statistics
+          const totalStops = newSegments.reduce(
+            (total, seg) =>
+              total + (seg.type === 'transit' ? seg.stations.length - 1 : 0),
+            0
+          );
 
-          segments.push(walkToDestination);
+          const totalDistance = newSegments.reduce(
+            (total, seg) =>
+              total +
+              (seg.type === 'transit'
+                ? calculateSegmentDistance(seg.stations)
+                : 0),
+            0
+          );
 
           routes.push({
-            segments,
-            totalStops: segment1.length + segment2.length - 2,
+            segments: newSegments,
+            totalStops,
             totalDistance,
-            totalDuration: 0,
+            totalDuration: 0, // Will be calculated later
+          });
+
+          continue; // Found a route to destination, continue to next line
+        }
+      }
+
+      // If we haven't hit max transfers, try interchange stations
+      if (transfers < maxTransfers) {
+        // Find all interchange stations from current line
+        const interchangeMap = new Map<
+          string,
+          { station: Station; lines: MetroLine[] }
+        >();
+
+        for (const otherLine of metroLines) {
+          if (visitedLines.has(otherLine.id)) continue;
+
+          const interchanges = findInterchanges(currentLine, otherLine);
+          for (const interchange of interchanges) {
+            if (!interchangeMap.has(interchange.id)) {
+              interchangeMap.set(interchange.id, {
+                station: interchange,
+                lines: [otherLine],
+              });
+            } else {
+              interchangeMap.get(interchange.id)!.lines.push(otherLine);
+            }
+          }
+        }
+
+        // Process each interchange
+        for (const {
+          station: interchange,
+          lines: nextLines,
+        } of interchangeMap.values()) {
+          const segmentToInterchange = getStationsBetween(
+            currentLine,
+            station,
+            interchange
+          );
+          if (segmentToInterchange.length === 0) continue;
+
+          const newSegments = [...segments];
+
+          // Add walking segment if this is the first segment
+          if (segments.length === 0) {
+            const walkSegment = await createWalkingSegment(
+              station,
+              segmentToInterchange[0],
+              fromLocation,
+              segmentToInterchange[0].coordinates
+            );
+            if (walkSegment) newSegments.push(walkSegment);
+          }
+
+          // Add transit segment to the interchange
+          newSegments.push({
+            type: 'transit',
+            line: currentLine,
+            stations: segmentToInterchange,
+            duration: 0, // Will be calculated later
+          });
+
+          // Create a new visited lines set
+          const newVisitedLines = new Set(visitedLines);
+          for (const line of nextLines) {
+            newVisitedLines.add(line.id);
+          }
+
+          // Add to queue for further exploration
+          queue.push({
+            station: interchange,
+            lines: nextLines,
+            visitedLines: newVisitedLines,
+            segments: newSegments,
+            transfers: transfers + 1,
           });
         }
       }
     }
   }
 
-  // Try double transfer routes if needed
-  if (routes.length === 0 && maxTransfers > 1) {
-    const allLines = new Set(metroLines);
-
-    for (const middleLine of Array.from(allLines)) {
-      if (fromLines.includes(middleLine) || toLines.includes(middleLine))
-        continue;
-
-      for (const fromLine of fromLines) {
-        for (const toLine of toLines) {
-          const firstTransfers = findInterchanges(fromLine, middleLine);
-          const secondTransfers = findInterchanges(middleLine, toLine);
-
-          for (const firstTransfer of firstTransfers) {
-            for (const secondTransfer of secondTransfers) {
-              const segment1 = getStationsBetween(
-                fromLine,
-                fromStation,
-                firstTransfer
-              );
-              const segment2 = getStationsBetween(
-                middleLine,
-                firstTransfer,
-                secondTransfer
-              );
-              const segment3 = getStationsBetween(
-                toLine,
-                secondTransfer,
-                toStation
-              );
-
-              if (
-                segment1.length > 0 &&
-                segment2.length > 0 &&
-                segment3.length > 0
-              ) {
-                const totalDistance =
-                  calculateSegmentDistance(segment1) +
-                  calculateSegmentDistance(segment2) +
-                  calculateSegmentDistance(segment3);
-
-                const segments: RouteSegment[] = [];
-
-                // Add initial walking segment
-                const walkToFirstStation = await createWalkingSegment(
-                  fromStation,
-                  segment1[0],
-                  fromLocation,
-                  {
-                    lat: segment1[0].coordinates.lat,
-                    lng: segment1[0].coordinates.lng,
-                  }
-                );
-
-                if (!walkToFirstStation) continue;
-
-                segments.push(walkToFirstStation);
-
-                // Add all transit segments
-                segments.push(
-                  {
-                    type: 'transit',
-                    line: fromLine,
-                    stations: segment1,
-                    duration: 0,
-                  },
-                  {
-                    type: 'transit',
-                    line: middleLine,
-                    stations: segment2,
-                    duration: 0,
-                  },
-                  {
-                    type: 'transit',
-                    line: toLine,
-                    stations: segment3,
-                    duration: 0,
-                  }
-                );
-
-                // Add final walking segment
-                const walkToDestination = await createWalkingSegment(
-                  segment3[segment3.length - 1],
-                  toStation,
-                  {
-                    lat: segment3[segment3.length - 1].coordinates.lat,
-                    lng: segment3[segment3.length - 1].coordinates.lng,
-                  },
-                  toLocation
-                );
-
-                if (!walkToDestination) continue;
-
-                segments.push(walkToDestination);
-
-                routes.push({
-                  segments,
-                  totalStops:
-                    segment1.length + segment2.length + segment3.length - 3,
-                  totalDistance,
-                  totalDuration: 0,
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Calculate times for each route
-  for (const route of routes) {
-    let totalDuration = 0;
-
-    for (let i = 0; i < route.segments.length; i++) {
-      const segment = route.segments[i];
-
-      if (segment.type === 'walk') {
-        const walkResult = await calculateWalkingTime(
-          {
-            lat: segment.stations[0].coordinates.lat,
-            lng: segment.stations[0].coordinates.lng,
-          },
-          {
-            lat: segment.stations[1].coordinates.lat,
-            lng: segment.stations[1].coordinates.lng,
-          }
-        );
-
-        if (!walkResult) continue;
-
-        segment.duration = walkResult.duration;
-        segment.walkingTime = walkResult.duration;
-        segment.walkingDistance = walkResult.distance;
-        totalDuration += walkResult.duration;
-      } else if (segment.type === 'transit') {
-        const transitTime = await calculateTransitTime(
-          segment.stations[0],
-          segment.stations[segment.stations.length - 1]
-        );
-        segment.duration = transitTime;
-        totalDuration += transitTime;
-
-        // Handle transfer walking if needed
-        if (
-          i < route.segments.length - 1 &&
-          route.segments[i + 1].type === 'transit'
-        ) {
-          const walkTime = await calculateWalkingTime(
-            {
-              lat: segment.stations[segment.stations.length - 1].coordinates
-                .lat,
-              lng: segment.stations[segment.stations.length - 1].coordinates
-                .lng,
-            },
-            {
-              lat: route.segments[i + 1].stations[0].coordinates.lat,
-              lng: route.segments[i + 1].stations[0].coordinates.lng,
-            }
-          );
-
-          if (!walkTime) continue;
-          totalDuration += walkTime.duration;
-        }
-      }
-    }
-
-    route.totalDuration = totalDuration;
-  }
-
-  return routes.filter((route) => route.totalDuration > 0);
+  return routes;
 }
