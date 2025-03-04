@@ -1,39 +1,52 @@
 import { Route } from '@/types/metro';
 import { findNearestStation, findStation } from '@/utils/station';
-import { findDirectRoute } from './direct-route';
-import { findTransferRoutes } from './transfer-route';
+import { findRoutes } from './transfer-route';
 
 /**
  * Finds the best route between two stations
- * @param fromStationId ID of the starting station
- * @param toStationId ID of the destination station
- * @returns The best route or null if no route is found
  */
-export function findBestRoute(
+export async function findBestRoute(
   fromStationId: string,
-  toStationId: string
-): Route | null {
+  toStationId: string,
+  fromLocation?: google.maps.LatLngLiteral,
+  toLocation?: google.maps.LatLngLiteral
+): Promise<Route | null> {
   const fromStation = findStation(fromStationId);
   const toStation = findStation(toStationId);
 
   if (!fromStation || !toStation) return null;
 
-  const directRoute = findDirectRoute(fromStation, toStation);
-  if (directRoute) return directRoute;
+  // Use station coordinates as fallback if no specific locations provided
+  const startLocation = fromLocation || {
+    lat: fromStation.coordinates.lat,
+    lng: fromStation.coordinates.lng,
+  };
 
-  const transferRoutes = findTransferRoutes(fromStation, toStation);
-  if (transferRoutes.length === 0) return null;
+  const endLocation = toLocation || {
+    lat: toStation.coordinates.lat,
+    lng: toStation.coordinates.lng,
+  };
 
-  return transferRoutes.sort((a, b) => {
+  const routes = await findRoutes(
+    startLocation,
+    endLocation,
+    fromStation,
+    toStation
+  );
+
+  if (!routes || routes.length === 0) return null;
+
+  // Sort routes by total duration, then number of transfers, then stops
+  return routes.sort((a, b) => {
+    if (a.totalDuration !== b.totalDuration) {
+      return a.totalDuration - b.totalDuration;
+    }
     if (a.segments.length !== b.segments.length) {
       return a.segments.length - b.segments.length;
     }
-    if (a.totalStops !== b.totalStops) {
-      return a.totalStops - b.totalStops;
-    }
-    return a.totalDistance - b.totalDistance;
+    return a.totalStops - b.totalStops;
   })[0];
 }
 
-// Re-export needed functions and types
+// Re-export needed functions
 export { findNearestStation };

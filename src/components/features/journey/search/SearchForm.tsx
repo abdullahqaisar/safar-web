@@ -9,7 +9,12 @@ import { SearchButton } from '../../../ui/SearchButton';
 import LocationSearch from './LocationSearch';
 
 interface SearchFormProps {
-  onSearch: (from: Station, to: Station) => void;
+  onSearch: (
+    from: Station,
+    to: Station,
+    fromLocation: google.maps.LatLngLiteral,
+    toLocation: google.maps.LatLngLiteral
+  ) => void;
   onError: (message: string) => void;
   errorMessage: string;
 }
@@ -21,6 +26,10 @@ export function SearchForm({
 }: SearchFormProps) {
   const [fromStation, setFromStation] = useState<Station | null>(null);
   const [toStation, setToStation] = useState<Station | null>(null);
+  const [fromLocation, setFromLocation] =
+    useState<google.maps.LatLngLiteral | null>(null);
+  const [toLocation, setToLocation] =
+    useState<google.maps.LatLngLiteral | null>(null);
   const [fromLocationError, setFromLocationError] = useState<boolean>(false);
   const [toLocationError, setToLocationError] = useState<boolean>(false);
 
@@ -32,6 +41,7 @@ export function SearchForm({
 
   const handleLocationSelect = (locations: LocationSelectProps) => {
     if (locations.pickup) {
+      setFromLocation(locations.pickup);
       const nearest = findNearestStation(locations.pickup);
       setFromStation(nearest);
       setFromLocationError(!nearest);
@@ -44,6 +54,7 @@ export function SearchForm({
     }
 
     if (locations.destination) {
+      setToLocation(locations.destination);
       const nearest = findNearestStation(locations.destination);
       setToStation(nearest);
       setToLocationError(!nearest);
@@ -68,18 +79,12 @@ export function SearchForm({
   };
 
   const handleFindRoute = () => {
-    if (!fromStation || !toStation) {
-      onError(
-        !fromStation && !toStation
-          ? 'Please select both pickup and destination locations'
-          : !fromStation
-          ? 'Please select a valid pickup location'
-          : 'Please select a valid destination location'
-      );
+    if (!fromStation || !toStation || !fromLocation || !toLocation) {
+      onError('Please select both pickup and destination locations');
       return;
     }
 
-    onSearch(fromStation, toStation);
+    onSearch(fromStation, toStation, fromLocation, toLocation);
   };
 
   const isSearchDisabled =

@@ -12,7 +12,12 @@ export function Journey() {
   const [showResults, setShowResults] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const handleSearch = (fromStation: Station, toStation: Station) => {
+  const handleSearch = async (
+    fromStation: Station,
+    toStation: Station,
+    fromLocation: google.maps.LatLngLiteral,
+    toLocation: google.maps.LatLngLiteral
+  ) => {
     if (fromStation.id === toStation.id) {
       setErrorMessage('Start and destination stations are the same');
       setShowResults(false);
@@ -20,13 +25,25 @@ export function Journey() {
       return;
     }
 
-    const bestRoute = findBestRoute(fromStation.id, toStation.id);
-    if (bestRoute) {
-      setRoute(bestRoute);
-      setShowResults(true);
-      setErrorMessage('');
-    } else {
-      setErrorMessage('No route found between these stations');
+    try {
+      const bestRoute = await findBestRoute(
+        fromStation.id,
+        toStation.id,
+        fromLocation,
+        toLocation
+      );
+      if (bestRoute) {
+        setRoute(bestRoute);
+        setShowResults(true);
+        setErrorMessage('');
+      } else {
+        setErrorMessage('No route found between these stations');
+        setShowResults(false);
+        setRoute(null);
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Error finding route');
       setShowResults(false);
       setRoute(null);
     }
