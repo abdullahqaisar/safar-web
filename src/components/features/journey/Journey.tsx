@@ -9,7 +9,7 @@ import { Station } from '@/types/station';
 import { getBestRoute } from '@/lib/services/route.service';
 
 export function Journey() {
-  const [route, setRoute] = useState<Route | null>(null);
+  const [routes, setRoutes] = useState<Route[] | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -22,7 +22,7 @@ export function Journey() {
     if (fromStation.id === toStation.id) {
       setErrorMessage('Start and destination stations are the same');
       setShowResults(false);
-      setRoute(null);
+      setRoutes(null);
       return;
     }
 
@@ -34,26 +34,26 @@ export function Journey() {
         toLocation
       );
       if (bestRoute) {
-        setRoute(bestRoute);
+        setRoutes(bestRoute);
         setShowResults(true);
         setErrorMessage('');
       } else {
         setErrorMessage('No route found between these stations');
         setShowResults(false);
-        setRoute(null);
+        setRoutes(null);
       }
     } catch (error) {
       console.error(error);
       setErrorMessage('Error finding route');
       setShowResults(false);
-      setRoute(null);
+      setRoutes(null);
     }
   };
 
   const handleError = (message: string) => {
     setErrorMessage(message);
     setShowResults(false);
-    setRoute(null);
+    setRoutes(null);
   };
 
   return (
@@ -65,8 +65,8 @@ export function Journey() {
           onError={handleError}
           errorMessage={errorMessage}
         />
-        {!errorMessage && showResults && route && (
-          <RouteResults route={route} />
+        {!errorMessage && showResults && routes && (
+          <RouteResults routes={routes} />
         )}
       </div>
     </div>

@@ -6,35 +6,39 @@ import { RouteSummary } from './RouteSummary';
 import { formatDuration } from '@/lib/utils/formatters';
 
 interface RouteCardProps {
-  route: Route;
+  routes: Route[];
 }
 
-export function RouteCard({ route }: RouteCardProps) {
+export function RouteCard({ routes }: RouteCardProps) {
   return (
-    <div className="route-card">
-      <RouteSummary
-        journeyDuration={formatDuration(route.totalDuration)}
-        stops={route.totalStops ?? 0}
-        transfers={(route.segments?.length ?? 1) - 1}
-      />
-
-      <div className="route-details">
-        {route.segments.map((segment, index) => (
-          <RouteSegment
-            key={index}
-            segment={segment}
-            isLast={index === route.segments.length - 1}
-            position={
-              index === 0
-                ? 'first'
-                : index === route.segments.length - 1
-                ? 'last'
-                : 'middle'
-            }
+    <>
+      {routes.map((route, index) => (
+        <div key={index} className="route-card">
+          <RouteSummary
+            journeyDuration={formatDuration(route.totalDuration)}
+            stops={route.totalStops ?? 0}
+            transfers={(route.segments?.length ?? 1) - 1}
           />
-        ))}
-        <FareSummary amount={120} />
-      </div>
-    </div>
+
+          <div className="route-details">
+            {route.segments.map((segment, segmentIndex) => (
+              <RouteSegment
+                key={segmentIndex}
+                segment={segment}
+                isLast={segmentIndex === route.segments.length - 1}
+                position={
+                  segmentIndex === 0
+                    ? 'first'
+                    : segmentIndex === route.segments.length - 1
+                    ? 'last'
+                    : 'middle'
+                }
+              />
+            ))}
+            <FareSummary amount={120} />
+          </div>
+        </div>
+      ))}
+    </>
   );
 }

@@ -2,20 +2,23 @@ import { Route } from '@/types/route';
 import { RouteCard } from './RouteCard';
 
 interface RouteResultsProps {
-  route: Route;
+  routes: Route[];
 }
 
-export function RouteResults({ route }: RouteResultsProps) {
+export function RouteResults({ routes }: RouteResultsProps) {
+  const routeCount = routes.length;
+  const routeText = `${routeCount} route${routeCount !== 1 ? 's' : ''} found`;
+
   return (
     <div className="route-results bg-white rounded-b-2xl">
-      <div className="results-header">
-        <div>
+      <header className="results-header">
+        <div className="space-y-1">
           <h3 className="font-bold text-lg">Suggested Routes</h3>
-          <p className="text-sm text-gray-500">1 route found</p>
+          <p className="text-sm text-gray-500">{routeText}</p>
         </div>
-      </div>
+      </header>
 
-      <RouteCard route={route} />
+      <RouteCard routes={routes} />
     </div>
   );
 }
