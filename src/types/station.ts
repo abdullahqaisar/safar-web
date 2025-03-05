@@ -1,6 +1,6 @@
 export interface Coordinates {
-  lat: number | google.maps.LatLngLiteral;
-  lng: number | google.maps.LatLngLiteral;
+  lat: number;
+  lng: number;
 }
 
 export interface Station {
