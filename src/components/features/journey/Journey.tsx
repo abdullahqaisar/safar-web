@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { findBestRoute } from '@/lib/route-finder/route-finder';
 import { Route } from '@/types/route';
 import { Header } from '../../layouts/Header';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
 import { Station } from '@/types/station';
+import { getBestRoute } from '@/lib/services/route.service';
 
 export function Journey() {
   const [route, setRoute] = useState<Route | null>(null);
@@ -27,7 +27,7 @@ export function Journey() {
     }
 
     try {
-      const bestRoute = await findBestRoute(
+      const bestRoute = await getBestRoute(
         fromStation.id,
         toStation.id,
         fromLocation,

@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { RouteSegment as RouteSegmentType } from '@/types/route';
-import { formatDistance, formatDuration } from '@/utils/formatters';
-import { getBusColor } from '@/utils/route';
+import { formatDistance, formatDuration } from '@/lib/utils/formatters';
+import { getBusColor } from '@/lib/utils/route';
 
 interface RouteSegmentProps {
   segment: RouteSegmentType;

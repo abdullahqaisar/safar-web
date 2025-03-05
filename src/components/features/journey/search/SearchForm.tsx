@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { findNearestStation } from '@/lib/route-finder/route-finder';
 import { MAX_STATION_DISTANCE } from '@/constants/config';
 import { Alert } from '../../../ui/Alert';
 import { SearchButton } from '../../../ui/SearchButton';
 import LocationSearch from './LocationSearch';
 import { Station } from '@/types/station';
+import { getNearestStation } from '@/lib/services/station.service';
 
 interface LocationSelectProps {
   pickup: google.maps.LatLngLiteral | null;
@@ -43,10 +43,10 @@ export function SearchForm({
     }
   }, [fromStation, toStation, onError]);
 
-  const handleLocationSelect = (locations: LocationSelectProps) => {
+  const handleLocationSelect = async (locations: LocationSelectProps) => {
     if (locations.pickup) {
       setFromLocation(locations.pickup);
-      const nearest = findNearestStation(locations.pickup);
+      const nearest = await getNearestStation(locations.pickup);
       setFromStation(nearest);
       setFromLocationError(!nearest);
 
@@ -59,7 +59,7 @@ export function SearchForm({
 
     if (locations.destination) {
       setToLocation(locations.destination);
-      const nearest = findNearestStation(locations.destination);
+      const nearest = await getNearestStation(locations.destination);
       setToStation(nearest);
       setToLocationError(!nearest);
 
@@ -71,8 +71,8 @@ export function SearchForm({
     }
 
     if (locations.pickup && locations.destination) {
-      const fromNearest = findNearestStation(locations.pickup);
-      const toNearest = findNearestStation(locations.destination);
+      const fromNearest = await getNearestStation(locations.pickup);
+      const toNearest = await getNearestStation(locations.destination);
 
       if (!fromNearest && !toNearest) {
         onError(

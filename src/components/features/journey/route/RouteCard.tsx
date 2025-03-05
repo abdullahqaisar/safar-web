@@ -3,7 +3,7 @@ import { Route } from '@/types/route';
 import { FareSummary } from './FareSummary';
 import { RouteSegment } from './RouteSegment';
 import { RouteSummary } from './RouteSummary';
-import { formatDuration } from '@/utils/formatters';
+import { formatDuration } from '@/lib/utils/formatters';
 
 interface RouteCardProps {
   route: Route;
