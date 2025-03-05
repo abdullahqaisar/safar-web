@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { findBestRoute } from '@/lib/route-finder/route-finder';
-import { Route, Station } from '@/types/metro';
+import { Route } from '@/types/route';
 import { Header } from '../../layouts/Header';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
+import { Station } from '@/types/station';
 
 export function Journey() {
   const [route, setRoute] = useState<Route | null>(null);

@@ -1,4 +1,4 @@
-import { MetroLine, Route, RouteSegment, Station } from '@/types/metro';
+import { MetroLine } from '@/types/metro';
 import { metroLines } from '../../constants/metro-data';
 import {
   calculateSegmentDistance,
@@ -7,6 +7,8 @@ import {
 } from '@/utils/station';
 import { calculateTransitTime } from '@/utils/maps';
 import { calculateRouteTimes, createWalkingSegment } from './walk-routes';
+import { Station } from '@/types/station';
+import { Route, RouteSegment } from '@/types/route';
 
 /**
  * Finds all possible routes including direct and transfer routes

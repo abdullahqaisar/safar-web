@@ -1,6 +1,4 @@
-'use client';
-
-import { Route } from '@/types/metro';
+import { Route } from '@/types/route';
 import { RouteCard } from './RouteCard';
 
 interface RouteResultsProps {

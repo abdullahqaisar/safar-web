@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { findNearestStation } from '@/lib/route-finder/route-finder';
-import { LocationSelectProps, Station } from '@/types/metro';
 import { MAX_STATION_DISTANCE } from '@/constants/config';
 import { Alert } from '../../../ui/Alert';
 import { SearchButton } from '../../../ui/SearchButton';
 import LocationSearch from './LocationSearch';
+import { Station } from '@/types/station';
 
+interface LocationSelectProps {
+  pickup: google.maps.LatLngLiteral | null;
+  destination: google.maps.LatLngLiteral | null;
+}
 interface SearchFormProps {
   onSearch: (
     from: Station,

@@ -1,4 +1,5 @@
-import { Route, RouteSegment, Station } from '@/types/metro';
+import { Route, RouteSegment } from '@/types/route';
+import { Station } from '@/types/station';
 import { calculateTransitTime, calculateWalkingTime } from '@/utils/maps';
 
 export async function createWalkingSegment(

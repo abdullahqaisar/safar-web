@@ -1,4 +1,5 @@
-import { MetroLine, MetroLineColor, Station } from '@/types/metro';
+import { MetroLine, MetroLineColor } from '@/types/metro';
+import { Station } from '@/types/station';
 
 const stationData: Record<string, Station> = {
   secretariat: {

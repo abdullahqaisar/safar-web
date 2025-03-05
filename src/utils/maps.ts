@@ -1,4 +1,4 @@
-import { Station } from '@/types/metro';
+import { Station } from '@/types/station';
 
 export async function calculateWalkingTime(
   origin: google.maps.LatLngLiteral,

@@ -1,6 +1,6 @@
 'use client';
 
-import { Route } from '@/types/metro';
+import { Route } from '@/types/route';
 
 import { FareSummary } from './FareSummary';
 import { RouteSegment } from './RouteSegment';

@@ -1,4 +1,4 @@
-import { Station } from '@/types/metro';
+import { Station } from '@/types/station';
 
 /**
  * Calculates the distance between two geographic points using the Haversine formula

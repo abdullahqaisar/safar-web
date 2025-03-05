@@ -7,7 +7,7 @@ interface BadgeProps {
   className?: string;
 }
 
-const Badge: React.FC<BadgeProps> = ({ text, color, className = '' }) => {
+export function Badge({ text, color, className = '' }: BadgeProps) {
   const baseClasses =
     'hidden sm:inline-flex items-center rounded-full font-medium';
 
@@ -23,6 +23,4 @@ const Badge: React.FC<BadgeProps> = ({ text, color, className = '' }) => {
       {text}
     </span>
   );
-};
-
-export default Badge;
+}

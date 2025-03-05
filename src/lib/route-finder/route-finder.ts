@@ -1,6 +1,6 @@
-import { Route } from '@/types/metro';
 import { findNearestStation, findStation } from '@/utils/station';
 import { findRoutes } from './transfer-route';
+import { Route } from '@/types/route';
 
 /**
  * Finds the best route between two stations

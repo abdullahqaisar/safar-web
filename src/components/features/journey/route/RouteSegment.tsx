@@ -1,5 +1,5 @@
-import Badge from '@/components/ui/Badge';
-import { RouteSegment as RouteSegmentType } from '@/types/metro';
+import { Badge } from '@/components/ui/Badge';
+import { RouteSegment as RouteSegmentType } from '@/types/route';
 import { formatDistance, formatDuration } from '@/utils/formatters';
 import { getBusColor } from '@/utils/route';
 
