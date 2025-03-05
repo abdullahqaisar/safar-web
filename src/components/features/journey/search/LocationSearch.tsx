@@ -43,7 +43,7 @@ export default function LocationSearch({
           placeholder="From (e.g., Khanna Pul)"
           value={pickupValue}
           onValueChange={setPickupValue}
-          icon="fas fa-circle"
+          icon="far fa-circle"
         />
 
         <MapSearchInput

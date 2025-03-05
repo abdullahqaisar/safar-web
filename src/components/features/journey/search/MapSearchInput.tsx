@@ -1,6 +1,7 @@
 import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
 import { useEffect } from 'react';
+import { useInputState } from '@/hooks/useInputState';
 
 interface MapSearchInputProps {
   onSelectPlace: (location: google.maps.LatLngLiteral) => void;
@@ -17,6 +18,8 @@ export default function MapSearchInput({
   onValueChange,
   icon,
 }: MapSearchInputProps) {
+  const { isFocused, inputProps } = useInputState();
+
   const {
     ready,
     value: inputValue,
@@ -64,11 +67,14 @@ export default function MapSearchInput({
   return (
     <div className="relative">
       <i
-        className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 text-gray-400`}
+        className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200
+          ${isFocused ? 'text-green-500' : 'text-gray-400'}`}
       ></i>
       <input
         type="text"
-        className="w-full p-3 pl-12 border border-gray-300 rounded-lg text-base"
+        className={`w-full text-sm p-4 pl-12 border bg-white rounded-lg transition-colors duration-200
+          ${isFocused ? 'border-green-500' : 'border-gray-200'}
+          focus:outline-none`}
         value={inputValue}
         onChange={(e) => {
           setValue(e.target.value);
@@ -76,6 +82,7 @@ export default function MapSearchInput({
         }}
         disabled={!ready}
         placeholder={placeholder}
+        {...inputProps}
       />
       {status === 'OK' && (
         <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-auto shadow-lg">
