@@ -2,7 +2,7 @@ import { MetroLine } from '@/types/metro';
 import { calculateDistance } from './geo';
 import { MAX_STATION_DISTANCE } from '@/constants/config';
 import { metroLines } from '@/constants/metro-data';
-import { Station } from '@/types/station';
+import { Coordinates, Station } from '@/types/station';
 
 export const getAllStations = (): Station[] =>
   Array.from(new Set(metroLines.flatMap((line) => line.stations)));
@@ -53,10 +53,7 @@ export function calculateSegmentDistance(stations: Station[]): number {
 /**
  * Finds the nearest station to a given location
  */
-export function findNearestStation(location: {
-  lat: number;
-  lng: number;
-}): Station | null {
+export function findNearestStation(location: Coordinates): Station | null {
   const stations = getAllStations();
   if (stations.length === 0) return null;
 

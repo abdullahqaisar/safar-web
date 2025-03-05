@@ -1,4 +1,4 @@
-import { Station } from '@/types/station';
+import { Coordinates, Station } from '@/types/station';
 
 /**
  * Calculates the distance between two geographic points using the Haversine formula
@@ -7,7 +7,7 @@ import { Station } from '@/types/station';
  * @returns Distance in kilometers
  */
 export function calculateDistance(
-  from: Station | { coordinates: { lat: number; lng: number } },
+  from: Station | { coordinates: Coordinates },
   to: Station
 ): number {
   const R = 6371; // Earth's radius in km
