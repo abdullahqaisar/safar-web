@@ -11,6 +11,15 @@ export const findStation = (id: string | Station): Station | undefined =>
   getAllStations().find((s) => s.id === id);
 
 /**
+ * Get all metro lines that contain a specific station
+ */
+export function getStationLines(station: Station): MetroLine[] {
+  return metroLines.filter((line) =>
+    line.stations.some((s) => s.id === station.id)
+  );
+}
+
+/**
  * Gets an array of stations between two stations on the same line
  */
 export function getStationsBetween(
