@@ -9,11 +9,23 @@ interface RouteCardProps {
   routes: Route[];
 }
 
+function getSegmentPosition(
+  index: number,
+  total: number
+): 'first' | 'middle' | 'last' {
+  if (index === 0) return 'first';
+  if (index === total - 1) return 'last';
+  return 'middle';
+}
+
 export function RouteCard({ routes }: RouteCardProps) {
   return (
     <>
       {routes.map((route, index) => (
-        <div key={index} className="route-card">
+        <div
+          key={`route-${route.totalDuration}-${index}`}
+          className="route-card"
+        >
           <RouteSummary
             journeyDuration={formatDuration(route.totalDuration)}
             stops={route.totalStops ?? 0}
@@ -26,13 +38,10 @@ export function RouteCard({ routes }: RouteCardProps) {
                 key={segmentIndex}
                 segment={segment}
                 isLast={segmentIndex === route.segments.length - 1}
-                position={
-                  segmentIndex === 0
-                    ? 'first'
-                    : segmentIndex === route.segments.length - 1
-                    ? 'last'
-                    : 'middle'
-                }
+                position={getSegmentPosition(
+                  segmentIndex,
+                  route.segments.length
+                )}
               />
             ))}
             <FareSummary amount={120} />
