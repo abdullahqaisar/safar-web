@@ -1,6 +1,8 @@
-import { findNearestStation, findStation } from '@/utils/station';
-import { findRoutes } from './transfer-route';
+import { findStation } from '@/lib/utils/station';
+
 import { Route } from '@/types/route';
+import { Coordinates } from '@/types/station';
+import { findRoutes } from './transit-routes';
 
 /**
  * Finds the best route between two stations
@@ -8,8 +10,8 @@ import { Route } from '@/types/route';
 export async function findBestRoute(
   fromStationId: string,
   toStationId: string,
-  fromLocation?: google.maps.LatLngLiteral,
-  toLocation?: google.maps.LatLngLiteral
+  fromLocation?: Coordinates,
+  toLocation?: Coordinates
 ): Promise<Route | null> {
   const fromStation = findStation(fromStationId);
   const toStation = findStation(toStationId);
@@ -47,6 +49,3 @@ export async function findBestRoute(
     return a.totalStops - b.totalStops;
   })[0];
 }
-
-// Re-export needed functions
-export { findNearestStation };

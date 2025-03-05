@@ -4,18 +4,18 @@ import {
   calculateSegmentDistance,
   findInterchanges,
   getStationsBetween,
-} from '@/utils/station';
-import { calculateTransitTime } from '@/utils/maps';
+} from '@/lib/utils/station';
+import { calculateTransitTime } from '@/lib/utils/maps';
 import { calculateRouteTimes, createWalkingSegment } from './walk-routes';
-import { Station } from '@/types/station';
+import { Coordinates, Station } from '@/types/station';
 import { Route, RouteSegment } from '@/types/route';
 
 /**
  * Finds all possible routes including direct and transfer routes
  */
 export async function findRoutes(
-  fromLocation: google.maps.LatLngLiteral,
-  toLocation: google.maps.LatLngLiteral,
+  fromLocation: Coordinates,
+  toLocation: Coordinates,
   fromStation: Station,
   toStation: Station,
   maxTransfers = Infinity
@@ -29,6 +29,8 @@ export async function findRoutes(
     fromStation,
     toStation
   );
+
+  console.log('Direct Route: ', JSON.stringify(directRoute));
 
   if (directRoute) {
     routes.push(directRoute);
@@ -72,8 +74,8 @@ export async function findRoutes(
  * Find a direct route between two stations
  */
 async function findDirectRoute(
-  fromLocation: google.maps.LatLngLiteral,
-  toLocation: google.maps.LatLngLiteral,
+  fromLocation: Coordinates,
+  toLocation: Coordinates,
   fromStation: Station,
   toStation: Station
 ): Promise<Route | null> {
@@ -144,8 +146,8 @@ async function findAllTransferRoutes(
   toStation: Station,
   fromLines: MetroLine[],
   maxTransfers: number,
-  fromLocation: google.maps.LatLngLiteral,
-  toLocation: google.maps.LatLngLiteral
+  fromLocation: Coordinates,
+  toLocation: Coordinates
 ): Promise<Route[]> {
   const routes: Route[] = [];
 

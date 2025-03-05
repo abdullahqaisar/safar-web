@@ -1,12 +1,12 @@
 import { Route, RouteSegment } from '@/types/route';
-import { Station } from '@/types/station';
-import { calculateTransitTime, calculateWalkingTime } from '@/utils/maps';
+import { Coordinates, Station } from '@/types/station';
+import { calculateTransitTime, calculateWalkingTime } from '@/lib/utils/maps';
 
 export async function createWalkingSegment(
   from: Station,
   to: Station,
-  fromCoords: google.maps.LatLngLiteral,
-  toCoords: google.maps.LatLngLiteral
+  fromCoords: Coordinates,
+  toCoords: Coordinates
 ): Promise<RouteSegment | null> {
   const walkResult = await calculateWalkingTime(fromCoords, toCoords);
   if (!walkResult) return null;
