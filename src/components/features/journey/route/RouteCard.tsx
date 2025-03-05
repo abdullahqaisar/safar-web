@@ -1,5 +1,3 @@
-'use client';
-
 import { Route } from '@/types/route';
 
 import { FareSummary } from './FareSummary';
