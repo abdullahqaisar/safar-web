@@ -66,7 +66,7 @@ function getWalkSegmentDetails(
     iconBgColor: 'bg-blue-500',
     title: walkTitle,
     description: `${formatDuration(segment.duration)} (${formatDistance(
-      segment.walkingDistance!
+      segment.walkingDistance || 0
     )})`,
   };
 }
