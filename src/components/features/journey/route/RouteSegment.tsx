@@ -1,5 +1,9 @@
 import { Badge } from '@/components/ui/Badge';
-import { RouteSegment as RouteSegmentType } from '@/types/route';
+import {
+  RouteSegment as RouteSegmentType,
+  TransitSegment,
+  WalkSegment,
+} from '@/types/route';
 import { formatDistance, formatDuration } from '@/lib/utils/formatters';
 import { getBusColor } from '@/lib/utils/route';
 
@@ -9,42 +13,19 @@ interface RouteSegmentProps {
   position: 'first' | 'middle' | 'last';
 }
 
+interface SegmentDetails {
+  icon: string;
+  iconBgColor: string;
+  title: string;
+  description: string;
+  badges?: Array<{ text: string; color: string }>;
+}
+
 export function RouteSegment({ segment, isLast, position }: RouteSegmentProps) {
-  const getSegmentDetails = () => {
-    if (segment.type === 'walk') {
-      return {
-        icon: 'fas fa-walking',
-        iconBgColor: 'bg-blue-500',
-        title:
-          position === 'first'
-            ? 'Walk to station'
-            : position === 'last'
-            ? 'Walk to destination'
-            : 'Walk to next station',
-        description: `${formatDuration(segment.duration)} (${formatDistance(
-          segment.walkingDistance!
-        )})`,
-      };
-    }
-
-    let lineColor = 'bg-gray-500';
-    if (segment.line) lineColor = getBusColor(segment?.line?.id);
-
-    return {
-      icon: 'fas fa-bus',
-      iconBgColor: lineColor,
-      title:
-        position === 'first'
-          ? `Take ${segment.line?.name} at ${segment.stations[0].name}`
-          : `Transfer to ${segment.line?.name} at ${segment.stations[0].name}`,
-      description: `${segment.stations.length - 1} stops • ${formatDuration(
-        segment.duration
-      )}`,
-      badges: [{ text: segment.line?.name || '', color: lineColor || '' }],
-    };
-  };
-
-  const details = getSegmentDetails();
+  const details: SegmentDetails =
+    segment.type === 'walk'
+      ? getWalkSegmentDetails(segment as WalkSegment, position)
+      : getTransitSegmentDetails(segment as TransitSegment, position);
 
   return (
     <div className="route-segment">
@@ -67,4 +48,47 @@ export function RouteSegment({ segment, isLast, position }: RouteSegmentProps) {
       {!isLast && <div className="segment-connector"></div>}
     </div>
   );
+}
+
+function getWalkSegmentDetails(
+  segment: WalkSegment,
+  position: string
+): SegmentDetails {
+  const walkTitle =
+    position === 'first'
+      ? 'Walk to station'
+      : position === 'last'
+      ? 'Walk to destination'
+      : 'Walk to next station';
+
+  return {
+    icon: 'fas fa-walking',
+    iconBgColor: 'bg-blue-500',
+    title: walkTitle,
+    description: `${formatDuration(segment.duration)} (${formatDistance(
+      segment.walkingDistance || 0
+    )})`,
+  };
+}
+
+function getTransitSegmentDetails(
+  segment: TransitSegment,
+  position: string
+): SegmentDetails {
+  const lineColor = segment.line ? getBusColor(segment.line.id) : 'bg-gray-500';
+  const stationName = segment.stations[0].name;
+  const lineName = segment.line?.name;
+
+  return {
+    icon: 'fas fa-bus',
+    iconBgColor: lineColor,
+    title:
+      position === 'first'
+        ? `Take ${lineName} at ${stationName}`
+        : `Transfer to ${lineName} at ${stationName}`,
+    description: `${segment.stations.length - 1} stops • ${formatDuration(
+      segment.duration
+    )}`,
+    badges: [{ text: lineName || '', color: lineColor }],
+  };
 }

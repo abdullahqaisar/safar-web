@@ -6,35 +6,48 @@ import { RouteSummary } from './RouteSummary';
 import { formatDuration } from '@/lib/utils/formatters';
 
 interface RouteCardProps {
-  route: Route;
+  routes: Route[];
 }
 
-export function RouteCard({ route }: RouteCardProps) {
-  return (
-    <div className="route-card">
-      <RouteSummary
-        journeyDuration={formatDuration(route.totalDuration)}
-        stops={route.totalStops ?? 0}
-        transfers={(route.segments?.length ?? 1) - 1}
-      />
+function getSegmentPosition(
+  index: number,
+  total: number
+): 'first' | 'middle' | 'last' {
+  if (index === 0) return 'first';
+  if (index === total - 1) return 'last';
+  return 'middle';
+}
 
-      <div className="route-details">
-        {route.segments.map((segment, index) => (
-          <RouteSegment
-            key={index}
-            segment={segment}
-            isLast={index === route.segments.length - 1}
-            position={
-              index === 0
-                ? 'first'
-                : index === route.segments.length - 1
-                ? 'last'
-                : 'middle'
-            }
+export function RouteCard({ routes }: RouteCardProps) {
+  return (
+    <>
+      {routes.map((route, index) => (
+        <div
+          key={`route-${route.totalDuration}-${index}`}
+          className="route-card"
+        >
+          <RouteSummary
+            journeyDuration={formatDuration(route.totalDuration)}
+            stops={route.totalStops ?? 0}
+            transfers={(route.segments?.length ?? 1) - 1}
           />
-        ))}
-        <FareSummary amount={120} />
-      </div>
-    </div>
+
+          <div className="route-details">
+            {route.segments.map((segment, segmentIndex) => (
+              <RouteSegment
+                key={segmentIndex}
+                segment={segment}
+                isLast={segmentIndex === route.segments.length - 1}
+                position={getSegmentPosition(
+                  segmentIndex,
+                  route.segments.length
+                )}
+              />
+            ))}
+            <FareSummary amount={120} />
+          </div>
+        </div>
+      ))}
+    </>
   );
 }

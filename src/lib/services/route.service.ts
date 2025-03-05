@@ -6,7 +6,7 @@ export async function getBestRoute(
   toStationId: string,
   fromLocation?: Coordinates,
   toLocation?: Coordinates
-): Promise<Route | null> {
+): Promise<Route[] | null> {
   try {
     const response = await fetch('/api/routes/route', {
       method: 'POST',

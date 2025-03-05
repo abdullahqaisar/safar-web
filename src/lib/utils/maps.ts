@@ -11,11 +11,21 @@ type DistanceMatrixResponse = {
   }>;
 };
 
+// Add cache for API responses
+const distanceCache = new Map<string, DistanceMatrixResponse>();
+
 async function fetchDistanceMatrix(
   origin: Coordinates,
   destination: Coordinates,
   mode: 'walking' | 'driving' = 'walking'
 ): Promise<DistanceMatrixResponse | null> {
+  const cacheKey = `${origin.lat},${origin.lng}-${destination.lat},${destination.lng}-${mode}`;
+
+  // Check cache first
+  if (distanceCache.has(cacheKey)) {
+    return distanceCache.get(cacheKey)!;
+  }
+
   const apiKey = env.GOOGLE_MAPS_API_KEY;
 
   const url = new URL(
@@ -36,7 +46,14 @@ async function fetchDistanceMatrix(
       throw new Error('Distance matrix API request failed');
     }
 
-    return await response.json();
+    const data = await response.json();
+
+    // Cache the successful response
+    if (data?.rows?.[0]?.elements?.[0]?.status === 'OK') {
+      distanceCache.set(cacheKey, data);
+    }
+
+    return data;
   } catch (error) {
     console.error('Error fetching distance matrix:', error);
     return null;
