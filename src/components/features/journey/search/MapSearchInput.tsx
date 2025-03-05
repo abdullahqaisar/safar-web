@@ -1,3 +1,5 @@
+'use client';
+
 import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
 import { useEffect } from 'react';
@@ -74,6 +76,7 @@ export default function MapSearchInput({
         type="text"
         className={`w-full text-sm p-4 pl-12 border bg-white rounded-lg transition-colors duration-200
           ${isFocused ? 'border-green-500' : 'border-gray-200'}
+          ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
           focus:outline-none`}
         value={inputValue}
         onChange={(e) => {
@@ -81,7 +84,7 @@ export default function MapSearchInput({
           onValueChange?.(e.target.value);
         }}
         disabled={!ready}
-        placeholder={placeholder}
+        placeholder={!ready ? 'Loading...' : placeholder}
         {...inputProps}
       />
       {status === 'OK' && (

@@ -1,6 +1,9 @@
+'use client';
+
 import { useLoadScript } from '@react-google-maps/api';
 import { useState } from 'react';
 import MapSearchInput from './MapSearchInput';
+import LocationSearchSkeleton from './LocationSearchSkeleton';
 
 interface LocationSearchProps {
   onLocationSelect: (locations: {
@@ -33,7 +36,7 @@ export default function LocationSearch({
     onLocationSelect({ pickup, destination: location });
   };
 
-  if (!isLoaded) return <div>Loading...</div>;
+  if (!isLoaded) return <LocationSearchSkeleton />;
 
   return (
     <div className="w-full">
