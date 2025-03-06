@@ -1,9 +1,9 @@
 import { Route } from '@/types/route';
-import { RoutePreferences, MAX_ROUTES_TO_RETURN } from '../types/preferences';
+import { RoutePreferences } from '../types/preferences';
 
 import { calculateRouteScore } from '../scoring/route-scorer';
 import { calculateComfortScore } from '../scoring/comfort-score';
-import { MAX_TRANSFERS } from '@/constants/config';
+import { MAX_ROUTES_TO_RETURN, MAX_TRANSFERS } from '@/constants/config';
 
 /**
  * Ranks routes using a weighted scoring system similar to real-world mapping applications

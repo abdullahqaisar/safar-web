@@ -15,6 +15,3 @@ export const DEFAULT_PREFERENCES: RoutePreferences = {
   maxWalkingTime: 15,
   preferFewerTransfers: true,
 };
-
-// Maximum number of routes to return to the user
-export const MAX_ROUTES_TO_RETURN = 3;
