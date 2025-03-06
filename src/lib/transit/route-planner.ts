@@ -60,7 +60,7 @@ async function findRoutes(
   const routes: Route[] = [];
   const fromLines = getStationLines(fromStation);
 
-  // Try to find a direct route first (often the best option)
+  // Try to find a direct route first
   const directRoute = await findDirectRoute(
     fromLocation,
     toLocation,
@@ -70,19 +70,18 @@ async function findRoutes(
 
   if (directRoute) {
     routes.push(directRoute);
+  } else {
+    // Only search for transfer routes if no direct route exists
+    const transferRoutes = await findAllTransferRoutes(
+      fromStation,
+      toStation,
+      fromLines,
+      MAX_TRANSFERS,
+      fromLocation,
+      toLocation
+    );
+    routes.push(...transferRoutes);
   }
-
-  // Find routes with transfers
-  const transferRoutes = await findAllTransferRoutes(
-    fromStation,
-    toStation,
-    fromLines,
-    MAX_TRANSFERS,
-    fromLocation,
-    toLocation
-  );
-
-  routes.push(...transferRoutes);
 
   // Calculate accurate timings for each route
   return calculateRouteTimes(routes);
