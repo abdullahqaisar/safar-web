@@ -26,12 +26,14 @@ export default function LocationSearch({
     libraries: ['places'],
   });
 
-  const handlePickupSelect = (location: google.maps.LatLngLiteral) => {
+  const handlePickupSelect = (location: google.maps.LatLngLiteral | null) => {
     setPickup(location);
     onLocationSelect({ pickup: location, destination });
   };
 
-  const handleDestinationSelect = (location: google.maps.LatLngLiteral) => {
+  const handleDestinationSelect = (
+    location: google.maps.LatLngLiteral | null
+  ) => {
     setDestination(location);
     onLocationSelect({ pickup, destination: location });
   };
