@@ -11,10 +11,13 @@ export function calculateComfortScore(
 ): number {
   let score = 100;
 
+  const transfers =
+    route.transfers !== undefined
+      ? route.transfers
+      : route.segments.filter((s) => s.type === 'transit').length - 1;
+
   // Penalize transfers (more if user prefers fewer transfers)
   const transferPenalty = preferences.preferFewerTransfers ? 20 : 15;
-  const transfers =
-    route.segments.filter((s) => s.type === 'transit').length - 1;
   score -= transfers * transferPenalty;
 
   // Penalize walking segments based on user preference
