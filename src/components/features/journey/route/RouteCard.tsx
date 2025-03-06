@@ -22,7 +22,6 @@ export function RouteCard({ routes }: RouteCardProps) {
   return (
     <>
       {routes.map((route, index) => {
-        // Find the index of the first transit segment
         const firstTransitIndex = route.segments.findIndex(
           (segment) => segment.type === 'transit'
         );
