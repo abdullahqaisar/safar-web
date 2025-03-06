@@ -39,8 +39,9 @@ export function calculateRouteScore(
   const maxTransfers = MAX_TRANSFERS;
   const transferScore = 1 - transfers / maxTransfers;
 
-  // 4. Route complexity (fewer segments is simpler)
-  const complexityScore = 1 - route.segments.length / (MAX_TRANSFERS * 2 + 2);
+  // Maximum possible segments: MAX_TRANSFERS transit segments + (MAX_TRANSFERS + 1) walking segments
+  const maxPossibleSegments = MAX_TRANSFERS * 2 + 2;
+  const complexityScore = 1 - route.segments.length / maxPossibleSegments;
 
   // Combine all factors with their weights
   const score =
