@@ -8,6 +8,7 @@ import {
 import { Coordinates, Station } from '@/types/station';
 import { Route, RouteSegment } from '@/types/route';
 import { createWalkingSegment, createTransitSegment } from './segment-utils';
+import { coordinatesEqual } from '../utils/geo';
 
 /**
  * Find a direct route between two stations
@@ -86,13 +87,6 @@ export async function findDirectRoute(
     totalDistance: calculateSegmentDistance(stations),
     totalDuration,
   };
-}
-
-/**
- * Helper to check if coordinates are equal
- */
-function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
-  return a.lat === b.lat && a.lng === b.lng;
 }
 
 /**
