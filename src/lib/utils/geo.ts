@@ -29,3 +29,10 @@ export function calculateDistance(
 export function toRad(value: number): number {
   return (value * Math.PI) / 180;
 }
+
+/**
+ * Helper to check if coordinates are equal
+ */
+export function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
+  return a.lat === b.lat && a.lng === b.lng;
+}

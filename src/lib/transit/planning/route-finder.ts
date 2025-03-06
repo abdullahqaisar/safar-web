@@ -1,5 +1,5 @@
 import { MetroLine } from '@/types/metro';
-import { metroLines } from '../../constants/metro-data';
+import { metroLines } from '@/constants/metro-data';
 import {
   calculateSegmentDistance,
   findInterchanges,
@@ -7,7 +7,11 @@ import {
 } from '@/lib/utils/station';
 import { Coordinates, Station } from '@/types/station';
 import { Route, RouteSegment } from '@/types/route';
-import { createWalkingSegment, createTransitSegment } from './segment-utils';
+import {
+  createWalkingSegment,
+  createTransitSegment,
+} from '../segments/segment-builder';
+import { coordinatesEqual } from '@/lib/utils/geo';
 
 /**
  * Find a direct route between two stations
@@ -86,13 +90,6 @@ export async function findDirectRoute(
     totalDistance: calculateSegmentDistance(stations),
     totalDuration,
   };
-}
-
-/**
- * Helper to check if coordinates are equal
- */
-function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
-  return a.lat === b.lat && a.lng === b.lng;
 }
 
 /**

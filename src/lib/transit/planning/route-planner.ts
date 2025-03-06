@@ -1,19 +1,28 @@
 import { findStation, getStationLines } from '@/lib/utils/station';
 import { Route } from '@/types/route';
 import { Coordinates, Station } from '@/types/station';
-import { findAllTransferRoutes, findDirectRoute } from './transit-routes';
-import { calculateRouteTimes } from './segment-utils';
+import { RoutePreferences, DEFAULT_PREFERENCES } from '../types/preferences';
+import { findDirectRoute, findAllTransferRoutes } from './route-finder';
+import { calculateRouteTimes } from '../segments/segment-calculator';
+import {
+  filterRoutes,
+  rankRoutes,
+  ensureRouteDiversity,
+} from './route-optimizer';
 import { MAX_TRANSFERS } from '@/constants/config';
 
 /**
- * Finds the best route between two stations
+ * Main entry point for route planning - finds the best route between two stations
+ * with optional user preferences
  */
 export async function findBestRoute(
   fromStationId: string,
   toStationId: string,
   fromLocation?: Coordinates,
-  toLocation?: Coordinates
+  toLocation?: Coordinates,
+  preferences?: RoutePreferences
 ): Promise<Route[] | null> {
+  const mergedPreferences = { ...DEFAULT_PREFERENCES, ...preferences };
   const fromStation = findStation(fromStationId);
   const toStation = findStation(toStationId);
 
@@ -32,7 +41,7 @@ export async function findBestRoute(
   const endLocation = toLocation || toStation.coordinates;
 
   // Find all possible routes
-  const routes = await findRoutes(
+  let routes = await findRoutes(
     startLocation,
     endLocation,
     fromStation,
@@ -44,8 +53,11 @@ export async function findBestRoute(
     return null;
   }
 
-  // Return the best route based on duration, transfers, and stops
-  return selectBestRoute(routes);
+  routes = filterRoutes(routes, mergedPreferences);
+
+  const rankedRoutes = rankRoutes(routes, mergedPreferences);
+
+  return ensureRouteDiversity(rankedRoutes);
 }
 
 /**
@@ -60,7 +72,7 @@ async function findRoutes(
   const routes: Route[] = [];
   const fromLines = getStationLines(fromStation);
 
-  // Try to find a direct route first (often the best option)
+  // Try to find a direct route first
   const directRoute = await findDirectRoute(
     fromLocation,
     toLocation,
@@ -70,48 +82,19 @@ async function findRoutes(
 
   if (directRoute) {
     routes.push(directRoute);
+  } else {
+    // Only search for transfer routes if no direct route exists
+    const transferRoutes = await findAllTransferRoutes(
+      fromStation,
+      toStation,
+      fromLines,
+      MAX_TRANSFERS,
+      fromLocation,
+      toLocation
+    );
+    routes.push(...transferRoutes);
   }
-
-  // Find routes with transfers
-  const transferRoutes = await findAllTransferRoutes(
-    fromStation,
-    toStation,
-    fromLines,
-    MAX_TRANSFERS,
-    fromLocation,
-    toLocation
-  );
-
-  routes.push(...transferRoutes);
 
   // Calculate accurate timings for each route
   return calculateRouteTimes(routes);
-}
-
-/**
- * Select the best route based on duration, transfers, and stops
- */
-function selectBestRoute(routes: Route[]): Route[] {
-  return routes
-    .filter((route) => route.totalDuration > 0)
-    .sort((a, b) => {
-      // Sort by duration first, then number of segments (transfers), then stops
-      if (a.totalDuration !== b.totalDuration) {
-        return a.totalDuration - b.totalDuration;
-      }
-
-      // Count transit segments to get number of lines used
-      const aTransitCount = a.segments.filter(
-        (s) => s.type === 'transit'
-      ).length;
-      const bTransitCount = b.segments.filter(
-        (s) => s.type === 'transit'
-      ).length;
-
-      if (aTransitCount !== bTransitCount) {
-        return aTransitCount - bTransitCount;
-      }
-
-      return a.totalStops - b.totalStops;
-    });
 }
