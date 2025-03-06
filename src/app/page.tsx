@@ -1,9 +1,10 @@
 import { Journey } from '@/components/features/journey/Journey';
+import { Hero } from '@/components/ui/Hero';
 import Script from 'next/script';
 
 export default function Home() {
   return (
-    <main className="min-h-screen py-8">
+    <main className="min-h-screen">
       <Script id="structured-data" type="application/ld+json">
         {`
           {
@@ -20,7 +21,10 @@ export default function Home() {
           }
         `}
       </Script>
-      <Journey />
+      <Hero />
+      <div className="py-8">
+        <Journey />
+      </div>
     </main>
   );
 }

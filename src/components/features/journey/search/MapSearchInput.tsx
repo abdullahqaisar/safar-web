@@ -2,11 +2,11 @@
 
 import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useInputState } from '@/hooks/useInputState';
 
 interface MapSearchInputProps {
-  onSelectPlace: (location: google.maps.LatLngLiteral) => void;
+  onSelectPlace: (location: google.maps.LatLngLiteral | null) => void;
   placeholder: string;
   value?: string;
   onValueChange?: (value: string) => void;
@@ -21,6 +21,7 @@ export default function MapSearchInput({
   icon,
 }: MapSearchInputProps) {
   const { isFocused, inputProps } = useInputState();
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const {
     ready,
@@ -37,14 +38,16 @@ export default function MapSearchInput({
     debounce: 300,
   });
 
-  // Add effect to sync external value changes
+  // Add effect to sync external value changes, but only when not in selection process
   useEffect(() => {
-    if (value !== undefined && value !== inputValue) {
+    if (!isSelecting && value !== undefined && value !== inputValue) {
       setValue(value, false);
     }
-  }, [value, setValue, inputValue]);
+  }, [value, setValue, inputValue, isSelecting]);
 
   const handleSelect = async (address: string) => {
+    setIsSelecting(true);
+
     setValue(address, false);
     clearSuggestions();
 
@@ -63,30 +66,53 @@ export default function MapSearchInput({
       }
     } catch (error) {
       console.error('Error: ', error);
+    } finally {
+      setIsSelecting(false);
     }
+  };
+
+  const handleClear = () => {
+    setIsSelecting(true);
+    setValue('');
+    clearSuggestions();
+    onSelectPlace(null);
+    onValueChange?.('');
+    setIsSelecting(false);
   };
 
   return (
     <div className="relative">
       <i
         className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200
-          ${isFocused ? 'text-green-500' : 'text-gray-400'}`}
+      ${isFocused ? 'text-green-900' : 'text-gray-400'}`}
       ></i>
       <input
         type="text"
-        className={`w-full text-sm p-4 pl-12 border bg-white rounded-lg transition-colors duration-200
-          ${isFocused ? 'border-green-500' : 'border-gray-200'}
-          ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
-          focus:outline-none`}
+        className={`w-full text-sm p-4 pl-12 pr-10 border bg-white rounded-lg transition-colors duration-200
+      ${isFocused ? 'border-green-900' : 'border-gray-200'}
+      ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
+      focus:outline-none`}
         value={inputValue}
         onChange={(e) => {
           setValue(e.target.value);
-          onValueChange?.(e.target.value);
+          if (!isSelecting) {
+            onValueChange?.(e.target.value);
+          }
         }}
         disabled={!ready}
         placeholder={!ready ? 'Loading...' : placeholder}
         {...inputProps}
       />
+      {inputValue && (
+        <button
+          type="button"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          onClick={handleClear}
+          aria-label="Clear input"
+        >
+          <i className="fas fa-times"></i>
+        </button>
+      )}
       {status === 'OK' && (
         <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-auto shadow-lg">
           {data.map(({ place_id, description }) => (

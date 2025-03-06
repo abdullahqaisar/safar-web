@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Route } from '@/types/route';
-import { Header } from '../../layouts/Header';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
 import { Station } from '@/types/station';
@@ -57,17 +56,18 @@ export function Journey() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto mt-20 sm:mt-8 rounded-lg">
-      <Header />
-      <div className="px-4 sm:px-0">
-        <SearchForm
-          onSearch={handleSearch}
-          onError={handleError}
-          errorMessage={errorMessage}
-        />
-        {!errorMessage && showResults && routes && (
-          <RouteResults routes={routes} />
-        )}
+    <div>
+      <div className="w-full max-w-[1200px] mx-auto rounded-lg relative -mt-20 z-10">
+        <div className="px-2 sm:px-0">
+          <SearchForm
+            onSearch={handleSearch}
+            onError={handleError}
+            errorMessage={errorMessage}
+          />
+          {!errorMessage && showResults && routes && (
+            <RouteResults routes={routes} />
+          )}
+        </div>
       </div>
     </div>
   );

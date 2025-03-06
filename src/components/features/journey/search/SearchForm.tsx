@@ -36,6 +36,7 @@ export function SearchForm({
     useState<google.maps.LatLngLiteral | null>(null);
   const [fromLocationError, setFromLocationError] = useState<boolean>(false);
   const [toLocationError, setToLocationError] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (fromStation && toStation && fromStation.id === toStation.id) {
@@ -44,41 +45,74 @@ export function SearchForm({
   }, [fromStation, toStation, onError]);
 
   const handleLocationSelect = async (locations: LocationSelectProps) => {
-    if (locations.pickup) {
-      setFromLocation(locations.pickup);
-      const nearest = await getNearestStation(locations.pickup);
-      setFromStation(nearest);
-      setFromLocationError(!nearest);
+    const shouldShowLoading =
+      (locations.pickup !== undefined &&
+        locations.pickup !== null &&
+        toLocation !== null) ||
+      (locations.destination !== undefined &&
+        locations.destination !== null &&
+        fromLocation !== null);
 
-      if (!nearest) {
-        onError(
-          `No metro station found within ${MAX_STATION_DISTANCE}km of your pickup location`
-        );
-      }
+    if (shouldShowLoading) {
+      setIsLoading(true);
     }
 
-    if (locations.destination) {
-      setToLocation(locations.destination);
-      const nearest = await getNearestStation(locations.destination);
-      setToStation(nearest);
-      setToLocationError(!nearest);
+    try {
+      // Reset errors when locations change
+      if (locations.pickup !== undefined) {
+        if (locations.pickup === null) {
+          // Handle clearing of pickup location
+          setFromLocation(null);
+          setFromStation(null);
+          setFromLocationError(false);
+        } else {
+          // Handle setting new pickup location
+          setFromLocation(locations.pickup);
+          const nearest = await getNearestStation(locations.pickup);
+          setFromStation(nearest);
+          setFromLocationError(!nearest);
 
-      if (!nearest) {
-        onError(
-          `No metro station found within ${MAX_STATION_DISTANCE}km of your destination location`
-        );
+          if (!nearest) {
+            onError(
+              `No metro station found within ${MAX_STATION_DISTANCE}km of your pickup location`
+            );
+          }
+        }
       }
-    }
 
-    if (locations.pickup && locations.destination) {
-      const fromNearest = await getNearestStation(locations.pickup);
-      const toNearest = await getNearestStation(locations.destination);
+      if (locations.destination !== undefined) {
+        if (locations.destination === null) {
+          // Handle clearing of destination location
+          setToLocation(null);
+          setToStation(null);
+          setToLocationError(false);
+        } else {
+          // Handle setting new destination location
+          setToLocation(locations.destination);
+          const nearest = await getNearestStation(locations.destination);
+          setToStation(nearest);
+          setToLocationError(!nearest);
 
-      if (!fromNearest && !toNearest) {
-        onError(
-          `Both pickup and destination locations must be within ${MAX_STATION_DISTANCE}km of a metro station`
-        );
+          if (!nearest) {
+            onError(
+              `No metro station found within ${MAX_STATION_DISTANCE}km of your destination location`
+            );
+          }
+        }
       }
+
+      if (locations.pickup && locations.destination) {
+        const fromNearest = await getNearestStation(locations.pickup);
+        const toNearest = await getNearestStation(locations.destination);
+
+        if (!fromNearest && !toNearest) {
+          onError(
+            `Both pickup and destination locations must be within ${MAX_STATION_DISTANCE}km of a metro station`
+          );
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,11 +132,18 @@ export function SearchForm({
     !toStation ||
     (fromStation && toStation && fromStation.id === toStation.id);
 
+  const hasBothLocations = fromLocation !== null && toLocation !== null;
+
   return (
-    <div className="p-6 bg-white rounded-t-xl mb-6">
+    <div className="py-8 px-4 sm:py-14 sm:px-24 bg-[#0d442b] rounded-xl mb-6">
       <LocationSearch onLocationSelect={handleLocationSelect} />
       {errorMessage && <Alert message={errorMessage} />}
-      <SearchButton onClick={handleFindRoute} disabled={isSearchDisabled} />
+      <SearchButton
+        onClick={handleFindRoute}
+        disabled={isSearchDisabled}
+        isLoading={isLoading && hasBothLocations}
+        missingLocations={!fromLocation || !toLocation}
+      />
     </div>
   );
 }
