@@ -86,9 +86,10 @@ export async function findDirectRoute(
 
   return {
     segments,
-    totalStops: stations.length - 1,
+    totalStops: stations.length - 1, // Correct for direct route
     totalDistance: calculateSegmentDistance(stations),
     totalDuration,
+    transfers: 0, // Direct route has 0 transfers
   };
 }
 
@@ -206,11 +207,32 @@ export async function findAllTransferRoutes(
       routeDuration += finalWalk.duration;
     }
 
+    // Calculate total stops for the complete route
+    let totalStops = 0;
+    let totalDistance = 0;
+
+    // Count stops from previous segments
+    for (const segment of current.segments) {
+      if (segment.type === 'transit') {
+        totalStops += segment.stations.length - 1;
+        totalDistance += calculateSegmentDistance(segment.stations);
+      }
+    }
+
+    // Add stops from the current segment
+    totalStops += directSegment.length - 1;
+    totalDistance += calculateSegmentDistance(directSegment);
+
+    // Calculate transfers - it's the number of transit segments minus 1
+    const transfers =
+      newSegments.filter((s) => s.type === 'transit').length - 1;
+
     routes.push({
       segments: newSegments,
-      totalStops: directSegment.length - 1,
-      totalDistance: calculateSegmentDistance(directSegment),
+      totalStops,
+      totalDistance,
       totalDuration: routeDuration,
+      transfers, // Add explicit transfers count
     });
   }
 

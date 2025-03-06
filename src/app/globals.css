@@ -64,8 +64,6 @@ body {
   @apply font-bold text-base;
 }
 
-
-
 .route-duration {
   @apply text-gray-600 text-sm;
 }
@@ -75,11 +73,142 @@ body {
 }
 
 .route-segment {
-  @apply flex relative mb-6;
+  @apply flex relative mb-10;
+  padding-bottom: 16px;
+  position: relative;
+}
+
+/* Add spacing adjustment for walk segments */
+.route-segment.walk-segment {
+  @apply mb-5;
+  /* Reduce the bottom margin for walk segments */
 }
 
 .route-icon {
   @apply w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 z-10;
+  position: relative;
+}
+
+/* New connector and transfer styles based on the HTML example */
+.connector-line {
+  position: absolute;
+  left: 1rem;
+  width: 2px;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.connector-top {
+  top: 2rem;
+  bottom: 0;
+}
+
+.connector-bottom {
+  top: 0;
+  bottom: -2.5rem;
+}
+
+.connector-full {
+  top: 2rem;
+  bottom: -2.5rem;
+}
+
+/* Make walk segment connector lines dashed instead of dotted */
+.connector-line.walk-segment {
+  border-left: 2px dashed;
+  width: 0;
+  /* Reset width since we're using border instead */
+  background-color: transparent !important;
+  /* Override any background color */
+}
+
+/* Ensure connector lines inherit the correct color */
+.connector-line.bg-blue-500 {
+  border-color: #3B82F6;
+}
+
+.connector-line.bg-red-500 {
+  border-color: #EF4444;
+}
+
+.connector-line.bg-green-500 {
+  border-color: #10B981;
+}
+
+.connector-line.bg-yellow-500 {
+  border-color: #F59E0B;
+}
+
+.connector-line.bg-purple-500 {
+  border-color: #8B5CF6;
+}
+
+.connector-line.bg-pink-500 {
+  border-color: #EC4899;
+}
+
+.connector-line.bg-indigo-500 {
+  border-color: #6366F1;
+}
+
+.connector-line.bg-orange-500 {
+  border-color: #F97316;
+}
+
+.connector-line.bg-gray-500 {
+  border-color: #6B7280;
+}
+
+.transfer-dot {
+  position: absolute;
+  left: 1rem;
+  bottom: -0.75rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid white;
+  transform: translate(-50%, 0);
+  z-index: 20;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Improved transfer label styling */
+.transfer-label {
+  position: absolute;
+  left: calc(2rem + 0.5rem);
+  bottom: -1.25rem;
+  transform: translateY(-50%);
+  z-index: 10;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  height: 1rem;
+}
+
+.transfer-label-content {
+  @apply bg-white py-1.5 px-3 text-xs font-medium rounded-md shadow-sm border border-gray-100;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
 }
 
 .route-text {
@@ -98,11 +227,47 @@ body {
   @apply text-xs px-3 py-1 rounded-full text-white font-medium shadow-sm;
 }
 
+/* Updated connector positioning */
 .segment-connector {
-  @apply absolute left-4 w-0.5 bg-gray-300;
+  @apply absolute left-4 w-0.5;
   top: 32px;
-  bottom: -24px;
+  bottom: 0;
   transform: translateX(-50%);
+}
+
+/* Revised transfer indicator and dot positioning */
+.transfer-indicator {
+  @apply absolute;
+  left: 4px;
+  bottom: -12px;
+  /* Adjusted to position at midpoint between segments */
+  z-index: 30;
+  width: 100%;
+}
+
+.transfer-dot {
+  @apply w-4 h-4 rounded-full border-2 border-white;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  /* Ensure dot appears above the connector line */
+}
+
+.transfer-station-name {
+  @apply text-xs font-medium py-1.5 px-3 text-gray-700 bg-white rounded-md shadow-sm;
+  position: absolute;
+  left: 14px;
+  top: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 5;
+  border: 1px solid #f0f0f0;
 }
 
 .fare-info {

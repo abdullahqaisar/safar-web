@@ -15,6 +15,11 @@ export function rankRoutes(
   // Filter out invalid routes
   const validRoutes = routes.filter((route) => route.totalDuration > 0);
 
+  // Early return if no valid routes exist
+  if (validRoutes.length === 0) {
+    return [];
+  }
+
   // Find min/max values for normalization
   const maxDuration = Math.max(...validRoutes.map((r) => r.totalDuration));
   const minDuration = Math.min(...validRoutes.map((r) => r.totalDuration));
@@ -43,6 +48,11 @@ export function filterRoutes(
 ): Route[] {
   // Filter out invalid routes first
   const validRoutes = routes.filter((route) => route.totalDuration > 0);
+
+  // Early return if no valid routes exist
+  if (validRoutes.length === 0) {
+    return [];
+  }
 
   if (validRoutes.length <= MAX_ROUTES_TO_RETURN) {
     return validRoutes;
@@ -96,6 +106,11 @@ export function filterRoutes(
       transfersThreshold
   );
 
+  // Early return if filtering removed all routes
+  if (filteredRoutes.length === 0) {
+    return [fastestRoute]; // Fall back to the fastest route if all got filtered out
+  }
+
   // Calculate preliminary scores to identify the best candidates
   const scoredRoutes = filteredRoutes.map((route) => {
     const score = calculateRouteScore(route, preferences, {
@@ -141,6 +156,7 @@ export function filterRoutes(
  * Ensure the returned routes are meaningfully different from each other
  */
 export function ensureRouteDiversity(routes: Route[]): Route[] {
+  // Early return if no routes exist or just one route
   if (routes.length <= 1) return routes;
 
   const result: Route[] = [routes[0]]; // Always include the top-ranked route

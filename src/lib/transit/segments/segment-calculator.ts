@@ -7,6 +7,7 @@ import {
 
 import { calculateTransitTime, calculateWalkingTime } from '@/lib/utils/maps';
 import { createWalkingSegment } from './segment-builder';
+import { Coordinates } from '@/types/station';
 
 /**
  * Builds a complete route with initial walk, transit segments, and final walk
@@ -54,6 +55,8 @@ export async function calculateRouteTimes(routes: Route[]): Promise<Route[]> {
 async function processRoute(route: Route): Promise<Route | null> {
   let totalDuration = 0;
   const newSegments: RouteSegment[] = [];
+  let totalStops = 0;
+  let totalDistance = 0;
 
   for (let i = 0; i < route.segments.length; i++) {
     const segment = { ...route.segments[i] };
@@ -95,6 +98,20 @@ async function processRoute(route: Route): Promise<Route | null> {
         return null;
       }
 
+      // Count stops in this transit segment (stations - 1)
+      const segmentStops = transitSegment.stations.length - 1;
+      totalStops += segmentStops;
+
+      // Add distance for this segment
+      for (let j = 0; j < transitSegment.stations.length - 1; j++) {
+        const currentStation = transitSegment.stations[j];
+        const nextStation = transitSegment.stations[j + 1];
+        totalDistance += calculateDistance(
+          currentStation.coordinates,
+          nextStation.coordinates
+        );
+      }
+
       transitSegment.duration = transitTime;
       totalDuration += transitTime;
       newSegments.push(transitSegment);
@@ -134,10 +151,36 @@ async function processRoute(route: Route): Promise<Route | null> {
     return null;
   }
 
+  // Calculate the number of transfers (transit segments - 1)
+  const transfers = newSegments.filter((s) => s.type === 'transit').length - 1;
+
   return {
     segments: newSegments,
-    totalStops: route.totalStops,
-    totalDistance: route.totalDistance,
+    totalStops,
+    totalDistance,
     totalDuration,
+    transfers,
   };
+}
+
+/**
+ * Calculate distance between two coordinates in meters
+ */
+function calculateDistance(coord1: Coordinates, coord2: Coordinates): number {
+  // Simple euclidean distance calculation - can be replaced with haversine formula for more accuracy
+  const R = 6371000; // Earth's radius in meters
+  const lat1 = (coord1.lat * Math.PI) / 180;
+  const lat2 = (coord2.lat * Math.PI) / 180;
+  const deltaLat = ((coord2.lat - coord1.lat) * Math.PI) / 180;
+  const deltaLng = ((coord2.lng - coord1.lng) * Math.PI) / 180;
+
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(lat1) *
+      Math.cos(lat2) *
+      Math.sin(deltaLng / 2) *
+      Math.sin(deltaLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
 }

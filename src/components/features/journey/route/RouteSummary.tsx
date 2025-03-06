@@ -11,7 +11,7 @@ export function RouteSummary({
 }: RouteSummaryProps) {
   return (
     <div className="route-header">
-      <div className="route-time">Total Duration: {journeyDuration}</div>
+      <div className="route-time">Duration: {journeyDuration}</div>
       <div className="flex items-center gap-3">
         <div className="route-duration">
           {stops} stops • {transfers} transfer{transfers !== 1 ? 's' : ''}

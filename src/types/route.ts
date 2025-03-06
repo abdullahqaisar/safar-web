@@ -35,4 +35,5 @@ export interface Route {
   totalStops: number;
   totalDistance: number;
   totalDuration: number;
+  transfers?: number;
 }
