@@ -156,10 +156,10 @@ async function processRoute(route: Route): Promise<Route | null> {
 
   return {
     segments: newSegments,
-    totalStops, // Use our accurately calculated stops
+    totalStops,
     totalDistance,
     totalDuration,
-    transfers, // Add explicit transfers count
+    transfers,
   };
 }
 
