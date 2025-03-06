@@ -29,7 +29,7 @@ export function RouteCard({ routes }: RouteCardProps) {
           <RouteSummary
             journeyDuration={formatDuration(route.totalDuration)}
             stops={route.totalStops ?? 0}
-            transfers={(route.segments?.length ?? 1) - 1}
+            transfers={route.transfers ?? 0}
           />
 
           <div className="route-details">
