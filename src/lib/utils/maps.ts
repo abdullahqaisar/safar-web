@@ -1,5 +1,6 @@
 import { Coordinates, Station } from '@/types/station';
 import { env } from '@/env.mjs';
+import { DISTANCE_MATRIX_API_URL } from '@/constants/config';
 
 type DistanceMatrixResponse = {
   rows: Array<{
@@ -28,9 +29,7 @@ async function fetchDistanceMatrix(
 
   const apiKey = env.GOOGLE_MAPS_API_KEY;
 
-  const url = new URL(
-    'https://maps.googleapis.com/maps/api/distancematrix/json'
-  );
+  const url = new URL(DISTANCE_MATRIX_API_URL);
   url.searchParams.append('origins', `${origin.lat},${origin.lng}`);
   url.searchParams.append(
     'destinations',
