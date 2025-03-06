@@ -2,7 +2,7 @@
 language: "en-US"
 early_access: false
 reviews:
-  profile: "expert"
+  profile: "assertive"
   request_changes_workflow: true
   high_level_summary: true
   detailed_feedback: true
