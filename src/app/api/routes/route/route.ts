@@ -1,4 +1,4 @@
-import { findBestRoute } from '@/lib/transit/route-planner';
+import { findBestRoute } from '@/lib/transit/planning/route-planner';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {

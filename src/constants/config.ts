@@ -7,3 +7,5 @@ export const MAX_TRANSFERS = 5;
 
 export const DISTANCE_MATRIX_API_URL =
   'https://maps.googleapis.com/maps/api/distancematrix/json';
+
+export const MAX_ROUTES_TO_RETURN = 3;
