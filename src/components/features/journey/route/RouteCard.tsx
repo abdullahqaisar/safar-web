@@ -21,33 +21,44 @@ function getSegmentPosition(
 export function RouteCard({ routes }: RouteCardProps) {
   return (
     <>
-      {routes.map((route, index) => (
-        <div
-          key={`route-${route.totalDuration}-${index}`}
-          className="route-card"
-        >
-          <RouteSummary
-            journeyDuration={formatDuration(route.totalDuration)}
-            stops={route.totalStops ?? 0}
-            transfers={route.transfers ?? 0}
-          />
+      {routes.map((route, index) => {
+        // Find the index of the first transit segment
+        const firstTransitIndex = route.segments.findIndex(
+          (segment) => segment.type === 'transit'
+        );
 
-          <div className="route-details">
-            {route.segments.map((segment, segmentIndex) => (
-              <RouteSegment
-                key={segmentIndex}
-                segment={segment}
-                isLast={segmentIndex === route.segments.length - 1}
-                position={getSegmentPosition(
-                  segmentIndex,
-                  route.segments.length
-                )}
-              />
-            ))}
-            <FareSummary amount={120} />
+        return (
+          <div
+            key={`route-${route.totalDuration}-${index}`}
+            className="route-card"
+          >
+            <RouteSummary
+              journeyDuration={formatDuration(route.totalDuration)}
+              stops={route.totalStops ?? 0}
+              transfers={route.transfers ?? 0}
+            />
+
+            <div className="route-details">
+              {route.segments.map((segment, segmentIndex) => (
+                <RouteSegment
+                  key={segmentIndex}
+                  segment={segment}
+                  isLast={segmentIndex === route.segments.length - 1}
+                  position={getSegmentPosition(
+                    segmentIndex,
+                    route.segments.length
+                  )}
+                  isFirstTransit={
+                    segment.type === 'transit' &&
+                    segmentIndex === firstTransitIndex
+                  }
+                />
+              ))}
+              <FareSummary amount={120} />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }
