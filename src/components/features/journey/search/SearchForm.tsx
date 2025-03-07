@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { Alert } from '../../../ui/Alert';
 import { Button } from '../../../ui/Button';
 import LocationSearch from './LocationSearch';
@@ -25,7 +25,7 @@ interface SearchFormProps {
   isSearching?: boolean;
 }
 
-export const SearchForm = React.memo(function SearchForm({
+export const SearchForm = memo(function SearchForm({
   onSearch,
   onError,
   errorMessage = '',
@@ -43,8 +43,7 @@ export const SearchForm = React.memo(function SearchForm({
     setToLocation,
   } = useSearchForm();
 
-  // Notify parent component of form errors (if callback is provided)
-  React.useEffect(() => {
+  useEffect(() => {
     if (onError && formError !== null) {
       onError(formError);
     }
@@ -52,7 +51,6 @@ export const SearchForm = React.memo(function SearchForm({
 
   const handleLocationSelect = useCallback(
     ({ pickup, destination }: LocationSelectProps) => {
-      // If we're searching for routes, don't allow location changes
       if (isSearching) return;
 
       if (pickup !== undefined) {
@@ -75,13 +73,10 @@ export const SearchForm = React.memo(function SearchForm({
 
   const hasBothLocations = fromLocation !== null && toLocation !== null;
 
-  // Prioritize form errors, then API errors
   const displayError = formError || errorMessage;
 
-  // Button should be disabled if form is invalid OR we're already searching
   const isSearchDisabled = !isFormValid || isSearching;
 
-  // Show loading state only when we have locations and are either loading station data or searching routes
   const showLoading = (isLoading && hasBothLocations) || isSearching;
 
   return (
