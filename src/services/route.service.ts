@@ -1,14 +1,14 @@
 import { Route } from '@/types/route';
 import { Coordinates } from '@/types/station';
 
-export async function getBestRoute(
+export async function fetchRoutes(
   fromStationId: string,
   toStationId: string,
   fromLocation?: Coordinates,
   toLocation?: Coordinates
 ): Promise<Route[] | null> {
   try {
-    const response = await fetch('/api/routes/route', {
+    const response = await fetch('/api/routes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
