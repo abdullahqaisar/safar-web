@@ -6,7 +6,7 @@ import { Alert } from '../../../ui/Alert';
 import { SearchButton } from '../../../ui/SearchButton';
 import LocationSearch from './LocationSearch';
 import { Station } from '@/types/station';
-import { getNearestStation } from '@/lib/services/station.service';
+import { getNearestStation } from '@/services/station.service';
 
 interface LocationSelectProps {
   pickup: google.maps.LatLngLiteral | null;

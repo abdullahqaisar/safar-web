@@ -5,7 +5,7 @@ import { Route } from '@/types/route';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
 import { Station } from '@/types/station';
-import { getBestRoute } from '@/lib/services/route.service';
+import { getBestRoute } from '@/services/route.service';
 
 export function Journey() {
   const [routes, setRoutes] = useState<Route[] | null>(null);
