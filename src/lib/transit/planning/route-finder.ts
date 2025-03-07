@@ -1,5 +1,5 @@
 import { MetroLine } from '@/types/metro';
-import { metroLines } from '@/constants/metro-data';
+import { metroLines } from '@/lib/constants/metro-data';
 import {
   calculateSegmentDistance,
   findInterchanges,

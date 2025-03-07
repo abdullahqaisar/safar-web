@@ -1,6 +1,6 @@
 import { Coordinates, Station } from '@/types/station';
 import { env } from '@/env.mjs';
-import { DISTANCE_MATRIX_API_URL } from '@/constants/config';
+import { DISTANCE_MATRIX_API_URL } from '@/lib/constants/config';
 
 type DistanceMatrixResponse = {
   rows: Array<{

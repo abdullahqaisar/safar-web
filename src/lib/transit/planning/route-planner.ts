@@ -9,13 +9,13 @@ import {
   rankRoutes,
   ensureRouteDiversity,
 } from './route-optimizer';
-import { MAX_TRANSFERS } from '@/constants/config';
+import { MAX_TRANSFERS } from '@/lib/constants/config';
 
 /**
  * Main entry point for route planning - finds the best route between two stations
  * with optional user preferences
  */
-export async function findBestRoute(
+export async function findRoutes(
   fromStationId: string,
   toStationId: string,
   fromLocation?: Coordinates,
@@ -41,7 +41,7 @@ export async function findBestRoute(
   const endLocation = toLocation || toStation.coordinates;
 
   // Find all possible routes
-  let routes = await findRoutes(
+  let routes = await findRoutesWithTime(
     startLocation,
     endLocation,
     fromStation,
@@ -63,7 +63,7 @@ export async function findBestRoute(
 /**
  * Finds all possible routes including direct and transfer routes
  */
-async function findRoutes(
+async function findRoutesWithTime(
   fromLocation: Coordinates,
   toLocation: Coordinates,
   fromStation: Station,

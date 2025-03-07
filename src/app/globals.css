@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --font-sans: var(--font-geist-sans);
@@ -6,50 +6,118 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base colors */
+  --color-white: #ffffff;
+  --color-black: #171717;
+  --color-dark-black: #0a0a0a;
+  --color-light-white: #f9fafb;
+
+  /* Primary green theme (keeping the SearchForm bg color) */
+  --color-primary: #0d442b;
+  --color-primary-dark: #083620;
+  --color-primary-light: #145c3a;
+
+  /* Accent green (complementary to primary) */
+  --color-accent: #00a745;
+  --color-accent-dark: #008e3a;
+  --color-accent-light: #25c266;
+
+  /* Background shades (keeping the Hero bg) */
+  --color-bg-light: #effcf4; /* Hero bg */
+  --color-bg-light-hover: #e5f7eb;
+  --color-bg-muted: #f3f4f6;
+
+  /* Gray scale - more refined */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Feedback colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Connector colors */
+  --color-blue-500: #3b82f6;
+  --color-red-500: #ef4444;
+  --color-green-500: #10b981;
+  --color-yellow-500: #f59e0b;
+  --color-purple-500: #8b5cf6;
+  --color-pink-500: #ec4899;
+  --color-indigo-500: #6366f1;
+  --color-orange-500: #f97316;
+
+  /* Theme variables */
+  --background: var(--color-white);
+  --foreground: var(--color-gray-900);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-dark-black);
+    --foreground: var(--color-gray-100);
   }
 }
 
 body {
-  background-color: #ffffff;
+  background-color: var(--color-white);
   min-height: 100vh;
   padding: 0;
 }
-
-
 
 .app-container {
   @apply bg-white min-h-screen;
 }
 
-
-
-
 .route-results {
-  padding: 20px;
+  padding: 0;
 }
 
 .results-header {
-  @apply flex justify-between items-center mb-4;
+  @apply flex justify-between items-center;
 }
 
 .filter-btn {
-  @apply px-3 py-2 border rounded-lg text-sm flex items-center gap-2 text-gray-600 hover:bg-gray-50;
+  @apply px-3 py-2 border rounded-lg text-sm flex items-center gap-2 text-gray-600 hover:bg-gray-50 transition-colors;
 }
 
 .route-card {
-  @apply rounded-lg shadow-md border-b-green-900 overflow-hidden mb-4 hover:transform hover:-translate-y-1 transition-transform;
+  @apply rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6;
+}
+
+.route-card.selected-route {
+  @apply border-emerald-200 shadow-md;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
 }
 
 .route-header {
-  @apply p-4 text-white bg-[#0d442b] border-b-gray-800 flex justify-between items-center;
+  @apply p-4 text-white flex justify-between items-center;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .route-time {
@@ -57,134 +125,139 @@ body {
 }
 
 .route-duration {
-  @apply text-white text-sm;
+  @apply text-white text-sm opacity-90;
 }
 
 .route-details {
-  @apply p-4;
+  @apply p-5 bg-white;
+  position: relative;
 }
 
 .route-segment {
-  @apply flex relative mb-10;
-  padding-bottom: 16px;
+  @apply flex relative mb-12;
+  padding-bottom: 0;
   position: relative;
 }
 
-/* Add spacing adjustment for walk segments */
+.route-segment:last-child {
+  @apply mb-6;
+}
+
 .route-segment.walk-segment {
-  @apply mb-5;
-  /* Reduce the bottom margin for walk segments */
+  @apply mb-8;
 }
 
 .route-icon {
-  @apply w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 z-10;
+  @apply w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 z-10 shadow-sm;
   position: relative;
 }
 
-/* New connector and transfer styles based on the HTML example */
-.connector-line {
+.connector-container {
   position: absolute;
-  left: 1rem;
+  left: 1.125rem;
+  top: 2.25rem;
+  bottom: -12px;
   width: 2px;
   transform: translateX(-50%);
   z-index: 0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% + 12px);
 }
 
-.connector-top {
-  top: 2rem;
-  bottom: 0;
+.connector-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  z-index: 0;
 }
 
-.connector-bottom {
+.connector-segment {
   top: 0;
-  bottom: -2.5rem;
+  bottom: 0;
+  width: 2px;
+  height: 100%;
 }
 
-.connector-full {
-  top: 2rem;
-  bottom: -2.5rem;
+.route-card:hover .connector-line {
+  width: 3px;
+  margin-left: -0.5px;
 }
 
-/* Make walk segment connector lines dashed instead of dotted */
 .connector-line.walk-segment {
   border-left: 2px dashed;
-  width: 0;
-  /* Reset width since we're using border instead */
   background-color: transparent !important;
-  /* Override any background color */
+  height: calc(100%);
 }
 
-/* Ensure connector lines inherit the correct color */
+.connector-line[class*='bg-'] {
+  border-color: inherit;
+}
+
+/* Custom colors for bus lines */
 .connector-line.bg-blue-500 {
-  border-color: #3B82F6;
+  border-color: var(--color-blue-500);
+  background-color: var(--color-blue-500);
 }
-
 .connector-line.bg-red-500 {
-  border-color: #EF4444;
+  border-color: var(--color-red-500);
+  background-color: var(--color-red-500);
 }
-
 .connector-line.bg-green-500 {
-  border-color: #10B981;
+  border-color: var(--color-green-500);
+  background-color: var(--color-green-500);
 }
-
 .connector-line.bg-yellow-500 {
-  border-color: #F59E0B;
+  border-color: var(--color-yellow-500);
+  background-color: var(--color-yellow-500);
 }
-
 .connector-line.bg-purple-500 {
-  border-color: #8B5CF6;
+  border-color: var(--color-purple-500);
+  background-color: var(--color-purple-500);
 }
-
 .connector-line.bg-pink-500 {
-  border-color: #EC4899;
+  border-color: var(--color-pink-500);
+  background-color: var(--color-pink-500);
 }
-
 .connector-line.bg-indigo-500 {
-  border-color: #6366F1;
+  border-color: var(--color-indigo-500);
+  background-color: var(--color-indigo-500);
 }
-
 .connector-line.bg-orange-500 {
-  border-color: #F97316;
+  border-color: var(--color-orange-500);
+  background-color: var(--color-orange-500);
 }
-
 .connector-line.bg-gray-500 {
-  border-color: #6B7280;
-}
-
-.transfer-dot {
-  position: absolute;
-  left: 1rem;
-  bottom: -0.75rem;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 9999px;
-  border: 2px solid white;
-  transform: translate(-50%, 0);
-  z-index: 20;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-gray-500);
+  background-color: var(--color-gray-500);
 }
 
 /* Improved transfer label styling */
 .transfer-label {
   position: absolute;
-  left: calc(2rem + 0.5rem);
-  bottom: -1.25rem;
+  left: calc(1.125rem + 1rem);
+  top: 50%;
   transform: translateY(-50%);
   z-index: 10;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  height: 1rem;
+  height: 1.5rem;
 }
 
 .transfer-label-content {
-  @apply bg-white py-1.5 px-3 text-xs font-medium rounded-md shadow-sm border border-gray-100;
+  @apply py-1.5 px-3 text-xs font-medium rounded-full shadow-sm transition-all;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-100);
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
 
-
+.route-card:hover .transfer-label-content {
+  @apply shadow;
+  transform: translateY(-2px);
+}
 
 @keyframes pulse {
   0% {
@@ -204,52 +277,26 @@ body {
 }
 
 .route-text {
-  @apply ml-4 flex-grow flex justify-between items-start;
+  @apply ml-5 flex-grow flex justify-between items-start;
 }
 
 .route-text h4 {
-  @apply font-medium text-base mb-1;
+  @apply font-semibold text-base mb-1 text-gray-800;
 }
 
 .route-text p {
   @apply text-sm text-gray-600;
 }
 
-.bus-badge {
+.bus-badge,
+.badge {
   @apply text-xs px-3 py-1 rounded-full text-white font-medium shadow-sm;
 }
 
-/* Updated connector positioning */
-.segment-connector {
-  @apply absolute left-4 w-0.5;
-  top: 32px;
-  bottom: 0;
-  transform: translateX(-50%);
-}
-
-/* Revised transfer indicator and dot positioning */
-.transfer-indicator {
-  @apply absolute;
-  left: 4px;
-  bottom: -12px;
-  /* Adjusted to position at midpoint between segments */
-  z-index: 30;
-  width: 100%;
-}
-
-.transfer-dot {
-  @apply w-4 h-4 rounded-full border-2 border-white;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 40;
-  /* Ensure dot appears above the connector line */
-}
-
 .transfer-station-name {
-  @apply text-xs font-medium py-1.5 px-3 text-gray-700 bg-white rounded-md shadow-sm;
+  @apply text-xs font-medium py-1.5 px-3 rounded-md shadow-sm;
+  color: var(--color-gray-700);
+  background-color: var(--color-white);
   position: absolute;
   left: 14px;
   top: 0;
@@ -259,13 +306,90 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   z-index: 5;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--color-gray-50);
 }
 
 .fare-info {
-  @apply mt-6 bg-green-50 p-3 rounded-lg flex items-center gap-3 text-green-600;
+  @apply mt-8 p-4 rounded-lg flex items-center gap-3 transition-all;
+  background: linear-gradient(to right, #f0f9f4, #e6f7ee);
+  border-left: 3px solid var(--color-primary);
 }
 
 .fare-amount {
-  @apply font-bold;
+  @apply font-bold text-base;
+}
+
+/* Updated styles for the search dropdown */
+.places-dropdown {
+  @apply fixed z-[1000] w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-xl;
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.places-dropdown-item {
+  @apply p-3 text-sm border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.places-dropdown-item:hover {
+  @apply bg-green-50;
+}
+
+.places-dropdown-item i {
+  @apply text-green-700 flex-shrink-0;
+}
+
+/* Sort buttons */
+.sort-btn {
+  @apply px-3 py-1.5 text-sm rounded-full border border-gray-200 flex items-center transition-colors;
+  color: var(--color-gray-600);
+}
+
+.sort-btn:hover {
+  @apply bg-gray-50;
+}
+
+.sort-btn.active {
+  @apply bg-emerald-50 border-emerald-100 text-emerald-700;
+}
+
+/* View stops button */
+.view-stops-btn {
+  @apply text-xs text-emerald-600 font-medium mt-2 flex items-center hover:underline;
+  transition: color 0.2s ease;
+}
+
+/* Enhanced route results container */
+.route-results {
+  @apply transition-all duration-500;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .results-header {
+    @apply flex-col items-start;
+  }
+
+  .results-header > div {
+    @apply w-full;
+  }
+
+  .results-header > div:last-child {
+    @apply mt-3;
+  }
 }

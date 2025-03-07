@@ -1,7 +1,7 @@
 import { MetroLine } from '@/types/metro';
 import { calculateDistance } from './geo';
-import { MAX_STATION_DISTANCE } from '@/constants/config';
-import { metroLines } from '@/constants/metro-data';
+import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
+import { metroLines } from '@/lib/constants/metro-data';
 import { Coordinates, Station } from '@/types/station';
 
 export const getAllStations = (): Station[] =>

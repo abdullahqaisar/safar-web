@@ -3,7 +3,7 @@
  */
 
 // Main route planning functionality
-export { findBestRoute } from './planning/route-planner';
+export { findRoutes } from './planning/route-planner';
 
 // Re-export useful utilities
 export { calculateComfortScore } from './scoring/comfort-score';

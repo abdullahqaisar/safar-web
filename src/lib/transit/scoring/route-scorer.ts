@@ -1,7 +1,7 @@
 import { Route } from '@/types/route';
 import { RoutePreferences } from '../types/preferences';
 import { calculateComfortScore } from './comfort-score';
-import { MAX_TRANSFERS } from '@/constants/config';
+import { MAX_TRANSFERS } from '@/lib/constants/config';
 
 /**
  * Calculate a comprehensive score for a route based on multiple factors

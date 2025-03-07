@@ -1,4 +1,4 @@
-import { findBestRoute } from '@/lib/transit/planning/route-planner';
+import { findRoutes } from '@/lib/transit/planning/route-planner';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const route = await findBestRoute(
+    const route = await findRoutes(
       fromStationId,
       toStationId,
       fromLocation,
