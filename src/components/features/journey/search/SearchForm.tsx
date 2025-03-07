@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { Alert } from '../../../ui/Alert';
 import { Button } from '../../../ui/Button';
 import LocationSearch from './LocationSearch';
@@ -20,14 +20,16 @@ interface SearchFormProps {
     fromLocation: Coordinates,
     toLocation: Coordinates
   ) => void;
-  onError: (message: string) => void;
-  errorMessage: string;
+  onError?: (message: string) => void; // Making onError optional
+  errorMessage?: string;
+  isSearching?: boolean;
 }
 
 export const SearchForm = React.memo(function SearchForm({
   onSearch,
   onError,
-  errorMessage,
+  errorMessage = '',
+  isSearching = false,
 }: SearchFormProps) {
   const {
     fromLocation,
@@ -35,46 +37,52 @@ export const SearchForm = React.memo(function SearchForm({
     fromStation,
     toStation,
     isLoading,
-    fromLocationError,
-    toLocationError,
-    isSameStation,
+    error: formError,
+    isFormValid,
     setFromLocation,
     setToLocation,
-  } = useSearchForm(onError);
+  } = useSearchForm();
+
+  // Notify parent component of form errors (if callback is provided)
+  React.useEffect(() => {
+    if (onError && formError !== null) {
+      onError(formError);
+    }
+  }, [formError, onError]);
 
   const handleLocationSelect = useCallback(
-    (locations: LocationSelectProps) => {
-      if (locations.pickup !== undefined) {
-        setFromLocation(locations.pickup);
+    ({ pickup, destination }: LocationSelectProps) => {
+      // If we're searching for routes, don't allow location changes
+      if (isSearching) return;
+
+      if (pickup !== undefined) {
+        setFromLocation(pickup);
       }
 
-      if (locations.destination !== undefined) {
-        setToLocation(locations.destination);
+      if (destination !== undefined) {
+        setToLocation(destination);
       }
     },
-    [setFromLocation, setToLocation]
+    [setFromLocation, setToLocation, isSearching]
   );
 
   const handleFindRoute = useCallback(() => {
     if (!fromStation || !toStation || !fromLocation || !toLocation) {
-      onError('Please select both pickup and destination locations');
       return;
     }
-
     onSearch(fromStation, toStation, fromLocation, toLocation);
-  }, [fromStation, toStation, fromLocation, toLocation, onError, onSearch]);
-
-  const isSearchDisabled = useMemo(
-    () =>
-      fromLocationError ||
-      toLocationError ||
-      !fromStation ||
-      !toStation ||
-      isSameStation,
-    [fromLocationError, toLocationError, fromStation, toStation, isSameStation]
-  );
+  }, [fromStation, toStation, fromLocation, toLocation, onSearch]);
 
   const hasBothLocations = fromLocation !== null && toLocation !== null;
+
+  // Prioritize form errors, then API errors
+  const displayError = formError || errorMessage;
+
+  // Button should be disabled if form is invalid OR we're already searching
+  const isSearchDisabled = !isFormValid || isSearching;
+
+  // Show loading state only when we have locations and are either loading station data or searching routes
+  const showLoading = (isLoading && hasBothLocations) || isSearching;
 
   return (
     <form
@@ -87,19 +95,19 @@ export const SearchForm = React.memo(function SearchForm({
     >
       <LocationSearch onLocationSelect={handleLocationSelect} />
 
-      {errorMessage && <Alert message={errorMessage} aria-live="assertive" />}
+      {displayError && <Alert message={displayError} aria-live="polite" />}
 
       <Button
         onClick={handleFindRoute}
         disabled={isSearchDisabled}
-        isLoading={isLoading && hasBothLocations}
+        isLoading={showLoading}
         type="submit"
         variant="primary"
         size="lg"
         fullWidth
         className="mt-6"
         leftIcon={
-          !fromLocation || !toLocation ? (
+          !hasBothLocations ? (
             <i className="fas fa-map-marker-alt" />
           ) : (
             <i className="fas fa-search" />
@@ -108,7 +116,9 @@ export const SearchForm = React.memo(function SearchForm({
       >
         {isLoading && hasBothLocations
           ? 'Finding Stations Nearby...'
-          : !fromLocation || !toLocation
+          : isSearching
+          ? 'Searching Routes...'
+          : !hasBothLocations
           ? 'Select Both Locations'
           : 'Find Routes'}
       </Button>

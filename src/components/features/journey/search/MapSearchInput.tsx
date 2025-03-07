@@ -2,7 +2,7 @@
 
 import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useInputState } from '@/hooks/useInputState';
 import { Coordinates } from '@/types/station';
 
@@ -35,71 +35,90 @@ export default function MapSearchInput({
       componentRestrictions: { country: 'PK' },
       bounds: MAPS_CONFIG.islamabadRawalpindiBounds,
     },
-    defaultValue: value,
+    defaultValue: value || '',
     debounce: 300,
   });
 
-  // Add effect to sync external value changes, but only when not in selection process
+  // Sync external value changes only when not selecting
   useEffect(() => {
     if (!isSelecting && value !== undefined && value !== inputValue) {
       setValue(value, false);
     }
   }, [value, setValue, inputValue, isSelecting]);
 
-  const handleSelect = async (address: string) => {
-    setIsSelecting(true);
+  const handleSelect = useCallback(
+    async (address: string) => {
+      setIsSelecting(true);
 
-    setValue(address, false);
-    clearSuggestions();
+      // First update the visual input value immediately
+      setValue(address, false);
+      clearSuggestions();
 
-    try {
-      const geocoder = new google.maps.Geocoder();
-      const result = await geocoder.geocode({
-        address,
-        bounds: MAPS_CONFIG.islamabadRawalpindiBounds,
-        region: 'PK',
-      });
+      try {
+        const geocoder = new google.maps.Geocoder();
+        const result = await geocoder.geocode({
+          address,
+          bounds: MAPS_CONFIG.islamabadRawalpindiBounds,
+          region: 'PK',
+        });
 
-      if (result.results[0]) {
-        const location = result.results[0].geometry.location;
-        onSelectPlace({ lat: location.lat(), lng: location.lng() });
-        onValueChange?.(address);
+        if (result.results[0]) {
+          const location = result.results[0].geometry.location;
+          const coordinates = { lat: location.lat(), lng: location.lng() };
+
+          // Update parent values synchronously
+          onValueChange?.(address);
+          onSelectPlace(coordinates);
+        } else {
+          console.error('No results found for this address');
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+      } finally {
+        setIsSelecting(false);
       }
-    } catch (error) {
-      console.error('Error: ', error);
-    } finally {
-      setIsSelecting(false);
-    }
-  };
+    },
+    [setValue, clearSuggestions, onSelectPlace, onValueChange]
+  );
 
-  const handleClear = () => {
-    setIsSelecting(true);
+  const handleClear = useCallback(() => {
+    // First update UI state
     setValue('');
     clearSuggestions();
+
+    // Then immediately notify parent - don't wait for debounce
     onSelectPlace(null);
     onValueChange?.('');
-    setIsSelecting(false);
-  };
+  }, [setValue, clearSuggestions, onSelectPlace, onValueChange]);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setValue(newValue);
+      onValueChange?.(newValue);
+
+      // If input is cleared, immediately reset location
+      if (newValue === '') {
+        onSelectPlace(null);
+      }
+    },
+    [setValue, onSelectPlace, onValueChange]
+  );
 
   return (
     <div className="relative">
       <i
         className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200
-      ${isFocused ? 'text-green-900' : 'text-gray-400'}`}
+        ${isFocused ? 'text-green-900' : 'text-gray-400'}`}
       ></i>
       <input
         type="text"
         className={`w-full text-sm p-4 pl-12 pr-10 border bg-white rounded-lg transition-colors duration-200
-      ${isFocused ? 'border-green-900' : 'border-gray-200'}
-      ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
-      focus:outline-none`}
+          ${isFocused ? 'border-green-900' : 'border-gray-200'}
+          ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
+          focus:outline-none`}
         value={inputValue}
-        onChange={(e) => {
-          setValue(e.target.value);
-          if (!isSelecting) {
-            onValueChange?.(e.target.value);
-          }
-        }}
+        onChange={handleInputChange}
         disabled={!ready}
         placeholder={!ready ? 'Loading...' : placeholder}
         {...inputProps}

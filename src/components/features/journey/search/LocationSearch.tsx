@@ -1,7 +1,7 @@
 'use client';
 
 import { useLoadScript } from '@react-google-maps/api';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import MapSearchInput from './MapSearchInput';
 import LocationSearchSkeleton from './LocationSearchSkeleton';
 import { Coordinates } from '@/types/station';
@@ -26,15 +26,23 @@ export default function LocationSearch({
     libraries: ['places'],
   });
 
-  const handlePickupSelect = (location: Coordinates | null) => {
-    setPickup(location);
-    onLocationSelect({ pickup: location, destination });
-  };
+  const handlePickupSelect = useCallback(
+    (location: Coordinates | null) => {
+      setPickup(location);
+      // Immediately forward the location change
+      onLocationSelect({ pickup: location, destination });
+    },
+    [destination, onLocationSelect]
+  );
 
-  const handleDestinationSelect = (location: Coordinates | null) => {
-    setDestination(location);
-    onLocationSelect({ pickup, destination: location });
-  };
+  const handleDestinationSelect = useCallback(
+    (location: Coordinates | null) => {
+      setDestination(location);
+      // Immediately forward the location change
+      onLocationSelect({ pickup, destination: location });
+    },
+    [pickup, onLocationSelect]
+  );
 
   if (!isLoaded) return <LocationSearchSkeleton />;
 

@@ -1,59 +1,54 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Route } from '@/types/route';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
 import { Coordinates, Station } from '@/types/station';
-import { getBestRoute } from '@/services/route.service';
+import { fetchRoutes } from '@/services/route.service';
 
 export function Journey() {
   const [routes, setRoutes] = useState<Route[] | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = async (
-    fromStation: Station,
-    toStation: Station,
-    fromLocation: Coordinates,
-    toLocation: Coordinates
-  ) => {
-    if (fromStation.id === toStation.id) {
-      setErrorMessage('Start and destination stations are the same');
-      setShowResults(false);
+  const handleSearch = useCallback(
+    async (
+      fromStation: Station,
+      toStation: Station,
+      fromLocation: Coordinates,
+      toLocation: Coordinates
+    ) => {
+      // Reset state before search
+      setError('');
       setRoutes(null);
-      return;
-    }
+      setShowResults(false);
+      setIsSearching(true);
 
-    try {
-      const bestRoute = await getBestRoute(
-        fromStation.id,
-        toStation.id,
-        fromLocation,
-        toLocation
-      );
-      if (bestRoute) {
-        setRoutes(bestRoute);
-        setShowResults(true);
-        setErrorMessage('');
-      } else {
-        setErrorMessage('No route found between these stations');
-        setShowResults(false);
-        setRoutes(null);
+      try {
+        const bestRoutes = await fetchRoutes(
+          fromStation.id,
+          toStation.id,
+          fromLocation,
+          toLocation
+        );
+
+        if (bestRoutes?.length) {
+          setRoutes(bestRoutes);
+          setShowResults(true);
+        } else {
+          setError('No routes found between these stations');
+        }
+      } catch (err) {
+        console.error('Route search error:', err);
+        setError('Error finding route. Please try again later.');
+      } finally {
+        setIsSearching(false);
       }
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Error finding route');
-      setShowResults(false);
-      setRoutes(null);
-    }
-  };
-
-  const handleError = (message: string) => {
-    setErrorMessage(message);
-    setShowResults(false);
-    setRoutes(null);
-  };
+    },
+    []
+  );
 
   return (
     <div>
@@ -61,10 +56,10 @@ export function Journey() {
         <div className="px-2 sm:mx-6">
           <SearchForm
             onSearch={handleSearch}
-            onError={handleError}
-            errorMessage={errorMessage}
+            errorMessage={error}
+            isSearching={isSearching}
           />
-          {!errorMessage && showResults && routes && (
+          {!error && !isSearching && showResults && routes && (
             <RouteResults routes={routes} />
           )}
         </div>
