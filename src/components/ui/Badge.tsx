@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface BadgeProps {
   text: string;
   color: string;
