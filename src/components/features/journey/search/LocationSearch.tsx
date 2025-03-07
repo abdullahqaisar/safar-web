@@ -4,20 +4,20 @@ import { useLoadScript } from '@react-google-maps/api';
 import { useState } from 'react';
 import MapSearchInput from './MapSearchInput';
 import LocationSearchSkeleton from './LocationSearchSkeleton';
+import { Coordinates } from '@/types/station';
 
 interface LocationSearchProps {
   onLocationSelect: (locations: {
-    pickup: google.maps.LatLngLiteral | null;
-    destination: google.maps.LatLngLiteral | null;
+    pickup: Coordinates | null;
+    destination: Coordinates | null;
   }) => void;
 }
 
 export default function LocationSearch({
   onLocationSelect,
 }: LocationSearchProps) {
-  const [pickup, setPickup] = useState<google.maps.LatLngLiteral | null>(null);
-  const [destination, setDestination] =
-    useState<google.maps.LatLngLiteral | null>(null);
+  const [pickup, setPickup] = useState<Coordinates | null>(null);
+  const [destination, setDestination] = useState<Coordinates | null>(null);
   const [pickupValue, setPickupValue] = useState('');
   const [destinationValue, setDestinationValue] = useState('');
 
@@ -26,14 +26,12 @@ export default function LocationSearch({
     libraries: ['places'],
   });
 
-  const handlePickupSelect = (location: google.maps.LatLngLiteral | null) => {
+  const handlePickupSelect = (location: Coordinates | null) => {
     setPickup(location);
     onLocationSelect({ pickup: location, destination });
   };
 
-  const handleDestinationSelect = (
-    location: google.maps.LatLngLiteral | null
-  ) => {
+  const handleDestinationSelect = (location: Coordinates | null) => {
     setDestination(location);
     onLocationSelect({ pickup, destination: location });
   };

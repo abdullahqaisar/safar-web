@@ -4,9 +4,10 @@ import { MAPS_CONFIG } from '@/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
 import { useEffect, useState } from 'react';
 import { useInputState } from '@/hooks/useInputState';
+import { Coordinates } from '@/types/station';
 
 interface MapSearchInputProps {
-  onSelectPlace: (location: google.maps.LatLngLiteral | null) => void;
+  onSelectPlace: (location: Coordinates | null) => void;
   placeholder: string;
   value?: string;
   onValueChange?: (value: string) => void;

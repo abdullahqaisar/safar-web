@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Route } from '@/types/route';
 import { RouteResults } from './route/RouteResults';
 import { SearchForm } from './search/SearchForm';
-import { Station } from '@/types/station';
+import { Coordinates, Station } from '@/types/station';
 import { getBestRoute } from '@/services/route.service';
 
 export function Journey() {
@@ -15,8 +15,8 @@ export function Journey() {
   const handleSearch = async (
     fromStation: Station,
     toStation: Station,
-    fromLocation: google.maps.LatLngLiteral,
-    toLocation: google.maps.LatLngLiteral
+    fromLocation: Coordinates,
+    toLocation: Coordinates
   ) => {
     if (fromStation.id === toStation.id) {
       setErrorMessage('Start and destination stations are the same');
