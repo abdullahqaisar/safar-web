@@ -1,6 +1,6 @@
 import { fetchNearestStation } from '@/services/station.service';
 import { Coordinates } from '@/types/station';
-import { useQuery } from '@tanstack/react-query/build/modern';
+import { useQuery } from '@tanstack/react-query';
 
 export function useNearestStation(location: Coordinates | null) {
   return useQuery({
