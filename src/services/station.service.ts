@@ -1,6 +1,6 @@
 import { Coordinates, Station } from '@/types/station';
 
-export async function getNearestStation(
+export async function fetchNearestStation(
   location: Coordinates
 ): Promise<Station | null> {
   try {

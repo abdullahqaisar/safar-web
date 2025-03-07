@@ -1,8 +1,9 @@
 interface SearchButtonProps {
   onClick: () => void;
-  disabled: boolean;
+  disabled: boolean | null | undefined;
   isLoading?: boolean;
   missingLocations?: boolean; // New prop to indicate missing locations
+  type: 'submit' | 'reset' | 'button' | undefined;
 }
 
 export function SearchButton({
@@ -10,6 +11,7 @@ export function SearchButton({
   disabled,
   isLoading = false,
   missingLocations = false,
+  type,
 }: SearchButtonProps) {
   return (
     <button
@@ -21,6 +23,7 @@ export function SearchButton({
       onClick={onClick}
       disabled={disabled || isLoading}
       aria-disabled={disabled || isLoading}
+      type={type}
     >
       {isLoading ? (
         <>
