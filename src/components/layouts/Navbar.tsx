@@ -6,7 +6,12 @@ export function Navbar() {
       <div className="container mx-auto flex justify-between items-center">
         <div className="text-white text-2xl font-bold">
           <Link href="/" className="flex items-center">
-            <span className="mr-2">سفر</span> Safar
+            <span
+              className="italic text-[#feffff] font-bold text-4xl"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            >
+              Safar
+            </span>
           </Link>
         </div>
         <div className="space-x-4">
