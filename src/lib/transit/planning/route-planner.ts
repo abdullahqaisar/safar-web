@@ -9,7 +9,7 @@ import {
   rankRoutes,
   ensureRouteDiversity,
 } from './route-optimizer';
-import { MAX_TRANSFERS } from '@/constants/config';
+import { MAX_TRANSFERS } from '@/lib/constants/config';
 
 /**
  * Main entry point for route planning - finds the best route between two stations

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from './useDebounce';
 import { useNearestStation } from './useNearestStation';
 import { Coordinates } from '@/types/station';
-import { MAX_STATION_DISTANCE } from '@/constants/config';
+import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 
 export function useSearchForm() {
   // Core state

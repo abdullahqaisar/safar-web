@@ -1,10 +1,11 @@
 'use client';
 
-import { MAPS_CONFIG } from '@/constants/maps';
+import { MAPS_CONFIG } from '@/lib/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
 import { useEffect, useState, useCallback } from 'react';
 import { useInputState } from '@/hooks/useInputState';
 import { Coordinates } from '@/types/station';
+import { transitions } from '@/lib/constants/theme';
 
 interface MapSearchInputProps {
   onSelectPlace: (location: Coordinates | null) => void;
@@ -108,13 +109,21 @@ export default function MapSearchInput({
   return (
     <div className="relative">
       <i
-        className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200
-        ${isFocused ? 'text-green-900' : 'text-gray-400'}`}
+        className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 ${
+          transitions.DEFAULT
+        }
+        ${isFocused ? 'text-primary-900' : 'text-gray-400'}`}
       ></i>
       <input
         type="text"
-        className={`w-full text-sm p-4 pl-12 pr-10 border bg-white rounded-lg transition-colors duration-200
-          ${isFocused ? 'border-green-900' : 'border-gray-200'}
+        className={`w-full text-sm p-4 pl-12 pr-10 border bg-white rounded-lg shadow-sm ${
+          transitions.DEFAULT
+        }
+          ${
+            isFocused
+              ? 'border-primary-600 shadow-input-focus'
+              : 'border-gray-200'
+          }
           ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
           focus:outline-none`}
         value={inputValue}
