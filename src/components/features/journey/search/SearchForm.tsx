@@ -8,6 +8,9 @@ import { Coordinates, Station } from '@/types/station';
 import { useSearchForm } from '@/hooks/useSearchForm';
 import React from 'react';
 
+import { cn } from '@/lib/utils/formatters';
+import { Card } from '@/components/ui/Card';
+
 interface LocationSelectProps {
   pickup: Coordinates | null;
   destination: Coordinates | null;
@@ -80,43 +83,63 @@ export const SearchForm = memo(function SearchForm({
   const showLoading = (isLoading && hasBothLocations) || isSearching;
 
   return (
-    <form
-      className="py-8 px-4 sm:py-14 sm:px-24 bg-[#0d442b] rounded-xl mb-6"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!isSearchDisabled) handleFindRoute();
-      }}
-      aria-label="Journey search form"
+    <Card
+      className={cn(
+        'search-form-container relative',
+        'bg-gradient-to-br from-[#0d4e2e] via-[#0d442b] to-[#073622]',
+        "before:content-[''] before:absolute before:inset-0 before:bg-[url('/patterns/subtle-dots.png')] before:opacity-5",
+        'border-none shadow-xl mb-8'
+      )}
+      allowOverflow={true}
     >
-      <LocationSearch onLocationSelect={handleLocationSelect} />
-
-      {displayError && <Alert message={displayError} aria-live="polite" />}
-
-      <Button
-        onClick={handleFindRoute}
-        disabled={isSearchDisabled}
-        isLoading={showLoading}
-        type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        className="mt-6"
-        leftIcon={
-          !hasBothLocations ? (
-            <i className="fas fa-map-marker-alt" />
-          ) : (
-            <i className="fas fa-search" />
-          )
-        }
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
+      <form
+        className="py-8 px-5 sm:py-12 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!isSearchDisabled) handleFindRoute();
+        }}
+        aria-label="Journey search form"
       >
-        {isLoading && hasBothLocations
-          ? 'Finding Stations Nearby...'
-          : isSearching
-          ? 'Searching Routes...'
-          : !hasBothLocations
-          ? 'Select Both Locations'
-          : 'Find Routes'}
-      </Button>
-    </form>
+        <h2 className="text-white text-xl font-semibold mb-6 flex items-center">
+          <i className="fas fa-route mr-3 text-emerald-400"></i>
+          Find Your Route
+        </h2>
+
+        <LocationSearch onLocationSelect={handleLocationSelect} />
+
+        {displayError && (
+          <div className="mt-4">
+            <Alert message={displayError} aria-live="polite" />
+          </div>
+        )}
+
+        <Button
+          onClick={handleFindRoute}
+          disabled={isSearchDisabled}
+          isLoading={showLoading}
+          type="submit"
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="mt-8 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/30 transition-all duration-300"
+          leftIcon={
+            !hasBothLocations ? (
+              <i className="fas fa-map-marker-alt" />
+            ) : (
+              <i className="fas fa-search" />
+            )
+          }
+        >
+          {isLoading && hasBothLocations
+            ? 'Finding Stations Nearby...'
+            : isSearching
+            ? 'Searching Routes...'
+            : !hasBothLocations
+            ? 'Select Both Locations'
+            : 'Find Routes'}
+        </Button>
+      </form>
+    </Card>
   );
 });

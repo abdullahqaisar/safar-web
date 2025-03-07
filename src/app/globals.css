@@ -10,21 +10,42 @@
   --color-white: #ffffff;
   --color-black: #171717;
   --color-dark-black: #0a0a0a;
-  --color-light-white: #ededed;
+  --color-light-white: #f9fafb;
 
-  /* Primary colors (green) */
+  /* Primary green theme (keeping the SearchForm bg color) */
   --color-primary: #0d442b;
-  --color-primary-50: #effcf4;
-  --color-primary-100: #e5f7eb;
+  --color-primary-dark: #083620;
+  --color-primary-light: #145c3a;
 
-  /* Gray shades */
-  --color-gray-50: #f0f0f0;
-  --color-gray-100: #f9f9f9;
-  --color-gray-600: #6b7280;
-  --color-gray-700: #4b5563;
+  /* Accent green (complementary to primary) */
+  --color-accent: #00a745;
+  --color-accent-dark: #008e3a;
+  --color-accent-light: #25c266;
+
+  /* Background shades (keeping the Hero bg) */
+  --color-bg-light: #effcf4; /* Hero bg */
+  --color-bg-light-hover: #e5f7eb;
+  --color-bg-muted: #f3f4f6;
+
+  /* Gray scale - more refined */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
   --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
 
-  /* Utility colors for connectors */
+  /* Feedback colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Connector colors */
   --color-blue-500: #3b82f6;
   --color-red-500: #ef4444;
   --color-green-500: #10b981;
@@ -33,17 +54,16 @@
   --color-pink-500: #ec4899;
   --color-indigo-500: #6366f1;
   --color-orange-500: #f97316;
-  --color-gray-500: #6b7280;
 
   /* Theme variables */
   --background: var(--color-white);
-  --foreground: var(--color-black);
+  --foreground: var(--color-gray-900);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: var(--color-dark-black);
-    --foreground: var(--color-light-white);
+    --foreground: var(--color-gray-100);
   }
 }
 
@@ -299,4 +319,27 @@ body {
 
 .fare-amount {
   @apply font-bold;
+}
+
+/* Updated styles for the search dropdown */
+.places-dropdown {
+  @apply fixed z-[1000] w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-xl;
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.places-dropdown-item {
+  @apply p-3 text-sm border-b border-gray-100 last:border-b-0 cursor-pointer transition-colors;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.places-dropdown-item:hover {
+  @apply bg-green-50;
+}
+
+.places-dropdown-item i {
+  @apply text-green-700 flex-shrink-0;
 }

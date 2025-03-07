@@ -2,7 +2,7 @@
 
 import { MAPS_CONFIG } from '@lib/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useInputState } from '@/hooks/useInputState';
 import { Coordinates } from '@/types/station';
 
@@ -23,6 +23,8 @@ export default function MapSearchInput({
 }: MapSearchInputProps) {
   const { isFocused, inputProps } = useInputState();
   const [isSelecting, setIsSelecting] = useState(false);
+  const dropdownRef = useRef<HTMLUListElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     ready,
@@ -45,6 +47,25 @@ export default function MapSearchInput({
       setValue(value, false);
     }
   }, [value, setValue, inputValue, isSelecting]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        inputRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        clearSuggestions();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [clearSuggestions]);
 
   const handleSelect = useCallback(
     async (address: string) => {
@@ -112,6 +133,7 @@ export default function MapSearchInput({
         ${isFocused ? 'text-green-900' : 'text-gray-400'}`}
       ></i>
       <input
+        ref={inputRef}
         type="text"
         className={`w-full text-sm p-4 pl-12 pr-10 border bg-white rounded-lg transition-colors duration-200
           ${isFocused ? 'border-green-900' : 'border-gray-200'}
@@ -134,14 +156,23 @@ export default function MapSearchInput({
         </button>
       )}
       {status === 'OK' && (
-        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-auto shadow-lg">
+        <ul
+          ref={dropdownRef}
+          className="absolute z-[1000] w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-auto shadow-xl"
+          style={{
+            top: '100%',
+            left: 0,
+            right: 0,
+          }}
+        >
           {data.map(({ place_id, description }) => (
             <li
               key={place_id}
-              className="p-3 cursor-pointer hover:bg-gray-100"
+              className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex gap-2 items-center text-sm"
               onClick={() => handleSelect(description)}
             >
-              {description}
+              <i className="fas fa-map-marker-alt text-green-700 text-sm"></i>
+              <span className="line-clamp-2">{description}</span>
             </li>
           ))}
         </ul>
