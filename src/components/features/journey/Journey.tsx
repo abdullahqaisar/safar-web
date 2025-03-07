@@ -58,7 +58,7 @@ export function Journey() {
   return (
     <div>
       <div className="w-full max-w-[1200px] mx-auto rounded-lg relative -mt-20 z-10">
-        <div className="px-2 sm:px-0">
+        <div className="px-2 sm:mx-6">
           <SearchForm
             onSearch={handleSearch}
             onError={handleError}
