@@ -4,14 +4,14 @@ import React from 'react';
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   variant?: 'default' | 'elevated' | 'bordered';
-  allowOverflow?: boolean; // New prop to control overflow
+  allowOverflow?: boolean;
 }
 
 export function Card({
   children,
   className,
   variant = 'default',
-  allowOverflow = false, // Default to false to maintain backward compatibility
+  allowOverflow = false,
   ...props
 }: CardProps) {
   const variants = {
@@ -24,7 +24,7 @@ export function Card({
     <div
       className={cn(
         'rounded-xl',
-        !allowOverflow && 'overflow-hidden', // Only apply overflow-hidden if allowOverflow is false
+        !allowOverflow && 'overflow-hidden',
         variants[variant],
         className
       )}

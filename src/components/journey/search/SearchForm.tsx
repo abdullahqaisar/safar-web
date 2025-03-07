@@ -1,8 +1,8 @@
 'use client';
 
 import { memo, useCallback, useEffect } from 'react';
-import { Alert } from '../../../ui/Alert';
-import { Button } from '../../../ui/Button';
+import { Alert } from '../../ui/Alert';
+import { Button } from '../../ui/Button';
 import LocationSearch from './LocationSearch';
 import { Coordinates, Station } from '@/types/station';
 import { useSearchForm } from '@/hooks/useSearchForm';

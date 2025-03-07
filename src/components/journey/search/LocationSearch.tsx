@@ -5,7 +5,6 @@ import { useState, useCallback } from 'react';
 import MapSearchInput from './MapSearchInput';
 import LocationSearchSkeleton from './LocationSearchSkeleton';
 import { Coordinates } from '@/types/station';
-import { Card } from '@/components/ui/Card';
 
 interface LocationSearchProps {
   onLocationSelect: (locations: {
@@ -49,25 +48,23 @@ export default function LocationSearch({
 
   return (
     <div className="w-full">
-      <Card allowOverflow className="p-4">
-        <div className="space-y-4">
-          <MapSearchInput
-            onSelectPlace={handlePickupSelect}
-            placeholder="From (e.g., Khanna Pul)"
-            value={pickupValue}
-            onValueChange={setPickupValue}
-            icon="far fa-circle"
-          />
+      <div className="space-y-4">
+        <MapSearchInput
+          onSelectPlace={handlePickupSelect}
+          placeholder="From (e.g., Khanna Pul)"
+          value={pickupValue}
+          onValueChange={setPickupValue}
+          icon="far fa-circle"
+        />
 
-          <MapSearchInput
-            onSelectPlace={handleDestinationSelect}
-            placeholder="To (e.g., Air University)"
-            value={destinationValue}
-            onValueChange={setDestinationValue}
-            icon="fas fa-map-marker-alt"
-          />
-        </div>
-      </Card>
+        <MapSearchInput
+          onSelectPlace={handleDestinationSelect}
+          placeholder="To (e.g., Air University)"
+          value={destinationValue}
+          onValueChange={setDestinationValue}
+          icon="fas fa-map-marker-alt"
+        />
+      </div>
     </div>
   );
 }
