@@ -37,7 +37,6 @@ export function RouteSegment({
 
   const connectorColorClass = details.lineColorClass;
   const segmentTypeClass = segment.type === 'walk' ? 'walk-segment' : '';
-  const isTransit = segment.type === 'transit';
 
   return (
     <div className={`route-segment ${segmentTypeClass}`}>
