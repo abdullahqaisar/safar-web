@@ -87,7 +87,6 @@ export const SearchForm = memo(function SearchForm({
       className={cn(
         'search-form-container relative',
         'bg-gradient-to-br from-[#0d4e2e] via-[#0d442b] to-[#073622]',
-        "before:content-[''] before:absolute before:inset-0 before:bg-[url('/patterns/subtle-dots.png')] before:opacity-5",
         'border-none shadow-xl mb-8'
       )}
       allowOverflow={true}

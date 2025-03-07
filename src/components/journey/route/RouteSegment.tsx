@@ -37,10 +37,11 @@ export function RouteSegment({
 
   const connectorColorClass = details.lineColorClass;
   const segmentTypeClass = segment.type === 'walk' ? 'walk-segment' : '';
+  const isTransit = segment.type === 'transit';
 
   return (
     <div className={`route-segment ${segmentTypeClass}`}>
-      <div className={`route-icon ${details.iconBgColor}`}>
+      <div className={`route-icon ${details.iconBgColor} shadow-md`}>
         <i className={details.icon}></i>
       </div>
       <div className="route-text flex justify-between items-start w-full">
@@ -58,30 +59,32 @@ export function RouteSegment({
       </div>
 
       {!isLast && (
-        <>
+        <div className="connector-container">
           {details.transferStation ? (
             <>
               <div
-                className={`connector-line connector-top ${connectorColorClass} ${segmentTypeClass}`}
+                className={`connector-line connector-segment ${connectorColorClass} ${segmentTypeClass}`}
               ></div>
 
               <div className="transfer-label">
-                <div className="transfer-label-content ">
-                  <i className={`fas fa-sign-out-alt text-xs mr-1 `}></i>
-                  <span>Exit at {details.transferStation} Station</span>
+                <div className="transfer-label-content">
+                  <i className="fas fa-exchange-alt text-xs mr-1 text-emerald-600"></i>
+                  <span className="text-gray-700">
+                    Change at {details.transferStation}
+                  </span>
                 </div>
               </div>
 
               <div
-                className={`connector-line connector-bottom ${connectorColorClass}`}
+                className={`connector-line connector-segment ${connectorColorClass}`}
               ></div>
             </>
           ) : (
             <div
-              className={`connector-line connector-full ${connectorColorClass} ${segmentTypeClass}`}
+              className={`connector-line connector-segment ${connectorColorClass} ${segmentTypeClass}`}
             ></div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

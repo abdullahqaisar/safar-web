@@ -18,7 +18,13 @@ export const useRoutes = ({
   enabled = false,
 }: UseRoutesParams = {}) => {
   return useQuery({
-    queryKey: ['routes', fromStation?.id, toStation?.id],
+    queryKey: [
+      'routes',
+      fromStation?.id,
+      toStation?.id,
+      fromLocation,
+      toLocation,
+    ],
     queryFn: async () => {
       if (!fromStation || !toStation || !fromLocation || !toLocation) {
         throw new Error('Missing required parameters');
@@ -39,8 +45,8 @@ export const useRoutes = ({
     },
     enabled:
       enabled && !!fromStation && !!toStation && !!fromLocation && !!toLocation,
-    retry: false,
-    // Add a staleTime to prevent frequent refetching
+    retry: 1,
     staleTime: 300000, // 5 minute
+    refetchOnWindowFocus: false,
   });
 };

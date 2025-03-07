@@ -1,54 +1,39 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Route } from '@/types/route';
-import { RouteResults } from './route/RouteResults';
+import { useState } from 'react';
 import { SearchForm } from './search/SearchForm';
 import { Coordinates, Station } from '@/types/station';
-import { fetchRoutes } from '@/services/route.service';
+import { RouteResults } from './route/RouteResults';
+import { useRoutes } from '@/hooks/useRoutes';
+import { RouteLoadingSkeleton } from './route/RouteLoadingSkeleton';
 
 export function Journey() {
-  const [routes, setRoutes] = useState<Route[] | null>(null);
-  const [showResults, setShowResults] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [isSearching, setIsSearching] = useState(false);
+  const [searchParams, setSearchParams] = useState<{
+    fromStation?: Station;
+    toStation?: Station;
+    fromLocation?: Coordinates;
+    toLocation?: Coordinates;
+    enabled: boolean;
+  }>({
+    enabled: false,
+  });
 
-  const handleSearch = useCallback(
-    async (
-      fromStation: Station,
-      toStation: Station,
-      fromLocation: Coordinates,
-      toLocation: Coordinates
-    ) => {
-      // Reset state before search
-      setError('');
-      setRoutes(null);
-      setShowResults(false);
-      setIsSearching(true);
+  const { data: routes, isLoading, error, isError } = useRoutes(searchParams);
 
-      try {
-        const bestRoutes = await fetchRoutes(
-          fromStation.id,
-          toStation.id,
-          fromLocation,
-          toLocation
-        );
-
-        if (bestRoutes?.length) {
-          setRoutes(bestRoutes);
-          setShowResults(true);
-        } else {
-          setError('No routes found between these stations');
-        }
-      } catch (err) {
-        console.error('Route search error:', err);
-        setError('Error finding route. Please try again later.');
-      } finally {
-        setIsSearching(false);
-      }
-    },
-    []
-  );
+  const handleSearch = (
+    fromStation: Station,
+    toStation: Station,
+    fromLocation: Coordinates,
+    toLocation: Coordinates
+  ) => {
+    setSearchParams({
+      fromStation,
+      toStation,
+      fromLocation,
+      toLocation,
+      enabled: true,
+    });
+  };
 
   return (
     <div>
@@ -56,10 +41,15 @@ export function Journey() {
         <div className="px-2 sm:mx-6">
           <SearchForm
             onSearch={handleSearch}
-            errorMessage={error}
-            isSearching={isSearching}
+            errorMessage={isError ? error?.message : ''}
+            isSearching={isLoading}
           />
-          {!error && !isSearching && showResults && routes && (
+
+          {isError && searchParams.enabled && <div className="mt-4"></div>}
+
+          {isLoading && searchParams.enabled && <RouteLoadingSkeleton />}
+
+          {!isLoading && !isError && routes && routes.length > 0 && (
             <RouteResults routes={routes} />
           )}
         </div>
