@@ -257,7 +257,7 @@ const stationData: Record<string, Station> = {
 export const metroLines: MetroLine[] = [
   {
     id: 'red',
-    name: 'Red Line (Secretariat to Saddar)',
+    name: 'Red Line',
     stations: [
       stationData.secretariat,
       stationData.paradeGround,
@@ -287,7 +287,7 @@ export const metroLines: MetroLine[] = [
   },
   {
     id: 'orange',
-    name: 'Orange Line (FAF to Airport)',
+    name: 'Orange Line',
     stations: [
       stationData.faizAhmadFaiz,
       stationData.g10,
@@ -302,7 +302,7 @@ export const metroLines: MetroLine[] = [
   },
   {
     id: 'green',
-    name: 'Green Line (PIMS to Bharakau)',
+    name: 'Green Line',
     stations: [
       stationData.pims,
       stationData.g7g8,
@@ -317,7 +317,7 @@ export const metroLines: MetroLine[] = [
   },
   {
     id: 'blue',
-    name: 'Blue Line (PIMS to Koral Chowk)',
+    name: 'Blue Line',
     stations: [
       stationData.pims,
       stationData.g7g8,

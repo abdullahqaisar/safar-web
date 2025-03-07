@@ -1,6 +1,5 @@
 import { Route } from '@/types/route';
 
-import { FareSummary } from './FareSummary';
 import { RouteSegment } from './RouteSegment';
 import { RouteSummary } from './RouteSummary';
 import { formatDuration } from '@/lib/utils/formatters';
@@ -29,7 +28,7 @@ export function RouteCard({ routes }: RouteCardProps) {
         return (
           <div
             key={`route-${route.totalDuration}-${index}`}
-            className="route-card"
+            className="route-card group"
           >
             <RouteSummary
               journeyDuration={formatDuration(route.totalDuration)}
@@ -53,7 +52,6 @@ export function RouteCard({ routes }: RouteCardProps) {
                   }
                 />
               ))}
-              <FareSummary amount={120} />
             </div>
           </div>
         );

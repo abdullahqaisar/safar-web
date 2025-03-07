@@ -13,8 +13,8 @@
     "@googlemaps/google-maps-services-js": "github:googlemaps/google-maps-services-js",
     "@react-google-maps/api": "^2.20.6",
     "@tanstack/react-query": "^5.67.1",
+    "@tanstack/react-query-devtools": "^5.67.1",
     "@turf/turf": "^7.2.0",
-    "@types/turf": "^3.5.32",
     "googlemaps": "^1.12.0",
     "graphology": "^0.26.0",
     "graphology-shortest-path": "^2.1.0",
@@ -27,13 +27,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.0.11",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.0",
-    "tailwindcss": "^4",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.11",
     "typescript": "^5"
   }
 }
