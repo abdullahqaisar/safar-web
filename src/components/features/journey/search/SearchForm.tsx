@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { Alert } from '../../../ui/Alert';
-import { SearchButton } from '../../../ui/SearchButton';
+import { Button } from '../../../ui/Button';
 import LocationSearch from './LocationSearch';
 import { Coordinates, Station } from '@/types/station';
 import { useSearchForm } from '@/hooks/useSearchForm';
@@ -89,13 +89,29 @@ export const SearchForm = React.memo(function SearchForm({
 
       {errorMessage && <Alert message={errorMessage} aria-live="assertive" />}
 
-      <SearchButton
+      <Button
         onClick={handleFindRoute}
         disabled={isSearchDisabled}
         isLoading={isLoading && hasBothLocations}
-        missingLocations={!fromLocation || !toLocation}
         type="submit"
-      />
+        variant="primary"
+        size="lg"
+        fullWidth
+        className="mt-6"
+        leftIcon={
+          !fromLocation || !toLocation ? (
+            <i className="fas fa-map-marker-alt" />
+          ) : (
+            <i className="fas fa-search" />
+          )
+        }
+      >
+        {isLoading && hasBothLocations
+          ? 'Finding Stations Nearby...'
+          : !fromLocation || !toLocation
+          ? 'Select Both Locations'
+          : 'Find Routes'}
+      </Button>
     </form>
   );
 });
