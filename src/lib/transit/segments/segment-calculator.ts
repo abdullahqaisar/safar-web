@@ -8,6 +8,7 @@ import {
 import { calculateTransitTime, calculateWalkingTime } from '@/lib/utils/maps';
 import { createWalkingSegment } from './segment-builder';
 import { Coordinates } from '@/types/station';
+import { STOP_WAIT_TIME_SECONDS } from '@/lib/constants/config';
 
 /**
  * Builds a complete route with initial walk, transit segments, and final walk
@@ -112,8 +113,11 @@ async function processRoute(route: Route): Promise<Route | null> {
         );
       }
 
-      transitSegment.duration = transitTime;
-      totalDuration += transitTime;
+      const stopWaitTime = segmentStops * STOP_WAIT_TIME_SECONDS;
+
+      transitSegment.duration = transitTime + stopWaitTime;
+      transitSegment.stopWaitTime = stopWaitTime;
+      totalDuration += transitSegment.duration;
       newSegments.push(transitSegment);
 
       // Handle transfers - add walking segments between transit segments if needed

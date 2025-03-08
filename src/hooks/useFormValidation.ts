@@ -5,8 +5,8 @@ import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 export type ValidationType = {
   fromLocation: Coordinates | null;
   toLocation: Coordinates | null;
-  fromStation: Station | null;
-  toStation: Station | null;
+  fromStation: Station | null | undefined;
+  toStation: Station | null | undefined;
   isLoading: boolean;
   isLoadingFromStation: boolean;
   isLoadingToStation: boolean;

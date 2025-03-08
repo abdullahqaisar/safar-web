@@ -1,7 +1,10 @@
 import { findStation, getStationLines } from '@/lib/utils/station';
 import { Route } from '@/types/route';
 import { Coordinates, Station } from '@/types/station';
-import { RoutePreferences, DEFAULT_PREFERENCES } from '../types/preferences';
+import {
+  RoutePreferences,
+  DEFAULT_PREFERENCES,
+} from '../../../types/preferences';
 import { findDirectRoute, findAllTransferRoutes } from './route-finder';
 import { calculateRouteTimes } from '../segments/segment-calculator';
 import {

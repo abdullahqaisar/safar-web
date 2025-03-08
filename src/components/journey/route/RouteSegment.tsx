@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/common/Badge';
 import {
   RouteSegment as RouteSegmentType,
   TransitSegment,

@@ -1,5 +1,5 @@
 import { Route } from '@/types/route';
-import { RoutePreferences } from '../types/preferences';
+import { RoutePreferences } from '../../../types/preferences';
 
 /**
  * Calculates a comfort score for a route based on transfers and walking distances

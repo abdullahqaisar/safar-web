@@ -1,5 +1,5 @@
 import { Route } from '@/types/route';
-import { RoutePreferences } from '../types/preferences';
+import { RoutePreferences } from '../../../types/preferences';
 import { calculateComfortScore } from './comfort-score';
 import { MAX_TRANSFERS } from '@/lib/constants/config';
 

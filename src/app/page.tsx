@@ -1,5 +1,5 @@
 import { Journey } from '@/components/journey/Journey';
-import { Hero } from '@/components/ui/Hero';
+import { Hero } from '@/components/common/Hero';
 import Script from 'next/script';
 
 export default function Home() {

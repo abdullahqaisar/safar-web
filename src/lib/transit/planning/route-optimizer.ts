@@ -1,5 +1,5 @@
 import { Route } from '@/types/route';
-import { RoutePreferences } from '../types/preferences';
+import { RoutePreferences } from '../../../types/preferences';
 
 import { calculateRouteScore } from '../scoring/route-scorer';
 import { calculateComfortScore } from '../scoring/comfort-score';
