@@ -136,14 +136,6 @@ class StationService {
       }));
   }
 
-  getConnectedStations(stationId: string): Station[] {
-    this.ensureInitialized();
-    const networkStation = stationNetwork.getStation(stationId);
-    if (!networkStation) return [];
-
-    return networkStation.connections.map((conn) => conn.to);
-  }
-
   private ensureInitialized(): void {
     if (!this.initialized) {
       this.initialize();

@@ -1,4 +1,4 @@
-import { Coordinates, Station } from '@/types/station';
+import { Coordinates, NearestStationResult, Station } from '@/types/station';
 
 export interface NearestStationOptions {
   maxDistance?: number;
@@ -36,7 +36,7 @@ export async function fetchNearestStation(
       );
     }
 
-    const result = await response.json();
+    const result: NearestStationResult = await response.json();
 
     // TODO: handle this in component
     return result.station;
