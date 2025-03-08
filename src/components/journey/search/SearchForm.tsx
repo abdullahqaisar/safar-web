@@ -34,21 +34,21 @@ export const SearchForm = memo(function SearchForm() {
       className={cn(
         'search-form-container relative',
         'bg-gradient-to-br from-[#0d4e2e] via-[#0d442b] to-[#073622]',
-        'border-none shadow-xl mb-8'
+        'border-none shadow-xl mb-4 sm:mb-6 mt-1 sm:mt-2'
       )}
       allowOverflow={true}
     >
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
       <form
-        className="py-8 px-5 sm:py-12 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10"
+        className="py-5 sm:py-6 md:py-10 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10"
         onSubmit={(e) => {
           e.preventDefault();
           if (!isSearchDisabled) handleSearch();
         }}
         aria-label="Journey search form"
       >
-        <h2 className="text-white text-xl font-semibold mb-6 flex items-center">
-          <i className="fas fa-route mr-3 text-emerald-400"></i>
+        <h2 className="text-white text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center">
+          <i className="fas fa-route mr-2 sm:mr-3 text-emerald-400"></i>
           Find Your Route
         </h2>
 
@@ -62,7 +62,7 @@ export const SearchForm = memo(function SearchForm() {
           variant="primary"
           size="lg"
           fullWidth
-          className="mt-8 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/30 transition-all duration-300"
+          className="mt-6 sm:mt-8 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/30 transition-all duration-300"
           leftIcon={
             !hasBothLocations ? (
               <i className="fas fa-map-marker-alt" />
