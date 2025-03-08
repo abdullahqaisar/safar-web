@@ -2,7 +2,7 @@ import { MetroLine } from '@/types/metro';
 import { calculateDistance } from './geo';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 import { Coordinates, Station } from '@/types/station';
-import { stationService } from '@/lib/transit/station/station-service';
+import { stationService } from '@/services/server/station.service';
 
 export function initializeStationService(): void {
   stationService.initialize();

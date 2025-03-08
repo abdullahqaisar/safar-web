@@ -38,43 +38,10 @@ export async function fetchNearestStation(
 
     const result = await response.json();
 
+    // TODO: handle this in component
     return result.station;
   } catch (error) {
     console.error('Error fetching nearest station:', error);
     throw error;
-  }
-}
-
-export async function fetchNearbyStations(
-  location: Coordinates | null,
-  count: number = 3,
-  options: NearestStationOptions = {}
-): Promise<Station[]> {
-  if (!location) {
-    return [];
-  }
-
-  try {
-    const response = await fetch('/api/stations/nearby', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ location, count, options }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        `Failed to fetch nearby stations: ${
-          errorData.message || response.statusText
-        }`
-      );
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching nearby stations:', error);
-    return [];
   }
 }

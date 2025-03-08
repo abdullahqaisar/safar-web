@@ -2,7 +2,7 @@ import { MetroLine } from '@/types/metro';
 import { Coordinates, Station } from '@/types/station';
 import { SpatialIndex } from '@/lib/utils/spatial-index';
 import { metroLines } from '@/lib/constants/metro-data';
-import { stationNetwork } from './station-network';
+import { stationNetwork } from '../../lib/transit/station/station-network';
 
 class StationService {
   private stations: Map<string, Station> = new Map();

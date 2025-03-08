@@ -1,4 +1,4 @@
-import { fetchRoutes } from '@/services/route.service';
+import { fetchRoutes } from '@/services/client/route.service';
 import { Coordinates, Station } from '@/types/station';
 import { useQuery } from '@tanstack/react-query';
 
