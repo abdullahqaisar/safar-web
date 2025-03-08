@@ -1,86 +1,27 @@
 'use client';
 
-import { memo, useCallback, useEffect } from 'react';
-import { Alert } from '../../ui/Alert';
-import { Button } from '../../ui/Button';
+import { memo } from 'react';
+import { Alert } from '@/components/ui/Alert';
+import { Button } from '@/components/ui/Button';
 import LocationSearch from './LocationSearch';
-import { Coordinates, Station } from '@/types/station';
-import { useSearchForm } from '@/hooks/useSearchForm';
-import React from 'react';
-
 import { cn } from '@/lib/utils/formatters';
 import { Card } from '@/components/ui/Card';
+import { useJourney } from '@/context/JourneyContext';
 
-interface LocationSelectProps {
-  pickup: Coordinates | null;
-  destination: Coordinates | null;
-}
-
-interface SearchFormProps {
-  onSearch: (
-    from: Station,
-    to: Station,
-    fromLocation: Coordinates,
-    toLocation: Coordinates
-  ) => void;
-  onError?: (message: string) => void; // Making onError optional
-  errorMessage?: string;
-  isSearching?: boolean;
-}
-
-export const SearchForm = memo(function SearchForm({
-  onSearch,
-  onError,
-  errorMessage = '',
-  isSearching = false,
-}: SearchFormProps) {
+export const SearchForm = memo(function SearchForm() {
   const {
     fromLocation,
     toLocation,
-    fromStation,
-    toStation,
-    isLoading,
-    error: formError,
     isFormValid,
-    setFromLocation,
-    setToLocation,
-  } = useSearchForm();
+    isLoading,
+    errorMessage,
+    isRoutesLoading,
+    handleSearch,
+  } = useJourney();
 
-  useEffect(() => {
-    if (onError && formError !== null) {
-      onError(formError);
-    }
-  }, [formError, onError]);
-
-  const handleLocationSelect = useCallback(
-    ({ pickup, destination }: LocationSelectProps) => {
-      if (isSearching) return;
-
-      if (pickup !== undefined) {
-        setFromLocation(pickup);
-      }
-
-      if (destination !== undefined) {
-        setToLocation(destination);
-      }
-    },
-    [setFromLocation, setToLocation, isSearching]
-  );
-
-  const handleFindRoute = useCallback(() => {
-    if (!fromStation || !toStation || !fromLocation || !toLocation) {
-      return;
-    }
-    onSearch(fromStation, toStation, fromLocation, toLocation);
-  }, [fromStation, toStation, fromLocation, toLocation, onSearch]);
-
-  const hasBothLocations = fromLocation !== null && toLocation !== null;
-
-  const displayError = formError || errorMessage;
-
-  const isSearchDisabled = !isFormValid || isSearching;
-
-  const showLoading = (isLoading && hasBothLocations) || isSearching;
+  const hasBothLocations = Boolean(fromLocation && toLocation);
+  const isSearchDisabled = !isFormValid || isRoutesLoading;
+  const showLoading = (isLoading && hasBothLocations) || isRoutesLoading;
 
   return (
     <Card
@@ -96,7 +37,7 @@ export const SearchForm = memo(function SearchForm({
         className="py-8 px-5 sm:py-12 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!isSearchDisabled) handleFindRoute();
+          if (!isSearchDisabled) handleSearch();
         }}
         aria-label="Journey search form"
       >
@@ -105,16 +46,16 @@ export const SearchForm = memo(function SearchForm({
           Find Your Route
         </h2>
 
-        <LocationSearch onLocationSelect={handleLocationSelect} />
+        <LocationSearch />
 
-        {displayError && (
+        {errorMessage && (
           <div className="mt-4">
-            <Alert message={displayError} aria-live="polite" />
+            <Alert message={errorMessage} aria-live="polite" />
           </div>
         )}
 
         <Button
-          onClick={handleFindRoute}
+          onClick={handleSearch}
           disabled={isSearchDisabled}
           isLoading={showLoading}
           type="submit"
@@ -132,7 +73,7 @@ export const SearchForm = memo(function SearchForm({
         >
           {isLoading && hasBothLocations
             ? 'Finding Stations Nearby...'
-            : isSearching
+            : isRoutesLoading
             ? 'Searching Routes...'
             : !hasBothLocations
             ? 'Select Both Locations'
