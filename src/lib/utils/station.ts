@@ -1,4 +1,3 @@
-import { MetroLine } from '@/types/metro';
 import { calculateDistance } from './geo';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 import { Coordinates, NearestStationResult, Station } from '@/types/station';
