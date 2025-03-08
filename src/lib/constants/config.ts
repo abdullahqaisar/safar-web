@@ -1,4 +1,4 @@
-export const MAX_STATION_DISTANCE = 4; // kilometers
+export const MAX_STATION_DISTANCE = 8; // kilometers
 
 /**
  * Maximum number of transfers to allow in routes
@@ -11,3 +11,5 @@ export const DISTANCE_MATRIX_API_URL =
 export const MAX_ROUTES_TO_RETURN = 3;
 
 export const STOP_WAIT_TIME_SECONDS = 30;
+
+export const WALKING_SPEED_MPS = 1.4;

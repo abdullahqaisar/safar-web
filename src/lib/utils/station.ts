@@ -1,81 +1,74 @@
 import { MetroLine } from '@/types/metro';
 import { calculateDistance } from './geo';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
-import { metroLines } from '@/lib/constants/metro-data';
 import { Coordinates, Station } from '@/types/station';
+import { stationService } from '@/lib/transit/station/station-service';
 
-export const getAllStations = (): Station[] =>
-  Array.from(new Set(metroLines.flatMap((line) => line.stations)));
-
-export const findStation = (id: string | Station): Station | undefined =>
-  getAllStations().find((s) => s.id === id);
-
-/**
- * Get all metro lines that contain a specific station
- */
-export function getStationLines(station: Station): MetroLine[] {
-  return metroLines.filter((line) =>
-    line.stations.some((s) => s.id === station.id)
-  );
+export function initializeStationService(): void {
+  stationService.initialize();
 }
 
-/**
- * Gets an array of stations between two stations on the same line
- */
-export function getStationsBetween(
-  line: MetroLine,
-  fromStation: Station,
-  toStation: Station
-): Station[] {
-  const fromIndex = line.stations.findIndex((s) => s.id === fromStation.id);
-  const toIndex = line.stations.findIndex((s) => s.id === toStation.id);
+export const getAllStations =
+  stationService.getAllStations.bind(stationService);
+export const findStationById =
+  stationService.findStationById.bind(stationService);
+export const getStationLines =
+  stationService.getLinesForStation.bind(stationService);
+export const getStationsBetween =
+  stationService.getStationsBetween.bind(stationService);
 
-  if (fromIndex === -1 || toIndex === -1) return [];
-
-  return fromIndex < toIndex
-    ? line.stations.slice(fromIndex, toIndex + 1)
-    : line.stations.slice(toIndex, fromIndex + 1).reverse();
+export function findStation(id: string | Station): Station | undefined {
+  if (typeof id !== 'string') return id;
+  return stationService.findStationById(id);
 }
 
-/**
- * Finds all stations where two lines intersect
- */
-export function findInterchanges(
-  line1: MetroLine,
-  line2: MetroLine
-): Station[] {
-  return line1.stations.filter((station) =>
-    line2.stations.some((s) => s.id === station.id)
-  );
-}
-
-/**
- * Calculates the total distance of a segment
- */
 export function calculateSegmentDistance(stations: Station[]): number {
+  if (stations.length < 2) return 0;
+
   return stations.reduce((acc, station, i) => {
     if (i === 0) return 0;
     return acc + calculateDistance(stations[i - 1], station);
   }, 0);
 }
 
-/**
- * Finds the nearest station to a given location
- */
-export function findNearestStation(location: Coordinates): Station | null {
-  const stations = getAllStations();
-  if (stations.length === 0) return null;
-
-  let nearest = stations[0];
-  let shortestDistance = calculateDistance({ coordinates: location }, nearest);
-
-  for (const station of stations) {
-    const distance = calculateDistance({ coordinates: location }, station);
-    if (distance < shortestDistance) {
-      shortestDistance = distance;
-      nearest = station;
-    }
-  }
-
-  return shortestDistance <= MAX_STATION_DISTANCE ? nearest : null;
+export interface NearestStationResult {
+  station: Station;
+  distance: number;
+  lines: MetroLine[];
 }
+
+export function findNearestStation(
+  location: Coordinates,
+  maxDistance: number = MAX_STATION_DISTANCE,
+  includeLines: boolean = true,
+  filter?: (station: Station) => boolean
+): NearestStationResult | null {
+  // Apply filter during search for better efficiency
+  const result = stationService.findAccessibleStations(
+    location,
+    1,
+    maxDistance,
+    filter
+  );
+  return result.length > 0 ? result[0] : null;
+}
+
+export function findNearestStations(
+  location: Coordinates,
+  n: number = 3,
+  maxDistance: number = MAX_STATION_DISTANCE,
+  includeLines: boolean = true,
+  filter?: (station: Station) => boolean
+): NearestStationResult[] {
+  // Request more stations than needed to ensure we get enough after filtering
+  const multiplier = filter ? 2 : 1;
+  const count = n * multiplier;
+
+  return stationService
+    .findAccessibleStations(location, count, maxDistance, filter)
+    .slice(0, n); // Ensure we only return the requested number
+}
+
+// Keep this function as a direct alias
+export const findAccessibleStations =
+  stationService.findAccessibleStations.bind(stationService);
