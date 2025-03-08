@@ -85,40 +85,39 @@ class StationService {
   ): { station: Station; distance: number; lines: MetroLine[] }[] {
     this.ensureInitialized();
 
-    // Apply filter first if provided to improve efficiency
-    let effectiveCount = count;
-    if (filter) {
-      // Request more stations initially if we have a filter
-      effectiveCount = Math.min(count * 3, 30);
-    }
+    // If we have a filter, request more stations to ensure we have enough after filtering
+    const requestCount = filter ? Math.min(count * 3, 30) : count;
 
-    // Find nearest stations using spatial index
-    const results = this.spatialIndex.findNearest(
+    // Find nearest stations using spatial index - request more if filtering
+    let results = this.spatialIndex.findNearest(
       location,
-      effectiveCount,
+      requestCount,
       maxDistance
     );
 
     // If no results or all filtered out, try with a larger radius
     if (
       filter &&
-      results.filter((result) => filter(result.item)).length === 0 &&
-      results.length > 0
+      results.filter((result) => filter(result.item)).length === 0
     ) {
-      // Try with double the distance if there are stations but none pass the filter
-      const expandedResults = this.spatialIndex.findNearest(
+      // Try with a much larger radius to find any matching stations
+      const expandedRadius = Math.min(maxDistance * 3, 15000); // Limit to 15km
+      results = this.spatialIndex.findNearest(
         location,
-        effectiveCount,
-        Math.min(maxDistance * 2, 10000) // Limit to 10km to avoid excessive search
+        requestCount * 2,
+        expandedRadius
       );
 
-      const filteredExpanded = expandedResults.filter(
-        (result) => !filter || filter(result.item)
-      );
+      // If still no matches, try without filter as fallback
+      if (results.filter((result) => filter(result.item)).length === 0) {
+        const fallbackResults = this.spatialIndex.findNearest(
+          location,
+          count,
+          Math.min(maxDistance * 2, 5000) // More conservative fallback radius
+        );
 
-      if (filteredExpanded.length > 0) {
-        // Return expanded results if we found matches
-        return filteredExpanded.slice(0, count).map((result) => ({
+        // Return whatever stations we found
+        return fallbackResults.slice(0, count).map((result) => ({
           station: result.item,
           distance: result.distance,
           lines: this.getLinesForStation(result.item),

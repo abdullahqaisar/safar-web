@@ -43,7 +43,7 @@ export function findNearestStation(
   includeLines: boolean = true,
   filter?: (station: Station) => boolean
 ): NearestStationResult | null {
-  // Apply filter during search for better efficiency
+  // Request just 1 station
   const result = stationService.findAccessibleStations(
     location,
     1,
@@ -60,13 +60,13 @@ export function findNearestStations(
   includeLines: boolean = true,
   filter?: (station: Station) => boolean
 ): NearestStationResult[] {
-  // Request more stations than needed to ensure we get enough after filtering
-  const multiplier = filter ? 2 : 1;
-  const count = n * multiplier;
-
-  return stationService
-    .findAccessibleStations(location, count, maxDistance, filter)
-    .slice(0, n); // Ensure we only return the requested number
+  // Let the service handle the filtering logic
+  return stationService.findAccessibleStations(
+    location,
+    n,
+    maxDistance,
+    filter
+  );
 }
 
 // Keep this function as a direct alias

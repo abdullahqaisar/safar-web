@@ -105,12 +105,15 @@ export class SpatialIndex<T extends { coordinates: Coordinates }> {
 
     const radiusInDegrees = radiusMeters / 111320;
 
+    // Adjust longitude span based on latitude to account for Earth's curvature
+    const latCosine = Math.cos((center.lat * Math.PI) / 180);
+    // Prevent division by very small numbers near poles
+    const lngFactor = Math.max(latCosine, 0.01);
+
     const minLat = center.lat - radiusInDegrees;
     const maxLat = center.lat + radiusInDegrees;
-    const minLng =
-      center.lng - radiusInDegrees / Math.cos((center.lat * Math.PI) / 180);
-    const maxLng =
-      center.lng + radiusInDegrees / Math.cos((center.lat * Math.PI) / 180);
+    const minLng = center.lng - radiusInDegrees / lngFactor;
+    const maxLng = center.lng + radiusInDegrees / lngFactor;
 
     const minCellLat = Math.floor(minLat / this.gridPrecision);
     const maxCellLat = Math.ceil(maxLat / this.gridPrecision);
@@ -118,17 +121,33 @@ export class SpatialIndex<T extends { coordinates: Coordinates }> {
     const maxCellLng = Math.ceil(maxLng / this.gridPrecision);
 
     const candidates: T[] = [];
+    // Check if the area is too large, which might indicate a problem
+    const cellCount =
+      (maxCellLat - minCellLat + 1) * (maxCellLng - minCellLng + 1);
+    const maxCells = 100; // Reasonable limit to prevent excessive cell checking
+
+    if (cellCount > maxCells && this.items.length < 1000) {
+      // Fall back to checking all items for small datasets when area is too large
+      return this.items.filter(
+        (item) =>
+          calculateHaversineDistance(center, item.coordinates) <= radiusMeters
+      );
+    }
+
+    // Otherwise collect items from relevant grid cells
     for (let lat = minCellLat; lat <= maxCellLat; lat++) {
-      for (let lng = minCellLng; lng <= maxCellLng; lng++) {
+      for (let lng = minCellLng; lat <= maxCellLng; lng++) {
         const key = `${lat}:${lng}`;
         const cell = this.grid.get(key);
         if (cell) candidates.push(...cell);
       }
     }
 
+    // If we found no candidates or too many, check all items
+    // but adjust the threshold to be more reasonable
     if (
       candidates.length === 0 ||
-      (candidates.length > this.items.length * 0.25 && this.items.length < 1000)
+      (candidates.length > this.items.length * 0.5 && this.items.length < 500)
     ) {
       return this.items.filter(
         (item) =>
@@ -161,28 +180,45 @@ export class SpatialIndex<T extends { coordinates: Coordinates }> {
         .slice(0, k);
     }
 
-    // Adaptive search radius strategy with multiple passes
-    let searchRadius =
-      maxRadiusMeters === Infinity ? 500 : Math.min(2000, maxRadiusMeters / 2);
-    let results = this.findWithinRadius(center, searchRadius);
+    // Set initial search radius - ensure it's not too small
+    const initialRadius =
+      maxRadiusMeters === Infinity
+        ? 500
+        : Math.min(Math.max(maxRadiusMeters / 4, 250), maxRadiusMeters);
+
+    let searchRadius = initialRadius;
+    const allResults: T[] = [];
+    const processedItemIds = new Set<string>();
 
     // If we didn't find enough results, expand the search radius with multiple passes
     const maxPasses = 4;
     let currentPass = 1;
 
     while (
-      results.length < k &&
-      searchRadius < maxRadiusMeters &&
+      allResults.length < k &&
+      searchRadius <= maxRadiusMeters &&
       currentPass <= maxPasses
     ) {
-      // Exponentially increase search radius up to the max
+      // Get items within current radius
+      const newResults = this.findWithinRadius(center, searchRadius);
+
+      // Add only new items (not already processed)
+      for (const item of newResults) {
+        // Use a unique identifier for the item - assuming coordinates can be used
+        const itemId = `${item.coordinates.lat},${item.coordinates.lng}`;
+        if (!processedItemIds.has(itemId)) {
+          allResults.push(item);
+          processedItemIds.add(itemId);
+        }
+      }
+
+      // Exponentially increase search radius for next pass
       searchRadius = Math.min(searchRadius * 2, maxRadiusMeters);
-      results = this.findWithinRadius(center, searchRadius);
       currentPass++;
     }
 
-    // Calculate distance for each result, sort by distance, and return top k
-    return results
+    // Calculate distance for all accumulated results, sort by distance, and return top k
+    return allResults
       .map((item) => ({
         item,
         distance: calculateHaversineDistance(center, item.coordinates),
