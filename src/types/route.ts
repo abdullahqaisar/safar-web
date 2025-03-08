@@ -16,6 +16,9 @@ export interface RouteSegment {
 export interface TransitSegment extends RouteSegment {
   type: 'transit';
   line: MetroLine;
+  stations: Station[];
+  duration: number;
+  stopWaitTime?: number; // Added field to store wait time at stops
 }
 
 /**
