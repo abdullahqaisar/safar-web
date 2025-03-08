@@ -14,7 +14,7 @@ export function Hero() {
           </span>
         </h1>
         <p className="text-sm text-[var(--color-gray-600)] font-medium mt-2">
-          No delays. No stress. Just smooth travel.
+          Find the best metro routes near you!
         </p>
       </div>
     </section>

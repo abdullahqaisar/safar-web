@@ -1,12 +1,12 @@
 'use client';
 
-import { memo } from 'react';
-import { Alert } from '@/components/ui/Alert';
-import { Button } from '@/components/ui/Button';
+import { memo, useEffect } from 'react';
+import { Button } from '@/components/common/Button';
 import LocationSearch from './LocationSearch';
 import { cn } from '@/lib/utils/formatters';
-import { Card } from '@/components/ui/Card';
 import { useJourney } from '@/context/JourneyContext';
+import { showError } from '@/lib/utils/toast';
+import { Card } from '@/components/common/Card';
 
 export const SearchForm = memo(function SearchForm() {
   const {
@@ -22,6 +22,12 @@ export const SearchForm = memo(function SearchForm() {
   const hasBothLocations = Boolean(fromLocation && toLocation);
   const isSearchDisabled = !isFormValid || isRoutesLoading;
   const showLoading = (isLoading && hasBothLocations) || isRoutesLoading;
+
+  useEffect(() => {
+    if (errorMessage) {
+      showError(errorMessage);
+    }
+  }, [errorMessage]);
 
   return (
     <Card
@@ -47,12 +53,6 @@ export const SearchForm = memo(function SearchForm() {
         </h2>
 
         <LocationSearch />
-
-        {errorMessage && (
-          <div className="mt-4">
-            <Alert message={errorMessage} aria-live="polite" />
-          </div>
-        )}
 
         <Button
           onClick={handleSearch}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card } from '@/components/ui/Card';
+import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils/formatters';
 
 export function JourneyErrorFallback() {
