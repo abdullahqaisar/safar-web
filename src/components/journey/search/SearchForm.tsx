@@ -33,7 +33,7 @@ export const SearchForm = memo(function SearchForm() {
     <Card
       className={cn(
         'search-form-container relative',
-        'bg-gradient-to-br from-[#0d4e2e] via-[#0d442b] to-[#073622]',
+        'bg-gradient-to-br from-[#012620] via-[#012620] to-[#023428]',
         'border-none shadow-xl mb-4 sm:mb-6 mt-1 sm:mt-2'
       )}
       allowOverflow={true}

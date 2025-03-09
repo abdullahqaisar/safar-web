@@ -16,19 +16,19 @@
   --color-dark-black: #0a0a0a;
   --color-light-white: #f9fafb;
 
-  /* Primary green theme (keeping the SearchForm bg color) */
-  --color-primary: #0d442b;
-  --color-primary-dark: #083620;
-  --color-primary-light: #145c3a;
+  /* Primary green theme - darker shade */
+  --color-primary: #012620;
+  --color-primary-dark: #001813;
+  --color-primary-light: #023428;
 
   /* Accent green (complementary to primary) */
   --color-accent: #00a745;
   --color-accent-dark: #008e3a;
   --color-accent-light: #25c266;
 
-  /* Background shades (keeping the Hero bg) */
-  --color-bg-light: #effcf4; /* Hero bg */
-  --color-bg-light-hover: #e5f7eb;
+  /* Background shades - updated hero bg */
+  --color-bg-light: #fff5ee; /* Updated Hero bg */
+  --color-bg-light-hover: #ffeee4;
   --color-bg-muted: #f3f4f6;
 
   /* Gray scale - more refined */
@@ -73,9 +73,8 @@
 
   --popover-foreground: oklch(0.145 0 0);
 
-  --primary: oklch(0.205 0 0);
-
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #012620;
+  --primary-foreground: #ffffff;
 
   --secondary: oklch(0.97 0 0);
 
@@ -161,11 +160,7 @@ body {
 
 .route-header {
   @apply p-4 text-white flex justify-between items-center;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-primary-light)
-  );
+  background: linear-gradient(135deg, #012620, #023428);
   position: relative;
   overflow: hidden;
 }
@@ -372,8 +367,8 @@ body {
 
 .fare-info {
   @apply mt-8 p-4 rounded-lg flex items-center gap-3 transition-all;
-  background: linear-gradient(to right, #f0f9f4, #e6f7ee);
-  border-left: 3px solid var(--color-primary);
+  background: linear-gradient(to right, #f0f7f5, #e6f2ef);
+  border-left: 3px solid #012620;
 }
 
 .fare-amount {
@@ -414,12 +409,14 @@ body {
 }
 
 .sort-btn.active {
-  @apply bg-emerald-50 border-emerald-100 text-emerald-700;
+  @apply bg-emerald-50 border-emerald-100;
+  color: #012620;
 }
 
 /* View stops button */
 .view-stops-btn {
-  @apply text-xs text-emerald-600 font-medium mt-2 flex items-center hover:underline;
+  @apply text-xs font-medium mt-2 flex items-center hover:underline;
+  color: #012620;
   transition: color 0.2s ease;
 }
 
@@ -639,7 +636,7 @@ body {
 
 /* Hero component styling */
 .hero-section {
-  background: linear-gradient(120deg, var(--color-bg-light) 0%, #f2fcf6 100%);
+  background: linear-gradient(120deg, var(--color-bg-light) 0%, #fff9f5 100%);
   position: relative;
   width: 100%;
   overflow: hidden;
@@ -664,11 +661,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 .hero-decoration-line {
   height: 3px;
   width: 60px;
-  background: linear-gradient(
-    90deg,
-    var(--color-primary-light),
-    var(--color-accent)
-  );
+  background: linear-gradient(90deg, #023428, #00a745);
   margin: 1rem 0;
   border-radius: 4px;
   transition: width 0.3s ease;
@@ -684,8 +677,8 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 .hero-badge {
   display: inline-block;
   padding: 0.4rem 0.85rem;
-  background-color: rgba(20, 92, 58, 0.08);
-  color: var(--color-primary);
+  background-color: rgba(1, 38, 32, 0.08);
+  color: #012620;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 2rem;
@@ -695,7 +688,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 
 .hero-badge:hover {
   transform: translateY(-1px);
-  background-color: rgba(20, 92, 58, 0.12);
+  background-color: rgba(1, 38, 32, 0.12);
 }
 
 /* Improved responsive typography */
@@ -717,7 +710,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
   font-size: clamp(2.75rem, 8vw, 3.25rem);
   font-weight: 700;
   font-style: italic;
-  color: var(--color-primary);
+  color: #012620;
   position: relative;
   display: inline-flex;
 }
@@ -730,7 +723,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
   left: 0;
   width: 100%;
   height: 6px;
-  background-color: rgba(20, 92, 58, 0.1);
+  background-color: rgba(1, 38, 32, 0.1);
   z-index: -1;
   border-radius: 3px;
   transform-origin: bottom;
@@ -738,13 +731,13 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 }
 
 .hero-subtitle {
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.5;
-  color: var(--color-gray-600);
+  text-align: center;
   max-width: 36rem;
   margin-left: auto;
   margin-right: auto;
-  transition: font-size 0.3s ease;
+  color: var(--color-gray-600);
 }
 
 /* Performance-friendly animation */
@@ -807,8 +800,8 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 .hero-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
-  background-color: rgba(20, 92, 58, 0.08);
-  color: var(--color-primary);
+  background-color: rgba(1, 38, 32, 0.08);
+  color: #012620;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 2rem;
@@ -819,7 +812,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 
 .hero-badge:hover {
   transform: translateY(-1px);
-  background-color: rgba(20, 92, 58, 0.12);
+  background-color: rgba(1, 38, 32, 0.12);
 }
 
 .hero-title {
@@ -838,7 +831,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
   font-size: 3.5rem;
   font-weight: 700;
   font-style: italic;
-  color: var(--color-primary);
+  color: #012620;
   position: relative;
   display: inline-block;
 }
@@ -851,7 +844,7 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
   left: 0;
   width: 100%;
   height: 6px;
-  background-color: rgba(20, 92, 58, 0.1);
+  background-color: rgba(1, 38, 32, 0.1);
   z-index: -1;
   transform-origin: bottom;
   animation: waveEffect 3s ease-in-out infinite;
@@ -860,14 +853,8 @@ section.bg-\[var\(--color-bg-light\)\] .absolute {
 .hero-subtitle {
   font-size: 1rem;
   line-height: 1.5;
-  text-align: left;
+  text-align: center;
   max-width: 36rem;
-}
-
-@media (min-width: 640px) {
-  .hero-subtitle {
-    text-align: center;
-  }
 }
 
 /* Performance-friendly animation */

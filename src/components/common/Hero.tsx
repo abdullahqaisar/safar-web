@@ -12,21 +12,22 @@ export function Hero() {
         />
       </div>
 
-      <div className="max-w-3xl mx-auto text-left sm:text-center relative z-10 px-4 md:px-0">
-        <div className="text-left sm:text-center mb-2 sm:mb-2">
+      <div className="max-w-3xl mx-auto text-center relative z-10 px-4 md:px-0">
+        <div className="text-center mb-2 sm:mb-2">
           <span className="hero-badge" aria-label="Tagline">
             Public Transportation Made Easy
           </span>
         </div>
-        <h1 className="hero-title text-left sm:text-center">
-          <div className="flex flex-wrap sm:justify-center items-baseline gap-x-2">
+        <h1 className="hero-title text-center">
+          <div className="flex flex-wrap justify-center items-baseline gap-x-2">
             <span className="hero-title-main">From Suffer to</span>
             <span className="hero-title-accent">Safar</span>
           </div>
         </h1>
 
-        <p className="hero-subtitle text-left sm:text-center mt-3 sm:mt-5 sm:mb-4">
-          Find the fastest metro routes optimized for your journey
+        <p className="hero-subtitle text-center mt-3 sm:mt-5 sm:mb-4 mx-auto">
+          Find the fastest metro routes optimized for your journey and enjoy a
+          stress-free commute with our smart navigation system.
         </p>
       </div>
     </section>
