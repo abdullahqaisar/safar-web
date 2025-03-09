@@ -37,8 +37,15 @@ export function getStationsBetween(
 
 export function findNearestStation(
   location: Coordinates,
-  maxDistance: number = MAX_STATION_DISTANCE,
-  includeLines: boolean = true,
+export function findNearestStation(
+  location: Coordinates,
+  maxDistance = MAX_STATION_DISTANCE,
+  includeLines = true,
+  filter?: (station: Station) => boolean
+): NearestStationResult | null {
+  if (!location) return null;
+  ...
+}
   filter?: (station: Station) => boolean
 ): NearestStationResult | null {
   if (!location) return null;
