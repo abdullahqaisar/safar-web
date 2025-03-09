@@ -1,26 +1,31 @@
-import { Coordinates, Station } from '@/types/station';
+import * as turf from '@turf/turf';
+import { Coordinates } from '@/types/station';
 
-/**
- * Calculates the distance between two geographic points using the Haversine formula
- * @param from Starting point with coordinates
- * @param to Ending point with coordinates
- * @returns Distance in kilometers
- */
+export function coordinatesEqual(
+  coord1: Coordinates,
+  coord2: Coordinates
+): boolean {
+  return coord1.lat === coord2.lat && coord1.lng === coord2.lng;
+}
+
 export function calculateDistance(
-  from: Station | { coordinates: Coordinates },
-  to: Station
+  from: { coordinates: Coordinates } | Coordinates,
+  to: { coordinates: Coordinates } | Coordinates
 ): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = toRad(to.coordinates.lat - from.coordinates.lat);
-  const dLng = toRad(to.coordinates.lng - from.coordinates.lng);
-  const lat1 = toRad(from.coordinates.lat);
-  const lat2 = toRad(to.coordinates.lat);
+  const fromCoords = 'coordinates' in from ? from.coordinates : from;
+  const toCoords = 'coordinates' in to ? to.coordinates : to;
 
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return calculateHaversineDistance(fromCoords, toCoords);
+}
+
+export function calculateHaversineDistance(
+  coord1: Coordinates,
+  coord2: Coordinates
+): number {
+  const point1 = turf.point([coord1.lng, coord1.lat]);
+  const point2 = turf.point([coord2.lng, coord2.lat]);
+
+  return turf.distance(point1, point2, { units: 'kilometers' }) * 1000;
 }
 
 /**
@@ -28,11 +33,4 @@ export function calculateDistance(
  */
 export function toRad(value: number): number {
   return (value * Math.PI) / 180;
-}
-
-/**
- * Helper to check if coordinates are equal
- */
-export function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
-  return a.lat === b.lat && a.lng === b.lng;
 }

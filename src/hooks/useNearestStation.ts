@@ -1,4 +1,4 @@
-import { fetchNearestStation } from '@/services/station.service';
+import { fetchNearestStation } from '@/services/client/station.service';
 import { Coordinates } from '@/types/station';
 import { useQuery } from '@tanstack/react-query';
 

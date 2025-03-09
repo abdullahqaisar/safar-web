@@ -7,7 +7,8 @@ import {
 
 import { calculateTransitTime, calculateWalkingTime } from '@/lib/utils/maps';
 import { createWalkingSegment } from './segment-builder';
-import { Coordinates } from '@/types/station';
+import { STOP_WAIT_TIME_SECONDS } from '@/lib/constants/config';
+import { calculateHaversineDistance } from '@/lib/utils/geo';
 
 /**
  * Builds a complete route with initial walk, transit segments, and final walk
@@ -23,11 +24,15 @@ export async function buildRoute(
     totalDuration += segment.duration;
   });
 
+  // Calculate the number of transfers (transit segments - 1)
+  const transfers = segments.filter((s) => s.type === 'transit').length - 1;
+
   return {
     segments,
     totalStops,
     totalDistance,
     totalDuration,
+    transfers: Math.max(0, transfers),
   };
 }
 
@@ -106,14 +111,17 @@ async function processRoute(route: Route): Promise<Route | null> {
       for (let j = 0; j < transitSegment.stations.length - 1; j++) {
         const currentStation = transitSegment.stations[j];
         const nextStation = transitSegment.stations[j + 1];
-        totalDistance += calculateDistance(
+        totalDistance += calculateHaversineDistance(
           currentStation.coordinates,
           nextStation.coordinates
         );
       }
 
-      transitSegment.duration = transitTime;
-      totalDuration += transitTime;
+      const stopWaitTime = segmentStops * STOP_WAIT_TIME_SECONDS;
+
+      transitSegment.duration = transitTime + stopWaitTime;
+      transitSegment.stopWaitTime = stopWaitTime;
+      totalDuration += transitSegment.duration;
       newSegments.push(transitSegment);
 
       // Handle transfers - add walking segments between transit segments if needed
@@ -161,26 +169,4 @@ async function processRoute(route: Route): Promise<Route | null> {
     totalDuration,
     transfers,
   };
-}
-
-/**
- * Calculate distance between two coordinates in meters
- */
-function calculateDistance(coord1: Coordinates, coord2: Coordinates): number {
-  // Simple euclidean distance calculation - can be replaced with haversine formula for more accuracy
-  const R = 6371000; // Earth's radius in meters
-  const lat1 = (coord1.lat * Math.PI) / 180;
-  const lat2 = (coord2.lat * Math.PI) / 180;
-  const deltaLat = ((coord2.lat - coord1.lat) * Math.PI) / 180;
-  const deltaLng = ((coord2.lng - coord1.lng) * Math.PI) / 180;
-
-  const a =
-    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(lat1) *
-      Math.cos(lat2) *
-      Math.sin(deltaLng / 2) *
-      Math.sin(deltaLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
 }
