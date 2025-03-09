@@ -2,7 +2,7 @@ import {
   findNearestStation,
   findNearestStations,
   initializeStationService,
-} from '@/lib/utils/station';
+} from '@/lib/transit/station/station';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 

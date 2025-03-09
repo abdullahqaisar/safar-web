@@ -1,4 +1,12 @@
+import * as turf from '@turf/turf';
 import { Coordinates } from '@/types/station';
+
+export function coordinatesEqual(
+  coord1: Coordinates,
+  coord2: Coordinates
+): boolean {
+  return coord1.lat === coord2.lat && coord1.lng === coord2.lng;
+}
 
 export function calculateDistance(
   from: { coordinates: Coordinates } | Coordinates,
@@ -14,18 +22,10 @@ export function calculateHaversineDistance(
   coord1: Coordinates,
   coord2: Coordinates
 ): number {
-  const R = 6371000; // Earth's radius in meters
-  const φ1 = (coord1.lat * Math.PI) / 180;
-  const φ2 = (coord2.lat * Math.PI) / 180;
-  const Δφ = ((coord2.lat - coord1.lat) * Math.PI) / 180;
-  const Δλ = ((coord2.lng - coord1.lng) * Math.PI) / 180;
+  const point1 = turf.point([coord1.lng, coord1.lat]);
+  const point2 = turf.point([coord2.lng, coord2.lat]);
 
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // Distance in meters
+  return turf.distance(point1, point2, { units: 'kilometers' }) * 1000;
 }
 
 /**
@@ -33,11 +33,4 @@ export function calculateHaversineDistance(
  */
 export function toRad(value: number): number {
   return (value * Math.PI) / 180;
-}
-
-/**
- * Helper to check if coordinates are equal
- */
-export function coordinatesEqual(a: Coordinates, b: Coordinates): boolean {
-  return a.lat === b.lat && a.lng === b.lng;
 }

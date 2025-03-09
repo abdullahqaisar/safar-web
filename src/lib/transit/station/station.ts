@@ -1,6 +1,10 @@
-import { calculateDistance } from './geo';
+import {
+  Coordinates,
+  Station,
+  NearestStationResult,
+  RouteSegment,
+} from '@/types/station';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
-import { Coordinates, NearestStationResult, Station } from '@/types/station';
 import { stationService } from '@/services/server/station.service';
 
 export function initializeStationService(): void {
@@ -9,25 +13,26 @@ export function initializeStationService(): void {
 
 export const getAllStations =
   stationService.getAllStations.bind(stationService);
-export const findStationById =
-  stationService.findStationById.bind(stationService);
-export const getStationLines =
-  stationService.getLinesForStation.bind(stationService);
-export const getStationsBetween =
-  stationService.getStationsBetween.bind(stationService);
 
 export function findStation(id: string | Station): Station | undefined {
-  if (typeof id !== 'string') return id;
+  if (typeof id !== 'string') {
+    return id;
+  }
   return stationService.findStationById(id);
 }
 
-export function calculateSegmentDistance(stations: Station[]): number {
-  if (stations.length < 2) return 0;
+export const findStationById =
+  stationService.findStationById.bind(stationService);
 
-  return stations.reduce((acc, station, i) => {
-    if (i === 0) return 0;
-    return acc + calculateDistance(stations[i - 1], station);
-  }, 0);
+export const getStationLines =
+  stationService.getLinesForStation.bind(stationService);
+
+// Updated to handle transfers between lines
+export function getStationsBetween(
+  fromStation: string | Station,
+  toStation: string | Station
+): RouteSegment[] {
+  return stationService.getStationsBetween(fromStation, toStation);
 }
 
 export function findNearestStation(
@@ -36,14 +41,17 @@ export function findNearestStation(
   includeLines: boolean = true,
   filter?: (station: Station) => boolean
 ): NearestStationResult | null {
-  // Request just 1 station
-  const result = stationService.findAccessibleStations(
+  if (!location) return null;
+
+  const results = stationService.findAccessibleStations(
     location,
     1,
     maxDistance,
+    includeLines,
     filter
   );
-  return result.length > 0 ? result[0] : null;
+
+  return results.length > 0 ? results[0] : null;
 }
 
 export function findNearestStations(
@@ -53,15 +61,16 @@ export function findNearestStations(
   includeLines: boolean = true,
   filter?: (station: Station) => boolean
 ): NearestStationResult[] {
-  // Let the service handle the filtering logic
+  if (!location) return [];
+
   return stationService.findAccessibleStations(
     location,
     n,
     maxDistance,
+    includeLines,
     filter
   );
 }
 
-// Keep this function as a direct alias
 export const findAccessibleStations =
   stationService.findAccessibleStations.bind(stationService);

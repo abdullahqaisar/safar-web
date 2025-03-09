@@ -6,7 +6,7 @@ import {
   findAccessibleStations,
 } from '@/lib/utils/station';
 import { Coordinates, Station } from '@/types/station';
-import { Route, RouteSegment } from '@/types/route';
+import { Route, RouteSegment, TransitSegment } from '@/types/route';
 import {
   createWalkingSegment,
   createTransitSegment,
@@ -685,8 +685,9 @@ function createRouteKey(route: Route): string {
   return route.segments
     .map((segment) => {
       if (segment.type === 'transit') {
-        return `T-${segment.line.id}-${segment.stations[0].id}-${
-          segment.stations[segment.stations.length - 1].id
+        const transitSegment = segment as TransitSegment;
+        return `T-${transitSegment.line.id}-${transitSegment.stations[0].id}-${
+          transitSegment.stations[transitSegment.stations.length - 1].id
         }`;
       } else {
         return `W-${segment.from.id}-${segment.to.id}`;
