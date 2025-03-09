@@ -1,9 +1,4 @@
-import {
-  Coordinates,
-  Station,
-  NearestStationResult,
-  RouteSegment,
-} from '@/types/station';
+import { Coordinates, Station, NearestStationResult } from '@/types/station';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 import { stationService } from '@/services/server/station.service';
 
@@ -27,25 +22,10 @@ export const findStationById =
 export const getStationLines =
   stationService.getLinesForStation.bind(stationService);
 
-// Updated to handle transfers between lines
-export function getStationsBetween(
-  fromStation: string | Station,
-  toStation: string | Station
-): RouteSegment[] {
-  return stationService.getStationsBetween(fromStation, toStation);
-}
-
-export function findNearestStation(
-  location: Coordinates,
 export function findNearestStation(
   location: Coordinates,
   maxDistance = MAX_STATION_DISTANCE,
   includeLines = true,
-  filter?: (station: Station) => boolean
-): NearestStationResult | null {
-  if (!location) return null;
-  ...
-}
   filter?: (station: Station) => boolean
 ): NearestStationResult | null {
   if (!location) return null;
