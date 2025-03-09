@@ -9,6 +9,7 @@ export interface Station {
   id: string;
   name: string;
   coordinates: Coordinates;
+  lines?: string[];
 }
 
 export interface NearestStationResult {

@@ -238,17 +238,14 @@ export class StationService {
     // Score stations using multiple factors
     const scored = filtered.map((result) => ({
       ...result,
-      score: this.calculateStationScore(result, location),
+      score: this.calculateStationScore(result),
     }));
 
     // Return highest scoring stations
     return scored.sort((a, b) => b.score - a.score).slice(0, count);
   }
 
-  calculateStationScore(
-    result: NearestStationResult,
-    location: Coordinates
-  ): number {
+  calculateStationScore(result: NearestStationResult): number {
     // Base distance factor - exponentially decreases as distance increases
     const distanceFactor = Math.exp(-result.distance / 500); // Rapidly decreases after 500m
 

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@datastructures-js/priority-queue": "^6.3.2",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@googlemaps/google-maps-services-js": "github:googlemaps/google-maps-services-js",
     "@react-google-maps/api": "^2.20.6",
@@ -32,6 +33,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
     "use-places-autocomplete": "^4.0.1",
+    "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

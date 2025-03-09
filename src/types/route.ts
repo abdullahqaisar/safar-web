@@ -5,9 +5,9 @@ import { Station } from './station';
  * Base interface for route segments
  */
 export interface RouteSegment {
-  type: 'walk' | 'transit';
+  type: 'transit' | 'walk';
   stations: Station[];
-  duration: number;
+  duration: number; // in seconds
 }
 
 /**
@@ -15,10 +15,8 @@ export interface RouteSegment {
  */
 export interface TransitSegment extends RouteSegment {
   type: 'transit';
-  line: MetroLine;
-  stations: Station[];
-  duration: number;
-  stopWaitTime?: number; // Added field to store wait time at stops
+  line: Partial<Omit<MetroLine, 'station'>>;
+  stopWaitTime?: number;
 }
 
 /**
@@ -34,9 +32,10 @@ export interface WalkSegment extends RouteSegment {
  * Complete route composed of multiple segments
  */
 export interface Route {
+  id?: string;
   segments: RouteSegment[];
   totalStops: number;
-  totalDistance: number;
-  totalDuration: number;
-  transfers?: number;
+  totalDistance: number; // in meters
+  totalDuration: number; // in seconds
+  transfers: number;
 }

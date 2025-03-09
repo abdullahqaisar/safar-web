@@ -115,7 +115,9 @@ function getTransitSegmentDetails(
   segment: TransitSegment,
   isFirstTransit: boolean
 ): SegmentDetails {
-  const lineColor = segment.line ? getBusColor(segment.line.id) : 'bg-gray-500';
+  const lineColor = segment.line
+    ? getBusColor(segment.line.id || '')
+    : 'bg-gray-500';
   const stationName = segment.stations[0].name;
   const lineName = segment.line?.name;
   const lastStation = segment.stations[segment.stations.length - 1];

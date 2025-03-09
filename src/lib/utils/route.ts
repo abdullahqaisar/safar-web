@@ -7,5 +7,5 @@ export function getBusColor(lineId: MetroLine['id']): string {
     green: 'bg-green-500',
     orange: 'bg-orange-500',
   };
-  return colors[lineId] || 'bg-gray-50';
+  return colors[lineId];
 }
