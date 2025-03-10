@@ -17,27 +17,117 @@ import {
   buildRoute,
   calculateRouteTimes,
 } from '../segments/segment-calculator';
-import { MAX_ROUTES_TO_GENERATE } from '@/lib/constants/config';
+import {
+  MAX_ROUTES_TO_GENERATE,
+  MAX_WALKING_DISTANCE,
+  WALKING_SPEED_MPS,
+} from '@/lib/constants/config';
 import { metroLines } from '@/lib/constants/metro-data';
+import { createWalkingSegment } from '../segments/segment-builder';
 
 /**
- * Finds efficient transit routes between two points
+ * Main function to find all possible routes between two points
+ * Now handles both direct walking routes and transit routes
  */
 export async function findRoutes(
   origin: Coordinates,
   destination: Coordinates
 ): Promise<Route[]> {
-  // Get the transit graph with origin and destination nodes
-  const { graph, originId, destinationId } = getTransitGraph(
+  const routes: Route[] = [];
+
+  // Calculate direct distance between origin and destination
+  const directDistance = calculateHaversineDistance(origin, destination);
+
+  // Create distance classification flags
+  const isVeryShortDistance = directDistance < 500;
+  const isMediumDistance = directDistance >= 500 && directDistance <= 2000;
+  const isLongDistance = directDistance > 2000;
+
+  // Step 1: Always generate direct walking route if within max walking distance
+  if (directDistance <= MAX_WALKING_DISTANCE) {
+    try {
+      const walkingRoute = await createDirectWalkingRoute(origin, destination);
+      if (walkingRoute) {
+        routes.push(walkingRoute);
+      }
+    } catch (error) {
+      console.error('Error creating direct walking route:', error);
+    }
+  }
+
+  // Step 2: Find transit routes
+  try {
+    const transitRoutes = await findTransitRoutes(origin, destination);
+    if (transitRoutes.length > 0) {
+      routes.push(...transitRoutes);
+    }
+  } catch (error) {
+    console.error('Error finding transit routes:', error);
+    // If we have at least a walking route, continue
+    if (routes.length === 0) {
+      throw error; // Re-throw if we don't have any routes
+    }
+  }
+
+  return routes;
+}
+
+/**
+ * Create a direct walking route between two points
+ */
+async function createDirectWalkingRoute(
+  origin: Coordinates,
+  destination: Coordinates
+): Promise<Route | null> {
+  const walkSegment = await createWalkingSegment(
+    { id: 'origin', name: 'Origin', coordinates: origin },
+    { id: 'destination', name: 'Destination', coordinates: destination },
     origin,
     destination
+  );
+
+  if (!walkSegment) return null;
+
+  const route = await buildRoute([walkSegment], 0, walkSegment.walkingDistance);
+
+  return {
+    ...route,
+    id: `walk-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    isDirectWalk: true,
+    // Add classification flags
+    isShortWalk: walkSegment.walkingDistance < 500,
+    isMediumWalk:
+      walkSegment.walkingDistance >= 500 && walkSegment.walkingDistance <= 1500,
+    isLongWalk: walkSegment.walkingDistance > 1500,
+  };
+}
+
+/**
+ * Find transit routes between two points using the transit graph
+ */
+async function findTransitRoutes(
+  origin: Coordinates,
+  destination: Coordinates
+): Promise<Route[]> {
+  // Use enhanced walking distance for connections to ensure proper graph connectivity
+  const connectingWalkDistance = Math.max(MAX_WALKING_DISTANCE, 2500);
+
+  const { graph, originId, destinationId } = getTransitGraph(
+    origin,
+    destination,
+    connectingWalkDistance
   );
 
   // Explicitly cast the graph to correct type
   const typedGraph = graph as unknown as Graph<NodeData, EdgeData>;
 
-  // Find multiple routes through the graph
+  // Find multiple paths through the graph
   const paths = findMultiplePaths(typedGraph, originId, destinationId);
+
+  // If no paths found through the graph, return empty array
+  if (paths.length === 0) {
+    return [];
+  }
 
   // Convert paths to route segments
   const routes = await pathsToRoutes(paths, typedGraph);
@@ -45,10 +135,11 @@ export async function findRoutes(
   // Calculate accurate timings for each route
   const routesWithTimes = await calculateRouteTimes(routes);
 
-  // Filter and rank routes
-  const optimizedRoutes = filterAndRankRoutes(routesWithTimes);
-
-  return optimizedRoutes;
+  // Assign IDs to routes
+  return routesWithTimes.map((route) => ({
+    ...route,
+    id: `transit-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
+  }));
 }
 
 /**
@@ -72,7 +163,6 @@ function findMultiplePaths(
     console.error('Origin or destination node not found in graph');
     return [];
   }
-
   const strategies = [
     // Default strategy - balanced consideration of all factors
     { weight: (_edge: string, attributes: EdgeData) => attributes.duration },
@@ -347,19 +437,14 @@ async function convertPathToSegments(
   let currentTransitStations: Station[] = [];
   let currentTransitDuration: number = 0;
 
-  // Helper function to handle virtual nodes
-  function isVirtualNode(nodeId: string): boolean {
-    if (!graph.hasNode(nodeId)) return false;
-    const nodeData = graph.getNodeAttributes(nodeId);
-    return nodeData.virtual === true;
+  // Add helper function to identify the same line across virtual nodes
+  function extractLineId(nodeId: string): string | null {
+    // Extract line ID from virtual node format stationId_lineId
+    return nodeId.includes('_') ? nodeId.split('_')[1] : null;
   }
 
-  // Helper function to extract line ID from virtual node - Fix: be explicit about return type
-  function getLineIdFromVirtualNode(nodeId: string): string | null {
-    if (!nodeId.includes('_')) return null;
-    const parts = nodeId.split('_');
-    return parts.length > 1 ? parts[1] : null;
-  }
+  // Track virtual line IDs specifically
+  let lastVirtualLineId: string | null = null;
 
   for (let i = 0; i < edges.length; i++) {
     const edge = edges[i];
@@ -371,24 +456,61 @@ async function convertPathToSegments(
     // Skip if node data is missing
     if (!sourceNodeData || !targetNodeData) continue;
 
-    // Handle virtual nodes correctly - get actual station info
     const sourceStation = sourceNodeData.station;
     const targetStation = targetNodeData.station;
-
     if (!sourceStation || !targetStation) continue;
 
+    // Check if this is a transfer edge between virtual nodes of the same station
+    const isIntraStationTransfer =
+      edge.type === 'transfer' &&
+      sourceStation.id === targetStation.id &&
+      edge.source.includes('_') &&
+      edge.target.includes('_');
+
+    // Get current line IDs
+    const sourceLineId = extractLineId(edge.source);
+    const targetLineId = extractLineId(edge.target);
+
+    let lineId = edge.lineId || null;
+
+    // For transit edges between virtual nodes, use their line IDs
     if (edge.type === 'transit') {
-      let lineId: string | null = edge.lineId || null;
-      if (
-        !lineId &&
-        (isVirtualNode(edge.source) || isVirtualNode(edge.target))
-      ) {
-        lineId =
-          getLineIdFromVirtualNode(edge.source) ||
-          getLineIdFromVirtualNode(edge.target) ||
-          null;
+      // For transit edges, prefer explicit lineId, then source or target
+      lineId = edge.lineId || sourceLineId || targetLineId;
+      lastVirtualLineId = lineId;
+    }
+    // For transfers between virtual nodes, this is a true line transfer
+    else if (isIntraStationTransfer) {
+      // Complete any previous transit segment
+      if (currentTransitLine !== null && currentTransitStations.length > 1) {
+        // Finish previous transit segment
+        const line = metroLines.find((l) => l.id === currentTransitLine);
+        if (line) {
+          const transitSegment: TransitSegment = {
+            type: 'transit',
+            line: {
+              id: line.id,
+              name: line.name,
+              color: line.color,
+            },
+            stations: [...currentTransitStations],
+            duration: currentTransitDuration,
+          };
+
+          segments.push(transitSegment);
+        }
+
+        currentTransitLine = null;
+        currentTransitStations = [];
+        currentTransitDuration = 0;
       }
 
+      lastVirtualLineId = null; // Reset line tracking
+      continue;
+    }
+
+    if (edge.type === 'transit') {
+      // Handle continuation or start of transit segment
       if (currentTransitLine !== lineId) {
         // Starting a new transit segment
         if (currentTransitLine !== null && currentTransitStations.length > 1) {
@@ -410,8 +532,8 @@ async function convertPathToSegments(
           }
         }
 
-        // Start new transit segment - Fix: ensure compatible types
-        currentTransitLine = lineId; // Now both are string | null
+        // Start new transit segment
+        currentTransitLine = lineId;
         currentTransitStations = [sourceStation];
         currentTransitDuration = 0;
       }
@@ -423,8 +545,11 @@ async function convertPathToSegments(
 
       // Accumulate duration for this transit segment
       currentTransitDuration += edge.duration || 0;
-    } else if (edge.type === 'walking' || edge.type === 'transfer') {
-      // Finish any ongoing transit segment first
+    } else if (
+      edge.type === 'walking' ||
+      (edge.type === 'transfer' && sourceStation.id !== targetStation.id)
+    ) {
+      // Finish any ongoing transit segment
       if (currentTransitLine !== null && currentTransitStations.length > 1) {
         const line = metroLines.find((l) => l.id === currentTransitLine);
         if (line) {
@@ -447,18 +572,7 @@ async function convertPathToSegments(
         currentTransitDuration = 0;
       }
 
-      // Skip zero-distance transfers within the same station between virtual nodes
-      if (
-        edge.type === 'transfer' &&
-        sourceStation.id === targetStation.id &&
-        edge.distance === 0 &&
-        isVirtualNode(edge.source) &&
-        isVirtualNode(edge.target)
-      ) {
-        continue;
-      }
-
-      // Create walking segment
+      // Create walking segment for actual physical movement
       const walkSegment: WalkSegment = {
         type: 'walk',
         stations: [sourceStation, targetStation],

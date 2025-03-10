@@ -8,7 +8,7 @@ interface TopographyPatternProps {
 
 export function TopographyPattern({
   className = '',
-  color = 'currentColor',
+  color = '#012620',
   opacity = 0.1,
 }: TopographyPatternProps) {
   return (

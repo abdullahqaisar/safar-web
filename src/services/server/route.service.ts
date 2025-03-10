@@ -2,7 +2,6 @@ import { Coordinates } from '@/types/station';
 import { Route } from '@/types/route';
 import { stationService } from '@/services/server/station.service';
 import { calculateDistance } from '@/lib/utils/geo';
-import { createWalkingSegment } from '../../lib/transit/segments/segment-builder';
 import { filterAndRankRoutes } from '../../lib/transit/routing/route-optimizer';
 import { MAX_ROUTES_TO_RETURN } from '@/lib/constants/config';
 import { routeCache } from '../../lib/utils/cache';
@@ -17,18 +16,14 @@ export async function findBestRoutes(
   fromLocation?: Coordinates,
   toLocation?: Coordinates
 ): Promise<Route[] | null> {
+  // Validate stations
   const fromStation = stationService.findStationById(fromStationId);
-  const toStation = stationService.findStationById(toStationId);
+  const toStation = stationService.findStationById(fromStationId);
 
-  if (!fromStation) {
-    console.error(`Origin station not found: ${fromStationId}`);
-    console.timeEnd('Route finding');
-    return null;
-  }
-
-  if (!toStation) {
-    console.error(`Destination station not found: ${toStationId}`);
-    console.timeEnd('Route finding');
+  if (!fromStation || !toStation) {
+    console.error(
+      `Invalid station: ${!fromStation ? fromStationId : toStationId}`
+    );
     return null;
   }
 
@@ -36,67 +31,45 @@ export async function findBestRoutes(
   const startLocation = fromLocation || fromStation.coordinates;
   const endLocation = toLocation || toStation.coordinates;
 
-  // Calculate direct walking distance to determine if walking is viable
-  const directDistance = calculateDistance(
-    { coordinates: startLocation },
-    { coordinates: endLocation }
-  );
-
-  // If it's a short trip, consider just walking
-  const MAX_DIRECT_WALK_DISTANCE = 1500; // 1.5km threshold
-  if (directDistance <= MAX_DIRECT_WALK_DISTANCE) {
-    const walkSegment = await createWalkingSegment(
-      { id: 'origin', name: 'Origin', coordinates: startLocation },
-      { id: 'destination', name: 'Destination', coordinates: endLocation },
-      startLocation,
-      endLocation
-    );
-
-    if (walkSegment) {
-      const walkRoute = {
-        id: `walk-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        segments: [walkSegment],
-        totalStops: 0,
-        totalDistance: directDistance,
-        totalDuration: walkSegment.duration,
-        transfers: 0,
-      };
-      console.timeEnd('Route finding');
-      return [walkRoute];
-    }
-  }
-
-  // Create cache key
+  // Check cache first (quick return if cached)
   const cacheKey = routeCache.createKey(startLocation, endLocation);
-
-  // Check cache first
   const cachedRoutes = routeCache.get(cacheKey);
+
   if (cachedRoutes) {
     console.log('Using cached routes');
     console.timeEnd('Route finding');
     return cachedRoutes;
   }
 
-  try {
-    // Generate routes
-    const routes = await findRoutes(startLocation, endLocation);
+  // Calculate direct distance for classification
+  const directDistance = calculateDistance(
+    { coordinates: startLocation },
+    { coordinates: endLocation }
+  );
 
-    if (!routes || routes.length === 0) {
+  // Distance classification for route optimization
+  const isVeryShortDistance = directDistance < 500;
+  const isMediumDistance = directDistance >= 500 && directDistance <= 2000;
+  const isLongDistance = directDistance > 2000;
+
+  try {
+    // Find all possible routes (both walking and transit)
+    const allRoutes = await findRoutes(startLocation, endLocation);
+
+    // If no routes found
+    if (!allRoutes || allRoutes.length === 0) {
       console.log('No routes found');
       console.timeEnd('Route finding');
       return null;
     }
 
-    // Add unique IDs to routes
-    const routesWithIds = routes.map((route) => ({
-      ...route,
-      id: `route-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
-    }));
-
-    const optimizedRoutes = filterAndRankRoutes(routesWithIds).slice(
-      0,
-      MAX_ROUTES_TO_RETURN
-    );
+    // Optimize and filter routes
+    const optimizedRoutes = filterAndRankRoutes(
+      allRoutes,
+      isVeryShortDistance,
+      isMediumDistance,
+      isLongDistance
+    ).slice(0, MAX_ROUTES_TO_RETURN);
 
     // Cache the result
     routeCache.set(cacheKey, optimizedRoutes);

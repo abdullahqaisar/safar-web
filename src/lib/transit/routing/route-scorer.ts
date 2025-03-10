@@ -27,8 +27,23 @@ export function calculateRouteScore(route: Route): number {
 function calculateTransferScore(route: Route): number {
   if (!route) return 0;
 
-  // Count number of transit segments (transfers = segments - 1)
-  const transferCount = route.transfers;
+  let transferCount = 0;
+  let previousLineId: string | undefined = undefined;
+
+  for (const segment of route.segments) {
+    if (segment.type === 'transit') {
+      const transitSegment = segment as TransitSegment;
+      const currentLineId = transitSegment.line?.id;
+
+      // Only count as transfer if we're changing to a different line
+      if (previousLineId && currentLineId && previousLineId !== currentLineId) {
+        transferCount++;
+      }
+
+      // Update previous line ID
+      previousLineId = currentLineId;
+    }
+  }
 
   // Adjusted transfer penalty (more exponential)
   // 0 transfers = 100, 1 transfer = 85, 2 transfers = 60, 3 transfers = 30, 4+ = 0

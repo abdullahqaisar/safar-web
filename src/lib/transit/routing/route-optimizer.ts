@@ -1,4 +1,4 @@
-import { Route, TransitSegment } from '@/types/route';
+import { Route, TransitSegment, WalkSegment } from '@/types/route';
 import { calculateComfortScore, calculateRouteScore } from './route-scorer';
 import { MAX_TRANSFERS, MAX_ROUTES_TO_RETURN } from '@/lib/constants/config';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,7 +6,12 @@ import { v4 as uuidv4 } from 'uuid';
 /**
  * Combined function to filter, rank and ensure diversity in routes
  */
-export function filterAndRankRoutes(routes: Route[]): Route[] {
+export function filterAndRankRoutes(
+  routes: Route[],
+  isVeryShortDistance = false,
+  isMediumDistance = false,
+  isLongDistance = false
+): Route[] {
   // Filter out invalid routes
   const validRoutes = routes.filter((route) => route.totalDuration > 0);
 
@@ -22,15 +27,97 @@ export function filterAndRankRoutes(routes: Route[]): Route[] {
     }
   });
 
-  const filteredRoutes = filterRoutesByQuality(validRoutes);
+  // Separate routes by type
+  const directWalkRoutes = validRoutes.filter((r) => r.isDirectWalk === true);
+  const nonDirectWalkRoutes = validRoutes.filter(
+    (r) => r.isDirectWalk !== true
+  );
+
+  // Filter and rank non-direct walk routes
+  const filteredRoutes = filterRoutesByQuality(nonDirectWalkRoutes);
   const rankedRoutes = rankRoutes(filteredRoutes);
-  return ensureRouteDiversity(rankedRoutes);
+
+  // Ensure diversity in routes (use the consolidated function)
+  let diverseRoutes = ensureRouteDiversity(
+    rankedRoutes,
+    isMediumDistance || isLongDistance
+  );
+
+  // Enhanced logic for medium and long distances to improve transit route inclusion
+  if (
+    isLongDistance &&
+    directWalkRoutes.length > 0 &&
+    diverseRoutes.length > 0
+  ) {
+    // For long distances (>2km), ALWAYS include at least one transit route if available
+    const bestDirectWalk = directWalkRoutes[0];
+    const hasTransitRoute = diverseRoutes.some((route) =>
+      route.segments.some((segment) => segment.type === 'transit')
+    );
+
+    if (!hasTransitRoute) {
+      // Specifically search for transit routes
+      const transitRoute = rankedRoutes.find((route) =>
+        route.segments.some((segment) => segment.type === 'transit')
+      );
+
+      if (transitRoute) {
+        // For long distances, prioritize transit over walking
+        diverseRoutes.unshift(transitRoute);
+      }
+    }
+
+    // For long distances, only include walking if fast or no transit options
+    const includeWalking =
+      bestDirectWalk.totalDuration < diverseRoutes[0].totalDuration * 0.8 || // Walking is 20% faster
+      !diverseRoutes.some((r) => r.segments.some((s) => s.type === 'transit')); // No transit options
+
+    if (includeWalking) {
+      // Append walking route
+      diverseRoutes.push(bestDirectWalk);
+    }
+  } else if (
+    (isMediumDistance || isVeryShortDistance) &&
+    directWalkRoutes.length > 0
+  ) {
+    // For medium/short distances, more balanced approach
+    const bestDirectWalk = directWalkRoutes[0];
+
+    if (diverseRoutes.length === 0) {
+      // If no other routes, use walking
+      diverseRoutes.push(bestDirectWalk);
+    } else {
+      // Compare walking vs best alternative
+      const walkIsFaster =
+        bestDirectWalk.totalDuration < diverseRoutes[0].totalDuration * 1.1;
+
+      if (walkIsFaster) {
+        // Walking is competitive - put it first
+        diverseRoutes.unshift(bestDirectWalk);
+      } else {
+        // Transit is better - put walking last
+        diverseRoutes.push(bestDirectWalk);
+      }
+    }
+  }
+
+  // Limit the total number of routes
+  if (diverseRoutes.length > MAX_ROUTES_TO_RETURN) {
+    diverseRoutes = diverseRoutes.slice(0, MAX_ROUTES_TO_RETURN);
+  }
+
+  return diverseRoutes;
 }
 
 /**
  * Filter routes to keep only those that meet quality thresholds
  */
 function filterRoutesByQuality(routes: Route[]): Route[] {
+  // Early return if no routes
+  if (routes.length === 0) {
+    return [];
+  }
+
   // Find the fastest route as a baseline
   const fastestRoute = routes.reduce(
     (fastest, route) =>
@@ -74,6 +161,53 @@ function filterRoutesByQuality(routes: Route[]): Route[] {
   filtered = filtered.filter(
     (route) => countTransfers(route) <= transfersThreshold
   );
+
+  // Handle very long walking segments - don't prefer all-walking routes when transit is available
+  // Identify transit routes (those that have at least one transit segment)
+  const hasTransitRoutes = filtered.some((route) =>
+    route.segments.some((segment) => segment.type === 'transit')
+  );
+
+  // Calculate total walking distance for each route
+  const routesWithWalkingDistance = filtered.map((route) => {
+    const totalWalking = route.segments
+      .filter((segment) => segment.type === 'walk')
+      .reduce(
+        (sum, segment) => sum + (segment as WalkSegment).walkingDistance,
+        0
+      );
+
+    return { route, totalWalking };
+  });
+
+  // If we have transit routes and all-walking routes with very long walks, filter them out
+  if (hasTransitRoutes) {
+    // Keep only walking-only routes that aren't excessively long compared to transit options
+    filtered = routesWithWalkingDistance
+      .filter((item) => {
+        // If this is an all-walking route with a very long walk (>2000m)
+        const isLongWalkOnly =
+          !item.route.segments.some((segment) => segment.type === 'transit') &&
+          item.totalWalking > 2000;
+
+        // FIX: Logic error in the condition
+        // For long walks, we WANT to remove them if transit is competitive
+        if (isLongWalkOnly) {
+          const transitRoutes = routesWithWalkingDistance.filter((r) =>
+            r.route.segments.some((segment) => segment.type === 'transit')
+          );
+
+          // Keep the walking route ONLY IF no transit route is within 50% of walking time
+          // (reversed the condition from the original)
+          return !transitRoutes.some(
+            (tr) => tr.route.totalDuration <= item.route.totalDuration * 1.5
+          );
+        }
+
+        return true;
+      })
+      .map((item) => item.route);
+  }
 
   // Early return if filtering removed all routes
   if (filtered.length === 0) {
@@ -129,19 +263,50 @@ function rankRoutes(routes: Route[]): Route[] {
 }
 
 /**
- * Ensure the returned routes are meaningfully different from each other
+ * Ensure the returned routes are meaningfully different from each other,
+ * considering both mode diversity and route diversity
  */
-function ensureRouteDiversity(routes: Route[]): Route[] {
-  // Early return if no routes exist or just one route
+function ensureRouteDiversity(
+  routes: Route[],
+  enforceModeDiversity = false
+): Route[] {
+  // Early return if not enough routes
   if (routes.length <= 1) return routes;
 
   const result: Route[] = [routes[0]]; // Always include the top-ranked route
 
+  // For medium and long distances, ensure we have one transit and one walking option if possible
+  if (enforceModeDiversity) {
+    // Check what mode our first route is
+    const firstIsTransit = routes[0].segments.some((s) => s.type === 'transit');
+
+    // If we need a route of the opposite mode, look for it
+    const needsMode = firstIsTransit ? 'walk' : 'transit';
+
+    // Find the best route of the needed mode
+    const oppositeMode = routes
+      .slice(1)
+      .find((route) =>
+        needsMode === 'walk'
+          ? !route.segments.some((s) => s.type === 'transit')
+          : route.segments.some((s) => s.type === 'transit')
+      );
+
+    // If found, add it next
+    if (oppositeMode) {
+      result.push(oppositeMode);
+    }
+  }
+
+  // Continue with regular diversity checks for remaining routes
   for (
     let i = 1;
     i < routes.length && result.length < MAX_ROUTES_TO_RETURN;
     i++
   ) {
+    // Skip if we already added this route in the medium distance block
+    if (result.includes(routes[i])) continue;
+
     const candidate = routes[i];
     let isSignificantlyDifferent = true;
 
