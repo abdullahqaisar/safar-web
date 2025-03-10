@@ -17,6 +17,7 @@ export interface EdgeData {
   lineId?: string;
   lineName?: string;
   lineColor?: string;
+  costMultiplier?: number;
 }
 
 // Node data interface
@@ -27,12 +28,29 @@ export interface NodeData {
 }
 
 /**
+ * Calculate walking duration with distance-based penalties
+ * @param distance Walking distance in meters
+ * @returns Duration in seconds, with penalty applied
+ */
+function calculateWalkingDuration(distance: number): number {
+  const baseDuration = Math.round(distance / WALKING_SPEED_MPS);
+
+  // Updated tiered penalties
+  if (distance <= 500) return baseDuration;
+  if (distance <= 1000) return Math.round(baseDuration * 1.1);
+  if (distance <= 1500) return Math.round(baseDuration * 1.3);
+  if (distance <= 2000) return Math.round(baseDuration * 1.5);
+  if (distance <= 2500) return Math.round(baseDuration * 1.8);
+  if (distance <= 3000) return Math.round(baseDuration * 2.2);
+  return Math.round(baseDuration * 3.0);
+}
+/**
  * Get the transit graph with origin and destination nodes added
  */
 export function getTransitGraph(
   origin: Coordinates,
   destination: Coordinates,
-  maxWalkingDistance = 2000 // Maximum walking distance in meters
+  maxWalkingDistance: number
 ): { graph: Graph; originId: string; destinationId: string } {
   // Build or retrieve the graph
   const cachedGraph = graphCache.get();
@@ -70,121 +88,107 @@ export function getTransitGraph(
 export function buildTransitGraph(metroLines: MetroLine[]): Graph {
   const graph = new Graph<NodeData, EdgeData>();
   const stationsAdded = new Set<string>();
+  const virtualNodesCreated = new Map<string, string[]>();
 
-  // First pass: add all stations as nodes
+  // First pass: add all stations as nodes and create virtual nodes for each station on each line
   for (const line of metroLines) {
     for (const station of line.stations) {
+      // Add the physical station node if not already added
       if (!stationsAdded.has(station.id)) {
         graph.addNode(station.id, { station });
         stationsAdded.add(station.id);
+        virtualNodesCreated.set(station.id, []);
       }
-    }
-  }
 
-  // Second pass: add transit edges between stations on the same line
-  for (const line of metroLines) {
-    for (let i = 0; i < line.stations.length - 1; i++) {
-      const fromStation = line.stations[i];
-      const toStation = line.stations[i + 1];
+      // Create a virtual node for this station on this line
+      const virtualNodeId = `${station.id}_${line.id}`;
 
-      // Calculate time and distance between stations
-      const distance = calculateDistance(
-        { coordinates: fromStation.coordinates },
-        { coordinates: toStation.coordinates }
-      );
-
-      // Use different speeds for different transit types
-      const speed = 8; // Default average speed in m/s (roughly 30 km/h)
-
-      const duration = Math.round(distance / speed);
-
-      // Add bidirectional edges
-      const edgeData: EdgeData = {
-        type: 'transit',
-        duration,
-        distance,
+      // Add virtual node
+      graph.addNode(virtualNodeId, {
+        station,
+        virtual: true,
         lineId: line.id,
-        lineName: line.name,
-        lineColor: line.color,
+      });
+
+      // Connect physical station to its virtual node
+      const connectionData: EdgeData = {
+        type: 'transfer',
+        duration: 15, // Small time to transfer from physical station to platform
+        distance: 0,
       };
 
-      // Add edges in both directions (for bidirectional transit)
-      if (!graph.hasEdge(fromStation.id, toStation.id)) {
-        graph.addEdge(fromStation.id, toStation.id, edgeData);
-      }
-      if (!graph.hasEdge(toStation.id, fromStation.id)) {
-        graph.addEdge(toStation.id, fromStation.id, edgeData);
-      }
+      graph.addEdge(station.id, virtualNodeId, connectionData);
+      graph.addEdge(virtualNodeId, station.id, connectionData);
+
+      // Track virtual nodes
+      virtualNodesCreated.get(station.id)?.push(virtualNodeId);
     }
   }
 
-  // Third pass: add transfer edges at stations served by multiple lines
-  const stationLines = new Map<string, MetroLine[]>();
-
+  // Second pass: add transit edges between virtual stations on the same line
   for (const line of metroLines) {
-    for (const station of line.stations) {
-      const lines = stationLines.get(station.id) || [];
-      lines.push(line);
-      stationLines.set(station.id, lines);
-    }
-  }
+    for (let i = 0; i < line.stations.length; i++) {
+      const fromStation = line.stations[i];
+      const fromVirtualId = `${fromStation.id}_${line.id}`;
 
-  // Add transfer edges at interchange stations
-  for (const [stationId, lines] of stationLines.entries()) {
-    if (lines.length > 1) {
-      // This is an interchange station with multiple lines
+      // Connect to ALL subsequent stations on the same line, not just adjacent ones
+      for (let j = i + 1; j < line.stations.length; j++) {
+        const toStation = line.stations[j];
+        const toVirtualId = `${toStation.id}_${line.id}`;
 
-      // First create virtual nodes for each line at this station
-      const virtualNodes: string[] = [];
+        // Calculate distance and time between these stations
+        const distance = calculateDistance(
+          { coordinates: fromStation.coordinates },
+          { coordinates: toStation.coordinates }
+        );
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const virtualNodeId = `${stationId}_${line.id}`;
+        // Use different speeds for different transit types (default 8 m/s or ~30 km/h)
+        const speed = 8;
+        const duration = Math.round(distance / speed);
 
-        // Get the actual station data
-        const station = graph.getNodeAttributes(stationId).station;
-
-        // Add virtual node if it doesn't exist
-        if (!graph.hasNode(virtualNodeId)) {
-          graph.addNode(virtualNodeId, {
-            station,
-            virtual: true,
-            lineId: line.id,
-          });
-          virtualNodes.push(virtualNodeId);
-        }
-
-        // Connect main station node to its virtual node (crucial fix)
-        // This ensures passengers can enter the station from any line
-        const mainToVirtualData: EdgeData = {
-          type: 'transfer',
-          duration: 30, // Short transfer time within same station
-          distance: 0,
+        // Add edges for direct connections between stations on the same line
+        const edgeData: EdgeData = {
+          type: 'transit',
+          duration,
+          distance,
+          lineId: line.id,
+          lineName: line.name,
+          lineColor: line.color,
+          // Use a more reasonable cost multiplier that grows logarithmically rather than linearly
+          costMultiplier: j === i + 1 ? 1 : Math.log2(j - i) + 1,
         };
 
-        if (!graph.hasEdge(stationId, virtualNodeId)) {
-          graph.addEdge(stationId, virtualNodeId, mainToVirtualData);
-          graph.addEdge(virtualNodeId, stationId, mainToVirtualData);
-        }
+        graph.addEdge(fromVirtualId, toVirtualId, edgeData);
+        graph.addEdge(toVirtualId, fromVirtualId, edgeData);
       }
+    }
+  }
 
-      // Now connect virtual nodes to each other (transfers between lines)
+  // Third pass: add transfer edges at interchange stations
+  for (const stationId of stationsAdded) {
+    const virtualNodes = virtualNodesCreated.get(stationId);
+
+    if (virtualNodes && virtualNodes.length > 1) {
+      // This is an interchange station with multiple lines
       for (let i = 0; i < virtualNodes.length; i++) {
         for (let j = i + 1; j < virtualNodes.length; j++) {
-          const nodeA = virtualNodes[i];
-          const nodeB = virtualNodes[j];
+          // Get the line IDs from the virtual node IDs
+          const lineIdA = virtualNodes[i].split('_')[1];
+          const lineIdB = virtualNodes[j].split('_')[1];
 
-          // Base transfer time plus additional time based on station complexity
-          const transferTime = 90 + lines.length * 15;
+          // Base transfer time with additional penalty for complex stations
+          const transferTime = 90 + virtualNodes.length * 15;
 
           const transferData: EdgeData = {
             type: 'transfer',
             duration: transferTime,
             distance: 0,
+            lineId: `${lineIdA}-${lineIdB}`, // Mark which lines this transfer connects
           };
 
-          graph.addEdge(nodeA, nodeB, transferData);
-          graph.addEdge(nodeB, nodeA, transferData);
+          // Add bidirectional transfer edges
+          graph.addEdge(virtualNodes[i], virtualNodes[j], transferData);
+          graph.addEdge(virtualNodes[j], virtualNodes[i], transferData);
         }
       }
     }
@@ -247,11 +251,17 @@ function addCustomLocations(
   }
 
   // Connect origin to nearby stations with walking edges
+  // First find the closest station for better connectivity
+  let closestStationToOrigin = null;
+  let minDistanceToOrigin = Infinity;
+  let closestVirtualNodeToOrigin = null;
+
+  // First pass - find all physical stations within range and the closest one
   for (const nodeId of graph.nodes()) {
     if (nodeId === originId || nodeId === destinationId) continue;
 
     const nodeData = graph.getNodeAttributes(nodeId);
-    if (nodeData.virtual) continue; // Skip virtual nodes
+    if (nodeData.virtual) continue; // Skip virtual nodes for now
 
     const station = nodeData.station;
     const distance = calculateDistance(
@@ -259,9 +269,15 @@ function addCustomLocations(
       { coordinates: station.coordinates }
     );
 
+    if (distance < minDistanceToOrigin) {
+      minDistanceToOrigin = distance;
+      closestStationToOrigin = nodeId;
+    }
+
     // Only add walking edges for stations within walking distance
     if (distance <= maxWalkingDistance) {
-      const duration = Math.round(distance / WALKING_SPEED_MPS);
+      // Use new function that applies distance-based penalties
+      const duration = calculateWalkingDuration(distance);
 
       graph.addEdge(originId, nodeId, {
         type: 'walking',
@@ -277,12 +293,76 @@ function addCustomLocations(
     }
   }
 
+  // Second pass - find closest virtual node for direct line access
+  // This helps with finding better transit routes
+  let minVirtualDistance = Infinity;
+  for (const nodeId of graph.nodes()) {
+    const nodeData = graph.getNodeAttributes(nodeId);
+    if (!nodeData.virtual) continue;
+
+    const station = nodeData.station;
+    const distance = calculateDistance(
+      { coordinates: origin },
+      { coordinates: station.coordinates }
+    );
+
+    if (distance < minVirtualDistance && distance <= maxWalkingDistance * 1.2) {
+      minVirtualDistance = distance;
+      closestVirtualNodeToOrigin = nodeId;
+    }
+  }
+
+  // If a close virtual node was found, connect directly to it as well
+  // This creates more direct connections to transit lines
+  if (closestVirtualNodeToOrigin) {
+    const duration = calculateWalkingDuration(minVirtualDistance);
+    graph.addEdge(originId, closestVirtualNodeToOrigin, {
+      type: 'walking',
+      duration: duration * 0.9, // Slight bonus for direct line access
+      distance: minVirtualDistance,
+    });
+    graph.addEdge(closestVirtualNodeToOrigin, originId, {
+      type: 'walking',
+      duration: duration * 0.9,
+      distance: minVirtualDistance,
+    });
+  }
+
+  // If the closest station is beyond walking distance but within an extended range,
+  // connect to it anyway to ensure graph connectivity
+  if (
+    closestStationToOrigin &&
+    minDistanceToOrigin > maxWalkingDistance &&
+    minDistanceToOrigin <= maxWalkingDistance * 1.5
+  ) {
+    const duration = calculateWalkingDuration(minDistanceToOrigin);
+
+    graph.addEdge(originId, closestStationToOrigin, {
+      type: 'walking',
+      duration,
+      distance: minDistanceToOrigin,
+    });
+
+    graph.addEdge(closestStationToOrigin, originId, {
+      type: 'walking',
+      duration,
+      distance: minDistanceToOrigin,
+    });
+  }
+
+  // Now do the same for destination
   // Connect destination to nearby stations with walking edges
+  // Find the closest station to destination
+  let closestStationToDest = null;
+  let minDistanceToDest = Infinity;
+  let closestVirtualNodeToDest = null;
+
+  // First pass for physical stations
   for (const nodeId of graph.nodes()) {
     if (nodeId === originId || nodeId === destinationId) continue;
 
     const nodeData = graph.getNodeAttributes(nodeId);
-    if (nodeData.virtual) continue; // Skip virtual nodes
+    if (nodeData.virtual) continue;
 
     const station = nodeData.station;
     const distance = calculateDistance(
@@ -290,9 +370,15 @@ function addCustomLocations(
       { coordinates: station.coordinates }
     );
 
+    if (distance < minDistanceToDest) {
+      minDistanceToDest = distance;
+      closestStationToDest = nodeId;
+    }
+
     // Only add walking edges for stations within walking distance
     if (distance <= maxWalkingDistance) {
-      const duration = Math.round(distance / WALKING_SPEED_MPS);
+      // Use new function that applies distance-based penalties
+      const duration = calculateWalkingDuration(distance);
 
       graph.addEdge(nodeId, destinationId, {
         type: 'walking',
@@ -308,24 +394,81 @@ function addCustomLocations(
     }
   }
 
+  // Second pass for virtual nodes
+  let minVirtualDistanceToDest = Infinity;
+  for (const nodeId of graph.nodes()) {
+    const nodeData = graph.getNodeAttributes(nodeId);
+    if (!nodeData.virtual) continue;
+
+    const station = nodeData.station;
+    const distance = calculateDistance(
+      { coordinates: destination },
+      { coordinates: station.coordinates }
+    );
+
+    if (
+      distance < minVirtualDistanceToDest &&
+      distance <= maxWalkingDistance * 1.2
+    ) {
+      minVirtualDistanceToDest = distance;
+      closestVirtualNodeToDest = nodeId;
+    }
+  }
+
+  // Connect directly to closest virtual node
+  if (closestVirtualNodeToDest) {
+    const duration = calculateWalkingDuration(minVirtualDistanceToDest);
+    graph.addEdge(destinationId, closestVirtualNodeToDest, {
+      type: 'walking',
+      duration: duration * 0.9, // Slight bonus for direct line access
+      distance: minVirtualDistanceToDest,
+    });
+    graph.addEdge(closestVirtualNodeToDest, destinationId, {
+      type: 'walking',
+      duration: duration * 0.9,
+      distance: minVirtualDistanceToDest,
+    });
+  }
+
+  // If the closest station is beyond walking distance but within an extended range,
+  // connect to it anyway to ensure graph connectivity
+  if (
+    closestStationToDest &&
+    minDistanceToDest > maxWalkingDistance &&
+    minDistanceToDest <= maxWalkingDistance * 1.5
+  ) {
+    const duration = calculateWalkingDuration(minDistanceToDest);
+
+    graph.addEdge(destinationId, closestStationToDest, {
+      type: 'walking',
+      duration,
+      distance: minDistanceToDest,
+    });
+
+    graph.addEdge(closestStationToDest, destinationId, {
+      type: 'walking',
+      duration,
+      distance: minDistanceToDest,
+    });
+  }
+
+  // Always add direct walking between origin and destination
   const directDistance = calculateDistance(
     { coordinates: origin },
     { coordinates: destination }
   );
 
-  if (directDistance <= maxWalkingDistance * 1.5) {
-    const duration = Math.round(directDistance / WALKING_SPEED_MPS);
+  const duration = calculateWalkingDuration(directDistance);
 
-    graph.addEdge(originId, destinationId, {
-      type: 'walking',
-      duration,
-      distance: directDistance,
-    });
+  graph.addEdge(originId, destinationId, {
+    type: 'walking',
+    duration,
+    distance: directDistance,
+  });
 
-    graph.addEdge(destinationId, originId, {
-      type: 'walking',
-      duration,
-      distance: directDistance,
-    });
-  }
+  graph.addEdge(destinationId, originId, {
+    type: 'walking',
+    duration,
+    distance: directDistance,
+  });
 }

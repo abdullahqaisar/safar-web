@@ -225,7 +225,7 @@ const stationData: Record<string, Station> = {
   kuriRoad: {
     id: 'kuriRoad',
     name: 'Kuri Road',
-    coordinates: { lat: 33.64217419506025, lng: 73.10352144794746 },
+    coordinates: { lat: 33.64271726797072, lng: 73.10380327946089 },
   },
   ziaMasjid: {
     id: 'ziaMasjid',
