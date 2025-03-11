@@ -24,13 +24,12 @@
       "@/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
       "@features/*": ["./src/components/features/*"],
-      "@hooks/*": ["./src/hooks/*"],
+      "@hooks/*": ["src/client/hooks/*"],
       "@lib/*": ["./src/lib/*"],
       "@types/*": ["./src/types/*"],
       "@constants/*": ["./src/constants/*"],
       "@config/*": ["./src/config/*"],
-      "@services/*": ["./src/services/*"],
-      "@styles/*": ["./src/styles/*"]
+      "@server/*": ["./src/server/*"]
     }
   },
   "include": [

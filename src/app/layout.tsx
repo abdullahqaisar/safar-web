@@ -4,7 +4,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import { Navbar } from '@/components/layouts/Navbar';
 import './globals.css';
-import { QueryProvider } from '@/providers/QueryProvider';
+import { QueryProvider } from '@/client/providers/QueryProvider';
 import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });

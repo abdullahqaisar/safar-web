@@ -1,4 +1,4 @@
-import { Journey } from '@/components/journey/Journey';
+import { Journey } from '@/components/features/Journey';
 import { Hero } from '@/components/common/Hero';
 import Script from 'next/script';
 
