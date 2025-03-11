@@ -15,9 +15,13 @@ export const MAX_ROUTES_TO_RETURN = 3;
 // Average wait time at each stop in seconds
 export const STOP_WAIT_TIME_SECONDS = 20;
 
-// Average walking speed in meters per second (about 4.5 km/h)
-export const WALKING_SPEED_MPS = 1.25;
+// Walking distance thresholds (meters)
+export const MAX_WALKING_DISTANCE = 10000; // Maximum overall walking distance
+export const MAX_ORIGIN_WALKING_DISTANCE = 9000; // Shorter distance from origin
+export const MAX_DESTINATION_WALKING_DISTANCE = 9000; // Longer distance at destination
+
+// Speeds
+export const WALKING_SPEED_MPS = 1.4; // Average walking speed (meters/second)
 
 // Route finding settings
-export const MAX_WALKING_DISTANCE = 5000; // Maximum walking distance in meters
 export const MAX_ROUTES_TO_GENERATE = 10; // Maximum number of routes to generate

@@ -180,38 +180,60 @@ function filterRoutesByQuality(routes: Route[]): Route[] {
     return { route, totalWalking };
   });
 
-  // If we have transit routes and all-walking routes with very long walks, filter them out
+  // FIXED: More lenient filtering for routes with long walking segments
+  // when those are the only viable options
   if (hasTransitRoutes) {
-    // Keep only walking-only routes that aren't excessively long compared to transit options
-    filtered = routesWithWalkingDistance
-      .filter((item) => {
-        // If this is an all-walking route with a very long walk (>2000m)
-        const isLongWalkOnly =
-          !item.route.segments.some((segment) => segment.type === 'transit') &&
-          item.totalWalking > 2000;
+    const viableTransitRoutes = routesWithWalkingDistance.filter((r) =>
+      r.route.segments.some((segment) => segment.type === 'transit')
+    );
 
-        // FIX: Logic error in the condition
-        // For long walks, we WANT to remove them if transit is competitive
-        if (isLongWalkOnly) {
-          const transitRoutes = routesWithWalkingDistance.filter((r) =>
-            r.route.segments.some((segment) => segment.type === 'transit')
-          );
+    // Only filter out walking routes if we have viable transit alternatives
+    if (viableTransitRoutes.length > 0) {
+      filtered = routesWithWalkingDistance
+        .filter((item) => {
+          // If this is an all-walking route with a very long walk (>2000m)
+          const isLongWalkOnly =
+            !item.route.segments.some(
+              (segment) => segment.type === 'transit'
+            ) && item.totalWalking > 2000;
 
-          // Keep the walking route ONLY IF no transit route is within 50% of walking time
-          // (reversed the condition from the original)
-          return !transitRoutes.some(
-            (tr) => tr.route.totalDuration <= item.route.totalDuration * 1.5
-          );
-        }
+          // For long walks, check if any transit route is competitive
+          if (isLongWalkOnly) {
+            // FIXED: Don't filter out walking routes if no viable transit alternative exists
+            // Keep the route if no transit route is within 80% of the walking time
+            // (more lenient than before)
+            return !viableTransitRoutes.some(
+              (tr) => tr.route.totalDuration <= item.route.totalDuration * 1.8
+            );
+          }
 
-        return true;
-      })
-      .map((item) => item.route);
+          return true;
+        })
+        .map((item) => item.route);
+    }
   }
 
-  // Early return if filtering removed all routes
+  // Early return if filtering removed all routes - now with better fallback
   if (filtered.length === 0) {
-    return [fastestRoute]; // Fall back to the fastest route if all got filtered out
+    // FIXED: Try to return a diverse set of fallback options
+    if (routes.length > 0) {
+      // First try the fastest route
+      if (fastestRoute) {
+        return [fastestRoute];
+      }
+
+      // If that didn't work, try any route with transit
+      const transitRoute = routes.find((route) =>
+        route.segments.some((s) => s.type === 'transit')
+      );
+      if (transitRoute) {
+        return [transitRoute];
+      }
+
+      // Last resort - any available route
+      return [routes[0]];
+    }
+    return [];
   }
 
   // Ensure we always include these key routes

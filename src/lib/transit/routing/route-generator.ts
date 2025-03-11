@@ -3,7 +3,7 @@ import { dijkstra } from 'graphology-shortest-path';
 import Graph from 'graphology';
 import { v4 as uuidv4 } from 'uuid';
 
-import { calculateHaversineDistance } from '@/lib/utils/geo';
+import { calculateDistanceSync } from '@/lib/utils/distance';
 import { EdgeData, NodeData, getTransitGraph } from './graph-builder';
 import { Coordinates, Station } from '@/types/station';
 import {
@@ -20,7 +20,8 @@ import {
 import {
   MAX_ROUTES_TO_GENERATE,
   MAX_WALKING_DISTANCE,
-  WALKING_SPEED_MPS,
+  MAX_ORIGIN_WALKING_DISTANCE,
+  MAX_DESTINATION_WALKING_DISTANCE,
 } from '@/lib/constants/config';
 import { metroLines } from '@/lib/constants/metro-data';
 import { createWalkingSegment } from '../segments/segment-builder';
@@ -36,7 +37,7 @@ export async function findRoutes(
   const routes: Route[] = [];
 
   // Calculate direct distance between origin and destination
-  const directDistance = calculateHaversineDistance(origin, destination);
+  const directDistance = calculateDistanceSync(origin, destination);
 
   // Create distance classification flags
   const isVeryShortDistance = directDistance < 500;
@@ -109,22 +110,32 @@ async function findTransitRoutes(
   origin: Coordinates,
   destination: Coordinates
 ): Promise<Route[]> {
-  // Use enhanced walking distance for connections to ensure proper graph connectivity
-  const connectingWalkDistance = Math.max(MAX_WALKING_DISTANCE, 2500);
+  // Calculate direct distance to determine appropriate walking thresholds
+  const directDistance = calculateDistanceSync(origin, destination);
 
+  const stationDistances = await calculateStationDistances(origin, destination);
+
+  const walkingThresholds = determineWalkingThresholds(
+    stationDistances,
+    directDistance
+  );
+
+  console.log(
+    `Walking thresholds calculated: origin=${walkingThresholds.origin}m, destination=${walkingThresholds.destination}m`
+  );
+
+  // Use enhanced connecting walk distance to improve route options
   const { graph, originId, destinationId } = getTransitGraph(
     origin,
     destination,
-    connectingWalkDistance
+    walkingThresholds.origin,
+    walkingThresholds.destination
   );
 
-  // Explicitly cast the graph to correct type
   const typedGraph = graph as unknown as Graph<NodeData, EdgeData>;
 
-  // Find multiple paths through the graph
   const paths = findMultiplePaths(typedGraph, originId, destinationId);
 
-  // If no paths found through the graph, return empty array
   if (paths.length === 0) {
     return [];
   }
@@ -140,6 +151,174 @@ async function findTransitRoutes(
     ...route,
     id: `transit-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
   }));
+}
+
+/**
+ * Calculate distances from origin and destination to all metro stations
+ * This provides a more complete picture of the station network topology
+ */
+async function calculateStationDistances(
+  origin: Coordinates,
+  destination: Coordinates
+): Promise<{
+  originDistances: { stationId: string; distance: number }[];
+  destinationDistances: { stationId: string; distance: number }[];
+  minOriginDistance: number;
+  minDestDistance: number;
+  closestOriginStation: string;
+  closestDestStation: string;
+}> {
+  const originDistances: { stationId: string; distance: number }[] = [];
+  const destinationDistances: { stationId: string; distance: number }[] = [];
+
+  let minOriginDistance = Infinity;
+  let minDestDistance = Infinity;
+  let closestOriginStation = '';
+  let closestDestStation = '';
+
+  // Get unique station IDs from all metro lines
+  const stationIds = new Set<string>();
+  for (const line of metroLines) {
+    for (const station of line.stations) {
+      stationIds.add(station.id);
+    }
+  }
+
+  // Calculate distances between points and all stations
+  for (const stationId of stationIds) {
+    // Find the station by ID in metro lines
+    let stationCoords: Coordinates | null = null;
+    for (const line of metroLines) {
+      const station = line.stations.find((s) => s.id === stationId);
+      if (station) {
+        stationCoords = station.coordinates;
+        break;
+      }
+    }
+
+    if (stationCoords) {
+      // Calculate distances
+      const originDistance = calculateDistanceSync(origin, stationCoords);
+      const destDistance = calculateDistanceSync(destination, stationCoords);
+
+      // Store distances
+      originDistances.push({ stationId, distance: originDistance });
+      destinationDistances.push({ stationId, distance: destDistance });
+
+      // Track closest stations
+      if (originDistance < minOriginDistance) {
+        minOriginDistance = originDistance;
+        closestOriginStation = stationId;
+      }
+
+      if (destDistance < minDestDistance) {
+        minDestDistance = destDistance;
+        closestDestStation = stationId;
+      }
+    }
+  }
+
+  // Sort distances
+  originDistances.sort((a, b) => a.distance - b.distance);
+  destinationDistances.sort((a, b) => a.distance - b.distance);
+
+  return {
+    originDistances,
+    destinationDistances,
+    minOriginDistance,
+    minDestDistance,
+    closestOriginStation,
+    closestDestStation,
+  };
+}
+
+/**
+ * Determine appropriate walking thresholds based on station network topology
+ * This ensures thresholds are adapted to the actual distribution of stations
+ * and the journey being attempted, rather than using fixed or journey-length based values
+ */
+function determineWalkingThresholds(
+  stationDistances: {
+    originDistances: { stationId: string; distance: number }[];
+    destinationDistances: { stationId: string; distance: number }[];
+    minOriginDistance: number;
+    minDestDistance: number;
+    closestOriginStation: string;
+    closestDestStation: string;
+  },
+  directDistance: number
+): { origin: number; destination: number } {
+  // Default thresholds that will be adjusted
+  let originThreshold = MAX_ORIGIN_WALKING_DISTANCE;
+  let destinationThreshold = MAX_DESTINATION_WALKING_DISTANCE;
+
+  // Extract relevant data
+  const {
+    originDistances,
+    destinationDistances,
+    minOriginDistance,
+    minDestDistance,
+  } = stationDistances;
+
+  // SYMMETRIC THRESHOLD CALCULATION:
+  // 1. Start with a base threshold that considers both direct journey length and network topology
+  const baseThreshold = Math.max(
+    // At least 1/3 of direct distance to ensure routes with reasonable walking portions
+    directDistance * 0.33,
+
+    // And always at least the distance to the closest station + 50% buffer
+    // This ensures we can at least connect to the nearest station
+    Math.max(minOriginDistance, minDestDistance) * 1.5,
+
+    // But never less than 1km to ensure connectivity in sparse areas
+    1000
+  );
+
+  // 2. Examine station density around each point
+  // Find distance to 3rd closest station for each point
+  const originDensity =
+    originDistances.length >= 3
+      ? originDistances[2].distance
+      : minOriginDistance * 2;
+
+  const destDensity =
+    destinationDistances.length >= 3
+      ? destinationDistances[2].distance
+      : minDestDistance * 2;
+
+  // 3. For each endpoint, consider both the base threshold and local station density
+  originThreshold = Math.max(
+    baseThreshold,
+    // Include density factor to account for areas with sparse stations
+    Math.min(originDensity * 1.2, 3000)
+  );
+
+  destinationThreshold = Math.max(
+    baseThreshold,
+    Math.min(destDensity * 1.2, 3000)
+  );
+
+  // 4. For symmetry (critical for bidirectional routing), use the maximum of both thresholds
+  const symmetricThreshold = Math.max(originThreshold, destinationThreshold);
+
+  // 5. For longer journeys, we might want proportionally larger thresholds
+  const isLongJourney = directDistance > 5000;
+  if (isLongJourney) {
+    // For very long journeys, we can allow longer walking segments
+    return {
+      origin: Math.min(symmetricThreshold * 1.2, MAX_ORIGIN_WALKING_DISTANCE),
+      destination: Math.min(
+        symmetricThreshold * 1.2,
+        MAX_DESTINATION_WALKING_DISTANCE
+      ),
+    };
+  }
+
+  // 6. Always return identical thresholds for origin and destination to ensure symmetry
+  return {
+    origin: symmetricThreshold,
+    destination: symmetricThreshold,
+  };
 }
 
 /**
@@ -399,7 +578,7 @@ async function pathsToRoutes(
           for (let i = 0; i < transitSegment.stations.length - 1; i++) {
             const from = transitSegment.stations[i].coordinates;
             const to = transitSegment.stations[i + 1].coordinates;
-            totalDistance += calculateHaversineDistance(from, to);
+            totalDistance += calculateDistanceSync(from, to);
           }
         }
       }

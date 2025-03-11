@@ -1,10 +1,10 @@
-import { point, distance } from '@turf/turf';
 import KDBush from 'kdbush';
 import { metroLines } from '@/lib/constants/metro-data';
 import { Coordinates, Station, NearestStationResult } from '@/types/station';
 import { MetroLine } from '@/types/metro';
 import { SpatialIndex } from '@/lib/transit/station/spatial-index';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
+import { calculateDistanceSync } from '@/lib/utils/distance';
 
 type StationPoint = {
   idx: number;
@@ -121,12 +121,11 @@ export class StationService {
         // Then use that index to get the original station
         const station = this.stationsArray[stationPoint.idx];
 
-        const distanceInMeters =
-          distance(
-            point([location.lng, location.lat]),
-            point([station.coordinates.lng, station.coordinates.lat]),
-            { units: 'kilometers' }
-          ) * 1000; // Convert km to meters
+        // Use consistent distance calculation
+        const distanceInMeters = calculateDistanceSync(
+          location,
+          station.coordinates
+        );
 
         return {
           station,
@@ -246,17 +245,12 @@ export class StationService {
   }
 
   calculateStationScore(result: NearestStationResult): number {
-    // Base distance factor - exponentially decreases as distance increases
-    const distanceFactor = Math.exp(-result.distance / 500); // Rapidly decreases after 500m
+    const distanceFactor = Math.exp(-result.distance / 500);
 
-    // Lines factor - diminishes in importance as distance increases
-    // At close distances, more lines is very beneficial
-    // At far distances, more lines is less important
-    const lineCountValue = Math.min(result.lines.length, 5) / 5; // Cap at 5 lines
-    const distanceWeight = Math.max(0, 1 - result.distance / 1500); // More weight when closer
+    const lineCountValue = Math.min(result.lines.length, 5) / 5;
+    const distanceWeight = Math.max(0, 1 - result.distance / 1500);
     const lineFactor = lineCountValue * distanceWeight;
 
-    // Combine factors - distance is primary, lines are secondary
     // Distance contributes 70% of the score, lines 30%
     return distanceFactor * 0.7 + lineFactor * 0.3;
   }

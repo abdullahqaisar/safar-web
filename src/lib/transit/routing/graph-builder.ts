@@ -1,8 +1,12 @@
 import Graph from 'graphology';
 import { MetroLine } from '@/types/metro';
 import { Station, Coordinates } from '@/types/station';
-import { calculateDistance } from '@/lib/utils/geo';
-import { WALKING_SPEED_MPS } from '@/lib/constants/config';
+import { calculateDistanceSync } from '@/lib/utils/distance';
+import {
+  WALKING_SPEED_MPS,
+  MAX_ORIGIN_WALKING_DISTANCE,
+  MAX_DESTINATION_WALKING_DISTANCE,
+} from '@/lib/constants/config';
 import { metroLines } from '@/lib/constants/metro-data';
 import { graphCache } from '../../utils/cache';
 
@@ -46,11 +50,13 @@ function calculateWalkingDuration(distance: number): number {
 }
 /**
  * Get the transit graph with origin and destination nodes added
+ * Now uses separate walking thresholds for origin and destination
  */
 export function getTransitGraph(
   origin: Coordinates,
   destination: Coordinates,
-  maxWalkingDistance: number
+  customMaxOriginWalking?: number,
+  customMaxDestinationWalking?: number
 ): { graph: Graph; originId: string; destinationId: string } {
   // Build or retrieve the graph
   const cachedGraph = graphCache.get();
@@ -69,14 +75,21 @@ export function getTransitGraph(
   const originId = 'origin';
   const destinationId = 'destination';
 
-  // Add origin and destination nodes
+  // Use provided values or defaults from config
+  const maxOriginWalking =
+    customMaxOriginWalking || MAX_ORIGIN_WALKING_DISTANCE;
+  const maxDestinationWalking =
+    customMaxDestinationWalking || MAX_DESTINATION_WALKING_DISTANCE;
+
+  // Add origin and destination nodes with appropriate walking thresholds
   addCustomLocations(
     graph,
     originId,
     destinationId,
     origin,
     destination,
-    maxWalkingDistance
+    maxOriginWalking,
+    maxDestinationWalking
   );
 
   return { graph, originId, destinationId };
@@ -137,9 +150,9 @@ export function buildTransitGraph(metroLines: MetroLine[]): Graph {
         const toVirtualId = `${toStation.id}_${line.id}`;
 
         // Calculate distance and time between these stations
-        const distance = calculateDistance(
-          { coordinates: fromStation.coordinates },
-          { coordinates: toStation.coordinates }
+        const distance = calculateDistanceSync(
+          fromStation.coordinates,
+          toStation.coordinates
         );
 
         // Use different speeds for different transit types (default 8 m/s or ~30 km/h)
@@ -199,6 +212,7 @@ export function buildTransitGraph(metroLines: MetroLine[]): Graph {
 
 /**
  * Add custom origin and destination points to the graph with walking edges
+ * Updated to ensure perfect symmetry between origin and destination
  */
 function addCustomLocations(
   graph: Graph,
@@ -206,7 +220,8 @@ function addCustomLocations(
   destinationId: string,
   origin: Coordinates,
   destination: Coordinates,
-  maxWalkingDistance = 2000 // Maximum walking distance in meters
+  maxOriginWalkingDistance = 800, // Default 800m origin walking
+  maxDestinationWalkingDistance = 1200 // Default 1200m destination walking
 ): void {
   // Check and handle origin node
   if (graph.hasNode(originId)) {
@@ -250,41 +265,91 @@ function addCustomLocations(
     });
   }
 
-  // Connect origin to nearby stations with walking edges
-  // First find the closest station for better connectivity
+  // FIXED: Use the maximum threshold for both connections to ensure symmetry
+  const maxWalkingThreshold = Math.max(
+    maxOriginWalkingDistance,
+    maxDestinationWalkingDistance
+  );
+
+  // FIXED: Always use the same threshold for both origin and destination
+  connectOriginToStations(graph, originId, origin, maxWalkingThreshold);
+  connectDestinationToStations(
+    graph,
+    destinationId,
+    destination,
+    maxWalkingThreshold
+  );
+
+  // Add direct walking between origin and destination
+  addDirectWalking(graph, originId, destinationId, origin, destination);
+
+  // DEBUG: Log connectivity info
+  console.log(
+    `Origin connected to ${graph.outNeighbors(originId).length} nodes, ` +
+      `destination connected to ${
+        graph.outNeighbors(destinationId).length
+      } nodes`
+  );
+
+  // FIXED: Verify and enforce symmetry - ensure both endpoints have similar connectivity
+  const originConnectivity = graph.outNeighbors(originId).length;
+  const destConnectivity = graph.outNeighbors(destinationId).length;
+
+  // If there's a significant imbalance in connectivity, fix it
+  if (Math.abs(originConnectivity - destConnectivity) > 2) {
+    console.log('Detected connectivity imbalance, enforcing symmetry');
+    // Force connectivity parity by adding connections to match the better-connected endpoint
+    if (originConnectivity < destConnectivity) {
+      // Add more connections to origin
+      improveConnectivity(graph, originId, origin, maxWalkingThreshold * 1.2);
+    } else {
+      // Add more connections to destination
+      improveConnectivity(
+        graph,
+        destinationId,
+        destination,
+        maxWalkingThreshold * 1.2
+      );
+    }
+  }
+}
+
+/**
+ * Connect origin to nearby stations with appropriate walking edges
+ */
+function connectOriginToStations(
+  graph: Graph,
+  originId: string,
+  origin: Coordinates,
+  maxWalkingDistance: number
+): void {
+  // Find the closest station for better connectivity
   let closestStationToOrigin = null;
   let minDistanceToOrigin = Infinity;
-  let closestVirtualNodeToOrigin = null;
 
-  // First pass - find all physical stations within range and the closest one
+  // First pass - find stations within standard walking distance and the closest overall
   for (const nodeId of graph.nodes()) {
-    if (nodeId === originId || nodeId === destinationId) continue;
+    if (nodeId === originId || nodeId === 'destination' || nodeId.includes('_'))
+      continue;
 
     const nodeData = graph.getNodeAttributes(nodeId);
-    if (nodeData.virtual) continue; // Skip virtual nodes for now
-
     const station = nodeData.station;
-    const distance = calculateDistance(
-      { coordinates: origin },
-      { coordinates: station.coordinates }
-    );
+    const distance = calculateDistanceSync(origin, station.coordinates);
 
+    // Track closest regardless of distance
     if (distance < minDistanceToOrigin) {
       minDistanceToOrigin = distance;
       closestStationToOrigin = nodeId;
     }
 
-    // Only add walking edges for stations within walking distance
+    // Add standard walking edges within threshold with IDENTICAL logic as destination
     if (distance <= maxWalkingDistance) {
-      // Use new function that applies distance-based penalties
       const duration = calculateWalkingDuration(distance);
-
       graph.addEdge(originId, nodeId, {
         type: 'walking',
         duration,
         distance,
       });
-
       graph.addEdge(nodeId, originId, {
         type: 'walking',
         duration,
@@ -293,99 +358,121 @@ function addCustomLocations(
     }
   }
 
-  // Second pass - find closest virtual node for direct line access
-  // This helps with finding better transit routes
-  let minVirtualDistance = Infinity;
+  // FIXED: Make virtual node connection logic identical to destination
   for (const nodeId of graph.nodes()) {
     const nodeData = graph.getNodeAttributes(nodeId);
     if (!nodeData.virtual) continue;
 
     const station = nodeData.station;
-    const distance = calculateDistance(
-      { coordinates: origin },
-      { coordinates: station.coordinates }
-    );
+    const distance = calculateDistanceSync(origin, station.coordinates);
 
-    if (distance < minVirtualDistance && distance <= maxWalkingDistance * 1.2) {
-      minVirtualDistance = distance;
-      closestVirtualNodeToOrigin = nodeId;
+    // Apply IDENTICAL connection rules for origin and destination
+    if (distance < maxWalkingDistance * 1.5) {
+      if (distance < minDistanceToOrigin * 2.0) {
+        const duration = calculateWalkingDuration(distance);
+        // Small bonus for direct line access - identical to destination
+        graph.addEdge(originId, nodeId, {
+          type: 'walking',
+          duration: duration * 0.95, // Same scaling factor
+          distance,
+        });
+        graph.addEdge(nodeId, originId, {
+          type: 'walking',
+          duration: duration * 0.95, // Same scaling factor
+          distance,
+        });
+      }
     }
   }
 
-  // If a close virtual node was found, connect directly to it as well
-  // This creates more direct connections to transit lines
-  if (closestVirtualNodeToOrigin) {
-    const duration = calculateWalkingDuration(minVirtualDistance);
-    graph.addEdge(originId, closestVirtualNodeToOrigin, {
-      type: 'walking',
-      duration: duration * 0.9, // Slight bonus for direct line access
-      distance: minVirtualDistance,
-    });
-    graph.addEdge(closestVirtualNodeToOrigin, originId, {
-      type: 'walking',
-      duration: duration * 0.9,
-      distance: minVirtualDistance,
-    });
+  // Always ensure connectivity by connecting to closest station with appropriate penalties
+  if (closestStationToOrigin) {
+    ensureStationConnectivity(
+      graph,
+      originId,
+      closestStationToOrigin,
+      origin,
+      minDistanceToOrigin,
+      maxWalkingDistance
+    );
   }
 
-  // If the closest station is beyond walking distance but within an extended range,
-  // connect to it anyway to ensure graph connectivity
-  if (
-    closestStationToOrigin &&
-    minDistanceToOrigin > maxWalkingDistance &&
-    minDistanceToOrigin <= maxWalkingDistance * 1.5
-  ) {
-    const duration = calculateWalkingDuration(minDistanceToOrigin);
+  // Always connect to at least 3 stations if possible, using IDENTICAL logic as destination
+  const connectedStations = graph.outNeighbors(originId);
+  if (connectedStations.length < 3) {
+    // Find stations to connect to
+    const stations = Array.from(graph.nodes())
+      .filter(
+        (id) => !id.includes('_') && id !== originId && id !== 'destination'
+      )
+      .map((id) => ({
+        id,
+        distance: calculateDistanceSync(
+          origin,
+          graph.getNodeAttributes(id).station.coordinates
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 5); // Get 5 closest
 
-    graph.addEdge(originId, closestStationToOrigin, {
-      type: 'walking',
-      duration,
-      distance: minDistanceToOrigin,
-    });
-
-    graph.addEdge(closestStationToOrigin, originId, {
-      type: 'walking',
-      duration,
-      distance: minDistanceToOrigin,
-    });
+    for (const station of stations) {
+      if (!graph.hasEdge(originId, station.id)) {
+        const duration = calculateWalkingDuration(station.distance);
+        // Add connection with appropriate penalty - IDENTICAL to destination
+        const penaltyFactor = 1 + station.distance / maxWalkingDistance;
+        graph.addEdge(originId, station.id, {
+          type: 'walking',
+          duration: Math.round(duration * penaltyFactor),
+          distance: station.distance,
+          costMultiplier: penaltyFactor,
+        });
+        graph.addEdge(station.id, originId, {
+          type: 'walking',
+          duration: Math.round(duration * penaltyFactor),
+          distance: station.distance,
+          costMultiplier: penaltyFactor,
+        });
+      }
+    }
   }
+}
 
-  // Now do the same for destination
-  // Connect destination to nearby stations with walking edges
-  // Find the closest station to destination
+/**
+ * Connect destination to nearby stations with appropriate walking edges
+ */
+function connectDestinationToStations(
+  graph: Graph,
+  destinationId: string,
+  destination: Coordinates,
+  maxWalkingDistance: number
+): void {
+  // Similar improvements as connectOriginToStations
   let closestStationToDest = null;
   let minDistanceToDest = Infinity;
-  let closestVirtualNodeToDest = null;
 
-  // First pass for physical stations
+  // First pass - find stations within walking distance and the closest overall
   for (const nodeId of graph.nodes()) {
-    if (nodeId === originId || nodeId === destinationId) continue;
+    if (nodeId === 'origin' || nodeId === destinationId || nodeId.includes('_'))
+      continue;
 
     const nodeData = graph.getNodeAttributes(nodeId);
-    if (nodeData.virtual) continue;
-
     const station = nodeData.station;
-    const distance = calculateDistance(
-      { coordinates: destination },
-      { coordinates: station.coordinates }
-    );
+    const distance = calculateDistanceSync(destination, station.coordinates);
 
+    // Track closest regardless of distance
     if (distance < minDistanceToDest) {
       minDistanceToDest = distance;
       closestStationToDest = nodeId;
     }
 
-    // Only add walking edges for stations within walking distance
+    // Add standard walking edges within threshold
     if (distance <= maxWalkingDistance) {
-      // Use new function that applies distance-based penalties
       const duration = calculateWalkingDuration(distance);
-
       graph.addEdge(nodeId, destinationId, {
         type: 'walking',
         duration,
         distance,
       });
-
       graph.addEdge(destinationId, nodeId, {
         type: 'walking',
         duration,
@@ -394,70 +481,167 @@ function addCustomLocations(
     }
   }
 
-  // Second pass for virtual nodes
-  let minVirtualDistanceToDest = Infinity;
+  // Improved: More permissive connection to virtual nodes
   for (const nodeId of graph.nodes()) {
     const nodeData = graph.getNodeAttributes(nodeId);
     if (!nodeData.virtual) continue;
 
     const station = nodeData.station;
-    const distance = calculateDistance(
-      { coordinates: destination },
-      { coordinates: station.coordinates }
-    );
+    const distance = calculateDistanceSync(destination, station.coordinates);
 
-    if (
-      distance < minVirtualDistanceToDest &&
-      distance <= maxWalkingDistance * 1.2
-    ) {
-      minVirtualDistanceToDest = distance;
-      closestVirtualNodeToDest = nodeId;
+    // More permissive connection rules (same as origin)
+    if (distance < maxWalkingDistance * 1.5) {
+      if (distance < minDistanceToDest * 2.0) {
+        const duration = calculateWalkingDuration(distance);
+        // Small bonus for direct line access
+        graph.addEdge(nodeId, destinationId, {
+          type: 'walking',
+          duration: duration * 0.95,
+          distance,
+        });
+        graph.addEdge(destinationId, nodeId, {
+          type: 'walking',
+          duration: duration * 0.95,
+          distance,
+        });
+      }
     }
   }
 
-  // Connect directly to closest virtual node
-  if (closestVirtualNodeToDest) {
-    const duration = calculateWalkingDuration(minVirtualDistanceToDest);
-    graph.addEdge(destinationId, closestVirtualNodeToDest, {
-      type: 'walking',
-      duration: duration * 0.9, // Slight bonus for direct line access
-      distance: minVirtualDistanceToDest,
-    });
-    graph.addEdge(closestVirtualNodeToDest, destinationId, {
-      type: 'walking',
-      duration: duration * 0.9,
-      distance: minVirtualDistanceToDest,
-    });
+  // Always ensure connectivity by connecting to closest station with appropriate penalties
+  if (closestStationToDest) {
+    ensureStationConnectivity(
+      graph,
+      destinationId,
+      closestStationToDest,
+      destination,
+      minDistanceToDest,
+      maxWalkingDistance
+    );
   }
 
-  // If the closest station is beyond walking distance but within an extended range,
-  // connect to it anyway to ensure graph connectivity
-  if (
-    closestStationToDest &&
-    minDistanceToDest > maxWalkingDistance &&
-    minDistanceToDest <= maxWalkingDistance * 1.5
-  ) {
-    const duration = calculateWalkingDuration(minDistanceToDest);
+  // New: Always connect to at least 3 stations if possible (same as origin)
+  const connectedStations = graph.outNeighbors(destinationId);
+  if (connectedStations.length < 3) {
+    // Find stations to connect to
+    const stations = Array.from(graph.nodes())
+      .filter(
+        (id) => !id.includes('_') && id !== destinationId && id !== 'origin'
+      )
+      .map((id) => ({
+        id,
+        distance: calculateDistanceSync(
+          destination,
+          graph.getNodeAttributes(id).station.coordinates
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 5); // Get 5 closest
 
-    graph.addEdge(destinationId, closestStationToDest, {
+    for (const station of stations) {
+      if (!graph.hasEdge(destinationId, station.id)) {
+        const duration = calculateWalkingDuration(station.distance);
+        // Add connection with appropriate penalty
+        const penaltyFactor = 1 + station.distance / maxWalkingDistance;
+        graph.addEdge(destinationId, station.id, {
+          type: 'walking',
+          duration: Math.round(duration * penaltyFactor),
+          distance: station.distance,
+          costMultiplier: penaltyFactor,
+        });
+        graph.addEdge(station.id, destinationId, {
+          type: 'walking',
+          duration: Math.round(duration * penaltyFactor),
+          distance: station.distance,
+          costMultiplier: penaltyFactor,
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Ensure connectivity between a point and its closest station, with appropriate penalties for distance
+ */
+function ensureStationConnectivity(
+  graph: Graph,
+  pointId: string,
+  stationId: string,
+  pointCoordinates: Coordinates,
+  distance: number,
+  standardDistance: number
+): void {
+  const duration = calculateWalkingDuration(distance);
+
+  // Within standard range - already connected above
+  if (distance <= standardDistance) {
+    return;
+  }
+  // Extended range - mild penalty
+  else if (distance <= standardDistance * 1.5) {
+    const penaltyFactor = 1.1;
+    graph.addEdge(pointId, stationId, {
       type: 'walking',
-      duration,
-      distance: minDistanceToDest,
+      duration: Math.round(duration * penaltyFactor),
+      distance,
+      costMultiplier: penaltyFactor,
     });
-
-    graph.addEdge(closestStationToDest, destinationId, {
+    graph.addEdge(stationId, pointId, {
       type: 'walking',
-      duration,
-      distance: minDistanceToDest,
+      duration: Math.round(duration * penaltyFactor),
+      distance,
+      costMultiplier: penaltyFactor,
     });
   }
+  // Far range - stronger penalty
+  else if (distance <= standardDistance * 2.5) {
+    const penaltyFactor = 1.5;
+    graph.addEdge(pointId, stationId, {
+      type: 'walking',
+      duration: Math.round(duration * penaltyFactor),
+      distance,
+      costMultiplier: penaltyFactor,
+    });
+    graph.addEdge(stationId, pointId, {
+      type: 'walking',
+      duration: Math.round(duration * penaltyFactor),
+      distance,
+      costMultiplier: penaltyFactor,
+    });
+  }
+  // Very distant - extreme penalty but still connected
+  else {
+    // Scale penalty with distance but cap it
+    const penaltyFactor = Math.min(
+      3.0,
+      1.0 + (distance - standardDistance * 2.5) / 1000
+    );
+    graph.addEdge(pointId, stationId, {
+      type: 'walking',
+      duration: Math.round(duration * penaltyFactor),
+      distance,
+      costMultiplier: penaltyFactor,
+    });
+    graph.addEdge(stationId, pointId, {
+      type: 'walking',
+      duration: Math.round(duration * penaltyFactor),
+      distance,
+      costMultiplier: penaltyFactor,
+    });
+  }
+}
 
-  // Always add direct walking between origin and destination
-  const directDistance = calculateDistance(
-    { coordinates: origin },
-    { coordinates: destination }
-  );
-
+/**
+ * Add direct walking between origin and destination
+ */
+function addDirectWalking(
+  graph: Graph,
+  originId: string,
+  destinationId: string,
+  origin: Coordinates,
+  destination: Coordinates
+): void {
+  const directDistance = calculateDistanceSync(origin, destination);
   const duration = calculateWalkingDuration(directDistance);
 
   graph.addEdge(originId, destinationId, {
@@ -471,4 +655,63 @@ function addCustomLocations(
     duration,
     distance: directDistance,
   });
+}
+
+/**
+ * Improve connectivity for an endpoint that has fewer connections
+ * NEW: Added to enforce symmetry between origin and destination
+ */
+function improveConnectivity(
+  graph: Graph,
+  nodeId: string,
+  coordinates: Coordinates,
+  maxDistance: number
+): void {
+  const currentNeighbors = new Set(graph.outNeighbors(nodeId));
+
+  // Find all potential stations to connect to
+  const potentialStations = Array.from(graph.nodes())
+    .filter(
+      (id) =>
+        !id.includes('_') &&
+        id !== nodeId &&
+        id !== 'origin' &&
+        id !== 'destination'
+    )
+    .filter((id) => !currentNeighbors.has(id))
+    .map((id) => ({
+      id,
+      station: graph.getNodeAttributes(id).station,
+      distance: calculateDistanceSync(
+        coordinates,
+        graph.getNodeAttributes(id).station.coordinates
+      ),
+    }))
+    .sort((a, b) => a.distance - b.distance);
+
+  // Connect to closer stations first
+  for (let i = 0; i < Math.min(potentialStations.length, 3); i++) {
+    const station = potentialStations[i];
+
+    // Don't connect if too far
+    if (station.distance > maxDistance) continue;
+
+    const duration = calculateWalkingDuration(station.distance);
+    const penaltyFactor = 1 + station.distance / (maxDistance / 2);
+
+    // Add the connection
+    graph.addEdge(nodeId, station.id, {
+      type: 'walking',
+      duration: Math.round(duration * penaltyFactor),
+      distance: station.distance,
+      costMultiplier: penaltyFactor,
+    });
+
+    graph.addEdge(station.id, nodeId, {
+      type: 'walking',
+      duration: Math.round(duration * penaltyFactor),
+      distance: station.distance,
+      costMultiplier: penaltyFactor,
+    });
+  }
 }

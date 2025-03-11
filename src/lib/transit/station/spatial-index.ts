@@ -3,9 +3,9 @@ import {
   featureCollection,
   buffer,
   pointsWithinPolygon,
-  distance as turfDistance,
 } from '@turf/turf';
 import { Coordinates } from '@/types/station';
+import { calculateDistanceSync } from '@/lib/utils/distance';
 // Import GeoJSON namespace
 import type { GeoJSON } from 'geojson';
 
@@ -120,13 +120,11 @@ export class SpatialIndex<T extends { coordinates: Coordinates }> {
         const itemIndex = feature.properties!.index;
         const item = this.items[itemIndex];
 
-        // Use consistent distance calculation
-        const distanceInMeters =
-          turfDistance(
-            centerPoint,
-            point([item.coordinates.lng, item.coordinates.lat]),
-            { units: 'kilometers' }
-          ) * 1000; // Convert km to meters
+        // Use consistent distance calculation method
+        const distanceInMeters = calculateDistanceSync(
+          center,
+          item.coordinates
+        );
 
         return { item, distance: distanceInMeters };
       });
