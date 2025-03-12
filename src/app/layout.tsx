@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import { Navbar } from '@/components/layouts/Navbar';
+import { Footer } from '@/components/layouts/Footer';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
@@ -37,7 +38,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <QueryProvider>
           <Navbar />
-          {children}
+          <main className="min-h-screen">{children}</main>
+          <Footer />
           <Toaster />
         </QueryProvider>
       </body>
