@@ -17,6 +17,7 @@ export interface TransitSegment extends RouteSegment {
   type: 'transit';
   line: Partial<Omit<MetroLine, 'station'>>;
   stopWaitTime?: number;
+  boardingTime?: number;
 }
 
 /**
@@ -38,4 +39,9 @@ export interface Route {
   totalDistance: number; // in meters
   totalDuration: number; // in seconds
   transfers: number;
+  fare?: number;
+  isDirectWalk?: boolean;
+  isShortWalk?: boolean;
+  isMediumWalk?: boolean;
+  isLongWalk?: boolean;
 }

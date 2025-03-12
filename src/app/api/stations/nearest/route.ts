@@ -2,7 +2,7 @@ import {
   findNearestStation,
   findNearestStations,
   initializeStationService,
-} from '@/lib/transit/station/station';
+} from '@/server/core/journey/station/station';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 

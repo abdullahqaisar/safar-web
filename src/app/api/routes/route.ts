@@ -1,4 +1,4 @@
-import { findBestRoutes } from '@/services/server/route.service';
+import { findBestRoutes } from '@/server/services/route.service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
