@@ -23,8 +23,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
-      "@features/*": ["./src/components/features/*"],
-      "@hooks/*": ["src/client/hooks/*"],
+      "@features/*": ["src/features/*"],
+      "@hooks/*": ["src/hooks/*"],
       "@lib/*": ["./src/lib/*"],
       "@types/*": ["./src/types/*"],
       "@constants/*": ["./src/constants/*"],

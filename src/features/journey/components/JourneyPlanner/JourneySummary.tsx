@@ -5,7 +5,7 @@ interface RouteSummaryProps {
   isSelected?: boolean;
 }
 
-export function RouteSummary({
+export function JourneySummary({
   journeyDuration,
   stops,
   transfers,

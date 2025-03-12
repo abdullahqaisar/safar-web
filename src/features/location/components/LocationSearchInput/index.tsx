@@ -2,11 +2,11 @@
 
 import { useLoadScript } from '@react-google-maps/api';
 import { useState } from 'react';
-import MapSearchInput from './MapSearchInput';
-import LocationSearchSkeleton from './LocationSearchSkeleton';
-import { useJourney } from '@/client/context/JourneyContext';
+import MapSearch from './MapSearch';
+import LoadingSkeleton from './LoadingSkeleton';
+import { useJourney } from '@/features/journey/context/JourneyContext';
 
-export default function LocationSearch() {
+export default function LocationSearchInput() {
   const { setFromLocation, setToLocation } = useJourney();
   const [pickupValue, setPickupValue] = useState('');
   const [destinationValue, setDestinationValue] = useState('');
@@ -16,12 +16,12 @@ export default function LocationSearch() {
     libraries: ['places'],
   });
 
-  if (!isLoaded) return <LocationSearchSkeleton />;
+  if (!isLoaded) return <LoadingSkeleton />;
 
   return (
     <div className="w-full">
       <div className="space-y-4">
-        <MapSearchInput
+        <MapSearch
           onSelectPlace={setFromLocation}
           placeholder="From (e.g., Khanna Pul)"
           value={pickupValue}
@@ -29,7 +29,7 @@ export default function LocationSearch() {
           icon="far fa-circle"
         />
 
-        <MapSearchInput
+        <MapSearch
           onSelectPlace={setToLocation}
           placeholder="To (e.g., Air University)"
           value={destinationValue}

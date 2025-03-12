@@ -1,8 +1,8 @@
 import { Route } from '@/types/route';
 
 import { RouteSegment } from './RouteSegment';
-import { RouteSummary } from './RouteSummary';
-import { formatDuration } from '@/lib/utils/formatters';
+import { JourneySummary } from '../JourneyPlanner/JourneySummary';
+import { formatDuration } from '../../utils';
 
 interface RouteCardProps {
   routes: Route[];
@@ -30,7 +30,7 @@ export function RouteCard({ routes }: RouteCardProps) {
             key={`route-${route.totalDuration}-${index}`}
             className="route-card group"
           >
-            <RouteSummary
+            <JourneySummary
               journeyDuration={formatDuration(route.totalDuration)}
               stops={route.totalStops ?? 0}
               transfers={route.transfers ?? 0}

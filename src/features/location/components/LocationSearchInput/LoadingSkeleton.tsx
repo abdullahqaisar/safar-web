@@ -1,4 +1,4 @@
-export default function LocationSearchSkeleton() {
+export default function LoadingSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
       <div className="w-full h-[52px] bg-green-700/30 rounded-lg"></div>

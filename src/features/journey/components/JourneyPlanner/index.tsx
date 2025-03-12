@@ -1,13 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SearchForm } from './search/SearchForm';
-import { RouteResults } from './route/RouteResults';
-import { RouteLoadingSkeleton } from './route/RouteLoadingSkeleton';
-import { JourneyProvider, useJourney } from '@/client/context/JourneyContext';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
-import { JourneyErrorFallback } from '../common/errors/JourneyErrorFallback';
+import { JourneyForm } from './JourneyForm';
+import { RouteLoadingSkeleton } from '../LoadingSkeleton';
+import {
+  JourneyProvider,
+  useJourney,
+} from '@/features/journey/context/JourneyContext';
+
+import { JourneyErrorFallback } from '../../../../components/common/errors/JourneyErrorFallback';
 import { showError } from '@/lib/utils/toast';
+import { ErrorBoundary } from '@/components/layouts/ErrorBoundary';
+import { RouteResults } from '../RouteResults';
 
 function JourneyContent() {
   const { routes, isRoutesLoading, routesError } = useJourney();
@@ -24,7 +28,7 @@ function JourneyContent() {
   return (
     <div className="w-full max-w-[1200px] mx-auto rounded-lg relative -mt-20 z-10">
       <div className="px-2 sm:mx-6">
-        <SearchForm />
+        <JourneyForm />
 
         {isRoutesLoading && <RouteLoadingSkeleton />}
 
@@ -36,7 +40,7 @@ function JourneyContent() {
   );
 }
 
-export function Journey() {
+export function JourneyPlanner() {
   return (
     <ErrorBoundary fallback={<JourneyErrorFallback />}>
       <JourneyProvider>

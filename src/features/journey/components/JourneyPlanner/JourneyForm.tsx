@@ -2,13 +2,14 @@
 
 import { memo, useEffect } from 'react';
 import { Button } from '@/components/common/Button';
-import LocationSearch from './LocationSearch';
+
 import { cn } from '@/lib/utils/formatters';
-import { useJourney } from '@/client/context/JourneyContext';
+import { useJourney } from '@/features/journey/context/JourneyContext';
 import { showError } from '@/lib/utils/toast';
 import { Card } from '@/components/common/Card';
+import LocationSearchInput from '../../../location/components/LocationSearchInput';
 
-export const SearchForm = memo(function SearchForm() {
+export const JourneyForm = memo(function JourneyForm() {
   const {
     fromLocation,
     toLocation,
@@ -45,14 +46,14 @@ export const SearchForm = memo(function SearchForm() {
           e.preventDefault();
           if (!isSearchDisabled) handleSearch();
         }}
-        aria-label="Journey search form"
+        aria-label="JourneyPlanner search form"
       >
         <h2 className="text-white text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center">
           <i className="fas fa-route mr-2 sm:mr-3 text-emerald-400"></i>
           Find Your Route
         </h2>
 
-        <LocationSearch />
+        <LocationSearchInput />
 
         <Button
           onClick={handleSearch}

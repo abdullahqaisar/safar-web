@@ -3,10 +3,10 @@
 import { MAPS_CONFIG } from '@lib/constants/maps';
 import usePlacesAutocomplete from 'use-places-autocomplete';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useInputState } from '@/client/hooks/useInputState';
+import { useInputState } from '@/hooks/useInputState';
 import { Coordinates } from '@/types/station';
 
-interface MapSearchInputProps {
+interface MapSearchProps {
   onSelectPlace: (location: Coordinates | null) => void;
   placeholder: string;
   value?: string;
@@ -14,13 +14,13 @@ interface MapSearchInputProps {
   icon: string;
 }
 
-export default function MapSearchInput({
+export default function MapSearch({
   onSelectPlace,
   placeholder,
   value,
   onValueChange,
   icon,
-}: MapSearchInputProps) {
+}: MapSearchProps) {
   const { isFocused, inputProps } = useInputState();
   const [isSelecting, setIsSelecting] = useState(false);
   const dropdownRef = useRef<HTMLUListElement>(null);

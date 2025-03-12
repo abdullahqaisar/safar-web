@@ -8,10 +8,10 @@ import React, {
   ReactNode,
 } from 'react';
 import { Coordinates, Station } from '@/types/station';
-import { useNearestStation } from '@/client/hooks/useNearestStation';
-import { useRoutes } from '@/client/hooks/useRoutes';
-import { useDebounce } from '@/client/hooks/useDebounce';
-import { useFormValidation } from '@/client/hooks/useFormValidation';
+import { useNearestStation } from '@/features/location/hooks/useNearestStation';
+import { useRoutes } from '@/features/journey/hooks/useRoutes';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useFormValidation } from '@/features/location/hooks/useFormValidation';
 import { Route } from '@/types/route';
 
 interface JourneyContextType {
