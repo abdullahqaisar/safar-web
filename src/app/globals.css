@@ -452,7 +452,7 @@ body {
   }
 }
 
-/* Hero to SearchForm transition styling */
+/* Hero to JourneyForm transition styling */
 @media (max-width: 640px) {
   .hero-section {
     padding-bottom: 0.5rem;
@@ -473,7 +473,7 @@ body {
   }
 }
 
-/* Hero to SearchForm transition styling with more refined breakpoints */
+/* Hero to JourneyForm transition styling with more refined breakpoints */
 @media (max-width: 360px) {
   .hero-section {
     padding-bottom: 0.25rem;

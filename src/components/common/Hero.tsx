@@ -1,4 +1,6 @@
-import { TopographyPattern } from '../ui/TopographyPattern';
+'use client';
+
+import { TopographyPattern } from './TopographyPattern';
 
 export function Hero() {
   return (

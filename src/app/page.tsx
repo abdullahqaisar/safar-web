@@ -1,4 +1,4 @@
-import { Journey } from '@/components/journey/Journey';
+import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner';
 import { Hero } from '@/components/common/Hero';
 import Script from 'next/script';
 
@@ -23,7 +23,7 @@ export default function Home() {
       </Script>
       <Hero />
       <div className="py-8">
-        <Journey />
+        <JourneyPlanner />
       </div>
     </main>
   );
