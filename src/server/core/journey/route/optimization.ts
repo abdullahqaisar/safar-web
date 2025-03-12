@@ -153,12 +153,7 @@ function filterRoutesByQuality(routes: Route[]): Route[] {
   filtered = handleWalkingTransitFiltering(filtered);
 
   if (filtered.length === 0) {
-    return getFallbackRoutes(
-      routes,
-      fastestRoute,
-      minTransfersRoute,
-      mostComfortableRoute
-    );
+    return getFallbackRoutes(routes, fastestRoute);
   }
 
   return ensurePriorityRoutes(

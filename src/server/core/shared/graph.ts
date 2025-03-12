@@ -4,7 +4,7 @@ import { Coordinates } from '@/types/station';
 import { calculateDistanceSync } from '@/server/core/shared/distance';
 import { WALKING_SPEED_MPS } from '@/lib/constants/config';
 import { WALKING_SEGMENT_PENALTIES } from '@/lib/constants/route-config';
-import { EdgeData, NodeData } from '@/server/core/transit/route/graph';
+import { EdgeData, NodeData } from '@/server/core/journey/route/graph';
 
 export function calculateWalkingDuration(distance: number): number {
   const baseDuration = Math.round(distance / WALKING_SPEED_MPS);

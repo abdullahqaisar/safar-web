@@ -140,9 +140,7 @@ export function handleWalkingTransitFiltering(routes: Route[]): Route[] {
 
 export function getFallbackRoutes(
   routes: Route[],
-  fastestRoute: Route,
-  minTransfersRoute: Route,
-  mostComfortableRoute: Route
+  fastestRoute: Route
 ): Route[] {
   if (routes.length > 0) {
     if (fastestRoute) {

@@ -1,7 +1,7 @@
 import { Route } from '@/types/route';
 import { Coordinates } from '@/types/station';
 import Graph from 'graphology';
-import { NodeData, EdgeData } from '@/server/core/transit/route/graph';
+import { NodeData, EdgeData } from '@/server/core/journey/route/graph';
 
 /**
  * Cache for route data with expiration
@@ -65,20 +65,20 @@ export class RouteCache {
  * Cache for distance matrix API responses
  */
 export class DistanceCache {
-  private cache = new Map<string, any>();
+  private cache = new Map<string, { data: unknown; timestamp: number }>();
   private readonly maxAge: number;
 
   constructor(maxAgeMinutes = 60) {
     this.maxAge = maxAgeMinutes * 60 * 1000;
   }
 
-  get(key: string): any {
+  get(key: string): unknown | null {
     const item = this.cache.get(key);
     if (!item) return null;
     return item.data;
   }
 
-  set(key: string, data: any): void {
+  set(key: string, data: unknown): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),

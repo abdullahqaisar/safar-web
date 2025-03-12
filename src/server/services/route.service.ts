@@ -2,10 +2,10 @@ import { Coordinates } from '@/types/station';
 import { Route } from '@/types/route';
 import { calculateDistanceSync } from '@/server/core/shared/distance';
 import { MAX_ROUTES_TO_RETURN } from '@/lib/constants/config';
-import { findRoutes } from '@/server/core/transit/route/finder';
+import { findRoutes } from '@/server/core/journey/route/finder';
 import { DISTANCE_THRESHOLDS } from '@/lib/constants/route-config';
 import { routeCache } from '@/server/core/shared/cache';
-import { filterAndRankRoutes } from '../core/transit/route/optimization';
+import { filterAndRankRoutes } from '../core/journey/route/optimization';
 import { stationService } from './station.service';
 
 /**

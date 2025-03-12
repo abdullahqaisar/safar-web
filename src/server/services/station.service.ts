@@ -2,7 +2,7 @@ import KDBush from 'kdbush';
 import { metroLines } from '@/lib/constants/metro-data';
 import { Coordinates, Station, NearestStationResult } from '@/types/station';
 import { MetroLine } from '@/types/metro';
-import { SpatialIndex } from '@/server/core/transit/station/spatial-index';
+import { SpatialIndex } from '@/server/core/journey/station/spatial-index';
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 import { calculateDistanceSync } from '@/server/core/shared/distance';
 

@@ -454,7 +454,6 @@ async function convertPathToSegments(
 
   let currentTransitLine: string | null = null;
   let currentTransitStations: Station[] = [];
-  let currentTransitDuration = 0;
 
   function extractLineId(nodeId: string): string | null {
     return nodeId.includes('_') ? nodeId.split('_')[1] : null;
@@ -495,7 +494,6 @@ async function convertPathToSegments(
 
         currentTransitLine = null;
         currentTransitStations = [];
-        currentTransitDuration = 0;
       }
       continue;
     }
@@ -514,14 +512,11 @@ async function convertPathToSegments(
 
         currentTransitLine = lineId;
         currentTransitStations = [sourceStation];
-        currentTransitDuration = 0;
       }
 
       if (!currentTransitStations.some((s) => s.id === targetStation.id)) {
         currentTransitStations.push(targetStation);
       }
-
-      currentTransitDuration += edge.duration || 0;
     } else if (
       edge.type === 'walking' ||
       (edge.type === 'transfer' && sourceStation.id !== targetStation.id)
@@ -537,7 +532,6 @@ async function convertPathToSegments(
 
         currentTransitLine = null;
         currentTransitStations = [];
-        currentTransitDuration = 0;
       }
 
       const walkSegment = await createWalkingSegment(

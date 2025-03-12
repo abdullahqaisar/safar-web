@@ -24,7 +24,9 @@ async function fetchDistanceMatrix(
   const cacheKey = `${origin.lat},${origin.lng}-${destination.lat},${destination.lng}-${mode}`;
 
   // Check cache first
-  const cachedData = distanceCache.get(cacheKey);
+  const cachedData = distanceCache.get(
+    cacheKey
+  ) as DistanceMatrixResponse | null;
   if (cachedData) {
     return cachedData;
   }
