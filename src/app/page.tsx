@@ -1,10 +1,14 @@
 import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner';
 import { Hero } from '@/components/common/Hero';
+import { FeaturesSection } from '@/features/landing/components/FeaturesSection';
+import { HowItWorksSection } from '@/features/landing/components/HowItWorksSection';
+import { ContributeSection } from '@/features/landing/components/ContributeSection';
+import { NewsletterSection } from '@/features/landing/components/NewsletterSection';
 import Script from 'next/script';
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <>
       <Script id="structured-data" type="application/ld+json">
         {`
           {
@@ -21,10 +25,20 @@ export default function Home() {
           }
         `}
       </Script>
+
       <Hero />
-      <div className="py-8">
+
+      <section
+        id="journey-planner"
+        className="container mx-auto px-4 -mt-20 mb-12 relative z-10 max-w-5xl"
+      >
         <JourneyPlanner />
-      </div>
-    </main>
+      </section>
+
+      <FeaturesSection />
+      <HowItWorksSection />
+      <ContributeSection />
+      <NewsletterSection />
+    </>
   );
 }

@@ -1,5 +1,3 @@
-'use client';
-
 import { TopographyPattern } from './TopographyPattern';
 
 export function Hero() {
