@@ -10,7 +10,7 @@ export function RouteResults({ routes }: RouteResultsProps) {
   const routeText = `${routeCount} route${routeCount !== 1 ? 's' : ''} found`;
 
   return (
-    <div className="route-results rounded-2xl bg-white shadow-lg border border-gray-100">
+    <div className="route-results rounded-2xl bg-white shadow-lg border border-gray-100 mt-6">
       <header className="results-header px-6 py-5 border-b border-gray-100">
         <div className="space-y-1">
           <h3 className="font-bold text-lg text-gray-800">Suggested Routes</h3>
