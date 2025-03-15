@@ -17,31 +17,25 @@ export const useRoutes = ({
   toLocation,
   enabled = false,
 }: UseRoutesParams = {}) => {
-  // Generate query key based on stations and locations
-  const queryKey = [
-    'routes',
-    fromStation?.id,
-    toStation?.id,
-    fromLocation?.lat,
-    fromLocation?.lng,
-    toLocation?.lat,
-    toLocation?.lng,
-  ];
+  const isQueryEnabled =
+    enabled && !!fromStation && !!toStation && !!fromLocation && !!toLocation;
 
-  // The main query
-  const query = useQuery({
-    queryKey,
+  return useQuery({
+    queryKey: [
+      'routes',
+      fromStation?.id,
+      toStation?.id,
+      fromLocation?.lat,
+      fromLocation?.lng,
+      toLocation?.lat,
+      toLocation?.lng,
+    ],
     queryFn: async () => {
       if (!fromStation || !toStation || !fromLocation || !toLocation) {
         throw new Error('Missing required parameters');
       }
 
-      const routes = await fetchRoutes(
-        fromStation.id,
-        toStation.id,
-        fromLocation,
-        toLocation
-      );
+      const routes = await fetchRoutes(fromLocation, toLocation);
 
       if (!routes || routes.length === 0) {
         throw new Error('No route found between these stations');
@@ -49,13 +43,10 @@ export const useRoutes = ({
 
       return routes;
     },
-    enabled:
-      enabled && !!fromStation && !!toStation && !!fromLocation && !!toLocation,
+    enabled: isQueryEnabled,
     retry: 1,
-    staleTime: 300000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
-    gcTime: 600000, // 10 minutes
   });
-
-  return query;
 };

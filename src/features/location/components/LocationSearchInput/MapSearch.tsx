@@ -26,11 +26,9 @@ export default function MapSearch({
   icon,
 }: MapSearchProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const [isOptionClicked, setIsOptionClicked] = useState(false);
-  const [hasSelectedLocation, setHasSelectedLocation] = useState(false);
-
-  const isUserTypingRef = useRef(false);
-  const internalValueRef = useRef(value);
+  const [hasSelectedLocation, setHasSelectedLocation] = useState(
+    Boolean(value)
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -47,47 +45,28 @@ export default function MapSearch({
   });
 
   useEffect(() => {
-    internalValueRef.current = value;
     if (value) {
       setPlacesValue(value, false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isUserTypingRef.current && value !== internalValueRef.current) {
-      internalValueRef.current = value;
-      setPlacesValue(value, false);
-      setHasSelectedLocation(Boolean(value));
+      setHasSelectedLocation(true);
+    } else {
+      setHasSelectedLocation(false);
     }
   }, [value, setPlacesValue]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const newValue = e.target.value;
-
-    isUserTypingRef.current = true;
-
-    internalValueRef.current = newValue;
     onValueChange(newValue);
     setPlacesValue(newValue);
 
     if (newValue === '') {
       setHasSelectedLocation(false);
       onSelectPlace(null);
-    } else {
-      setIsOptionClicked(false);
     }
-
-    setTimeout(() => {
-      isUserTypingRef.current = false;
-    }, 100);
   }
 
   function handleClear() {
-    internalValueRef.current = '';
     setPlacesValue('', false);
     setHasSelectedLocation(false);
-    setIsOptionClicked(false);
-
     onValueChange('');
     onSelectPlace(null);
     clearSuggestions();
@@ -98,10 +77,7 @@ export default function MapSearch({
   }
 
   async function handleSelect(description: string) {
-    internalValueRef.current = description;
     setPlacesValue(description, false);
-    setIsOptionClicked(true);
-
     onValueChange(description);
     clearSuggestions();
 
@@ -114,40 +90,18 @@ export default function MapSearch({
 
       if (inputRef.current) {
         inputRef.current.blur();
-        setTimeout(() => {
-          if (
-            id === 'from-location' &&
-            document.getElementById('to-location')
-          ) {
+
+        if (id === 'from-location') {
+          setTimeout(() => {
             document.getElementById('to-location')?.focus();
-          }
-        }, 10);
+          }, 10);
+        }
       }
     } catch (error) {
       console.error('Error geocoding address:', error);
       setHasSelectedLocation(false);
     }
   }
-
-  const suggestionItems = data.map((suggestion) => {
-    const {
-      place_id,
-      structured_formatting: { main_text, secondary_text },
-    } = suggestion;
-
-    return (
-      <li
-        key={place_id}
-        className="cursor-pointer px-4 py-2 hover:bg-gray-100 transition-colors"
-        onClick={() => {
-          handleSelect(suggestion.description);
-        }}
-      >
-        <div className="font-medium text-gray-800">{main_text}</div>
-        <div className="text-xs text-gray-500">{secondary_text}</div>
-      </li>
-    );
-  });
 
   return (
     <div className="relative w-full">
@@ -173,9 +127,7 @@ export default function MapSearch({
         placeholder={placeholder}
         onFocus={() => setIsFocused(true)}
         onBlur={() => {
-          setTimeout(() => {
-            setIsFocused(false);
-          }, 150);
+          setTimeout(() => setIsFocused(false), 150);
         }}
       />
 
@@ -190,9 +142,24 @@ export default function MapSearch({
         </button>
       )}
 
-      {status === 'OK' && isFocused && !isOptionClicked && (
+      {status === 'OK' && isFocused && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-          {suggestionItems}
+          {data.map(
+            ({
+              place_id,
+              description,
+              structured_formatting: { main_text, secondary_text },
+            }) => (
+              <li
+                key={place_id}
+                className="cursor-pointer px-4 py-2 hover:bg-gray-100 transition-colors"
+                onClick={() => handleSelect(description)}
+              >
+                <div className="font-medium text-gray-800">{main_text}</div>
+                <div className="text-xs text-gray-500">{secondary_text}</div>
+              </li>
+            )
+          )}
         </ul>
       )}
     </div>

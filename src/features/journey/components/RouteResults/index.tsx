@@ -6,11 +6,18 @@ interface RouteResultsProps {
 }
 
 export function RouteResults({ routes }: RouteResultsProps) {
+  if (!routes.length) {
+    return null;
+  }
+
   const routeCount = routes.length;
   const routeText = `${routeCount} route${routeCount !== 1 ? 's' : ''} found`;
 
   return (
-    <div className="route-results rounded-2xl bg-white shadow-lg border border-gray-100 mt-6">
+    <section
+      className="route-results rounded-2xl bg-white shadow-lg border border-gray-100 mt-6"
+      aria-label="Route Results"
+    >
       <header className="results-header px-6 py-5 border-b border-gray-100">
         <div className="space-y-1">
           <h3 className="font-bold text-lg text-gray-800">Suggested Routes</h3>
@@ -21,6 +28,6 @@ export function RouteResults({ routes }: RouteResultsProps) {
       <div className="p-4 sm:p-6 space-y-6">
         <RouteCard routes={routes} />
       </div>
-    </div>
+    </section>
   );
 }
