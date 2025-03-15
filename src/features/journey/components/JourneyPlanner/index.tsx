@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { JourneyForm } from './JourneyForm';
 import { RouteLoadingSkeleton } from '../LoadingSkeleton';
@@ -37,7 +37,7 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
 
   const [currentUrlParams, setCurrentUrlParams] = useState('');
 
-  function initFromParams() {
+  const initFromParams = useCallback(() => {
     if (!searchParams) {
       setIsInitialized(true);
       return false;
@@ -86,11 +86,11 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
 
     setIsInitialized(true);
     return hasLocationData;
-  }
+  }, [searchParams, currentUrlParams, setFromLocation, setToLocation]);
 
   useEffect(() => {
     initFromParams();
-  }, [searchParams]);
+  }, [initFromParams]);
 
   useEffect(() => {
     if (showResults && isInitialized && !initialSearchDoneRef.current) {

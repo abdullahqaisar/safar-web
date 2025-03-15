@@ -91,7 +91,7 @@ export const JourneyForm = memo(function JourneyForm({
       if (!isResultsPage) {
         clearRoutes();
         setIsNavigating(true);
-        const url = `/search-results?${params.toString()}`;
+        const url = `/journey?${params.toString()}`;
         router.push(url);
       } else {
         clearRoutes();
