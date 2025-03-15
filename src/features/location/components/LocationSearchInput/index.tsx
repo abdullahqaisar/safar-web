@@ -1,29 +1,27 @@
 'use client';
 
 import { useLoadScript } from '@react-google-maps/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import MapSearch from './MapSearch';
 import LoadingSkeleton from './LoadingSkeleton';
 import { useJourney } from '@/features/journey/context/JourneyContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Coordinates } from '@/types/station';
 
 export default function LocationSearchInput() {
-  const { setFromLocation, setToLocation, fromLocation, toLocation } =
-    useJourney();
+  const { setFromLocation, setToLocation } = useJourney();
   const searchParams = useSearchParams();
   const [pickupValue, setPickupValue] = useState('');
   const [destinationValue, setDestinationValue] = useState('');
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const initDoneRef = useRef(false);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
     libraries: ['places'],
   });
 
-  // Load input values from URL on component mount
-  useEffect(() => {
-    if (searchParams) {
+  function initFromUrl() {
+    if (searchParams && !initDoneRef.current) {
       const fromText = searchParams.get('fromText');
       const toText = searchParams.get('toText');
 
@@ -35,10 +33,23 @@ export default function LocationSearchInput() {
         setDestinationValue(decodeURIComponent(toText));
       }
 
-      // After initial URL params load, mark first load as complete
-      setIsFirstLoad(false);
+      initDoneRef.current = true;
     }
-  }, [searchParams]);
+  }
+
+  useEffect(() => {
+    if (isLoaded) {
+      initFromUrl();
+    }
+  }, [isLoaded, searchParams]);
+
+  function handleFromLocationSelect(location: Coordinates | null) {
+    setFromLocation(location);
+  }
+
+  function handleToLocationSelect(location: Coordinates | null) {
+    setToLocation(location);
+  }
 
   if (!isLoaded) return <LoadingSkeleton />;
 
@@ -48,24 +59,12 @@ export default function LocationSearchInput() {
         <div className="relative">
           <MapSearch
             id="from-location"
-            onSelectPlace={setFromLocation}
+            onSelectPlace={handleFromLocationSelect}
             placeholder="From (e.g., Khanna Pul)"
             value={pickupValue}
             onValueChange={setPickupValue}
             icon="far fa-circle"
           />
-          <AnimatePresence>
-            {fromLocation && !isFirstLoad && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="absolute -right-2 -top-2 h-5 w-5 bg-green-600 rounded-full flex items-center justify-center shadow-sm"
-              >
-                <i className="fas fa-check text-white text-xs"></i>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         <div className="relative my-2">
@@ -77,24 +76,12 @@ export default function LocationSearchInput() {
         <div className="relative">
           <MapSearch
             id="to-location"
-            onSelectPlace={setToLocation}
+            onSelectPlace={handleToLocationSelect}
             placeholder="To (e.g., Air University)"
             value={destinationValue}
             onValueChange={setDestinationValue}
             icon="fas fa-map-marker-alt"
           />
-          <AnimatePresence>
-            {toLocation && !isFirstLoad && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="absolute -right-2 -top-2 h-5 w-5 bg-green-600 rounded-full flex items-center justify-center shadow-sm"
-              >
-                <i className="fas fa-check text-white text-xs"></i>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
     </div>

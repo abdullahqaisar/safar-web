@@ -1,43 +1,29 @@
 'use client';
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
   useCallback,
   ReactNode,
 } from 'react';
-import { Coordinates, Station } from '@/types/station';
-import { useNearestStation } from '@/features/location/hooks/useNearestStation';
-import { useRoutes } from '@/features/journey/hooks/useRoutes';
-import { useDebounce } from '@/hooks/useDebounce';
-import { useFormValidation } from '@/features/location/hooks/useFormValidation';
 import { Route } from '@/types/route';
+import { fetchRoutes } from '../services/route.service';
+import { Coordinates } from '@/types/station';
 
 interface JourneyContextType {
-  // Location state
   fromLocation: Coordinates | null;
   toLocation: Coordinates | null;
+  routes: Route[] | null;
+  isFormValid: boolean;
+  isRoutesLoading: boolean;
   setFromLocation: (location: Coordinates | null) => void;
   setToLocation: (location: Coordinates | null) => void;
-
-  // Station data
-  fromStation: Station | null | undefined;
-  toStation: Station | null | undefined;
-
-  // Form state
-  isFormValid: boolean;
-  isLoading: boolean;
+  handleSearch: () => Promise<void>;
   errorMessage: string | null;
-
-  // Route state
-  routes: Route[] | undefined;
-  isRoutesLoading: boolean;
   routesError: Error | null;
-
-  // Actions
-  handleSearch: () => void;
-  clearJourney: () => void;
+  resetError: () => void;
+  clearRoutes: () => void;
 }
 
 const JourneyContext = createContext<JourneyContextType | undefined>(undefined);
@@ -47,109 +33,110 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     null
   );
   const [toLocation, setToLocationState] = useState<Coordinates | null>(null);
+  const [routes, setRoutes] = useState<Route[] | null>(null);
+  const [isRoutesLoading, setIsRoutesLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [routesError, setRoutesError] = useState<Error | null>(null);
 
-  const [searchButtonClicked, setSearchButtonClicked] = useState(false);
-
-  const setFromLocation = useCallback((location: Coordinates | null) => {
-    setFromLocationState(location);
-    setSearchButtonClicked(false); // Reset search state when location changes
-  }, []);
-
-  const setToLocation = useCallback((location: Coordinates | null) => {
-    setToLocationState(location);
-    setSearchButtonClicked(false); // Reset search state when location changes
-  }, []);
-
-  const debouncedFromLocation = useDebounce(fromLocation, 300);
-  const debouncedToLocation = useDebounce(toLocation, 300);
-
-  // Station queries
-  const {
-    data: fromStation,
-    isLoading: isLoadingFromStation,
-    isError: isFromStationError,
-    isFetching: isFetchingFromStation,
-  } = useNearestStation(debouncedFromLocation);
-
-  const {
-    data: toStation,
-    isLoading: isLoadingToStation,
-    isError: isToStationError,
-    isFetching: isFetchingToStation,
-  } = useNearestStation(debouncedToLocation);
-
-  // Form validation
-  const { isFormValid, getErrorMessage } = useFormValidation({
-    fromLocation: debouncedFromLocation,
-    toLocation: debouncedToLocation,
-    fromStation,
-    toStation,
-    isLoading: isLoadingFromStation || isLoadingToStation,
-    isLoadingFromStation,
-    isLoadingToStation,
-    isFetchingFromStation,
-    isFetchingToStation,
-    isFromStationError,
-    isToStationError,
-  });
-
-  const {
-    data: routes,
-    isLoading: isRoutesLoading,
-    error: routesError,
-  } = useRoutes({
-    fromStation,
-    toStation,
-    fromLocation: debouncedFromLocation,
-    toLocation: debouncedToLocation,
-    enabled: searchButtonClicked,
-  });
-
-  const handleSearch = useCallback(() => {
-    if (isFormValid) {
-      setSearchButtonClicked(true);
+  const handleSearch = useCallback(async () => {
+    if (!fromLocation || !toLocation) {
+      setErrorMessage('Both origin and destination locations are required');
+      return;
     }
-  }, [isFormValid]);
 
-  const clearJourney = useCallback(() => {
-    setFromLocationState(null);
-    setToLocationState(null);
-    setSearchButtonClicked(false);
-  }, []);
+    setErrorMessage(null);
+    setRoutesError(null);
+    setIsRoutesLoading(true);
 
-  // Overall loading state
-  const isLoading =
-    isLoadingFromStation ||
-    isLoadingToStation ||
-    isFetchingFromStation ||
-    isFetchingToStation;
+    try {
+      const routesResult = await fetchRoutes(fromLocation, toLocation);
+      setRoutes(routesResult || []);
+    } catch (error) {
+      console.error('Error searching routes:', error);
+      setRoutesError(
+        error instanceof Error ? error : new Error('Failed to search routes')
+      );
+      setRoutes(null);
+    } finally {
+      setIsRoutesLoading(false);
+    }
+  }, [fromLocation, toLocation]);
 
-  // Error handling
-  const errorMessage = getErrorMessage();
+  function resetError() {
+    setErrorMessage(null);
+    setRoutesError(null);
+  }
 
-  const value = {
+  function clearRoutes() {
+    setRoutes(null);
+  }
+
+  function setFromLocation(location: Coordinates | null) {
+    if (location === null) {
+      setFromLocationState(null);
+      return;
+    }
+
+    const lat = Number(location.lat);
+    const lng = Number(location.lng);
+
+    if (!isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0)) {
+      setFromLocationState({ lat, lng });
+    } else {
+      console.warn('Invalid coordinates provided for fromLocation:', location);
+    }
+  }
+
+  function setToLocation(location: Coordinates | null) {
+    if (location === null) {
+      setToLocationState(null);
+      return;
+    }
+
+    const lat = Number(location.lat);
+    const lng = Number(location.lng);
+
+    if (!isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0)) {
+      setToLocationState({ lat, lng });
+    } else {
+      console.warn('Invalid coordinates provided for toLocation:', location);
+    }
+  }
+
+  const isFormValid = Boolean(
+    fromLocation &&
+      toLocation &&
+      typeof fromLocation.lat === 'number' &&
+      typeof fromLocation.lng === 'number' &&
+      typeof toLocation.lat === 'number' &&
+      typeof toLocation.lng === 'number' &&
+      (fromLocation.lat !== 0 || fromLocation.lng !== 0) &&
+      (toLocation.lat !== 0 || toLocation.lng !== 0)
+  );
+
+  const contextValue = {
     fromLocation,
     toLocation,
+    routes,
+    isFormValid,
+    isRoutesLoading,
     setFromLocation,
     setToLocation,
-    fromStation,
-    toStation,
-    isFormValid,
-    isLoading,
-    errorMessage,
-    routes,
-    isRoutesLoading,
-    routesError,
     handleSearch,
-    clearJourney,
+    errorMessage,
+    routesError,
+    resetError,
+    clearRoutes,
   };
 
   return (
-    <JourneyContext.Provider value={value}>{children}</JourneyContext.Provider>
+    <JourneyContext.Provider value={contextValue}>
+      {children}
+    </JourneyContext.Provider>
   );
 }
 
-export const useJourney = () => {
+export const useJourney = (): JourneyContextType => {
   const context = useContext(JourneyContext);
   if (context === undefined) {
     throw new Error('useJourney must be used within a JourneyProvider');

@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils/formatters';
@@ -10,31 +10,35 @@ import { showError } from '@/lib/utils/toast';
 import { Card } from '@/components/common/Card';
 import LocationSearchInput from '../../../location/components/LocationSearchInput';
 
-export const JourneyForm = memo(function JourneyForm() {
+interface JourneyFormProps {
+  isResultsPage?: boolean;
+}
+
+export const JourneyForm = memo(function JourneyForm({
+  isResultsPage = false,
+}: JourneyFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const {
     fromLocation,
     toLocation,
     isFormValid,
-    isLoading,
     errorMessage,
-    isRoutesLoading,
+    resetError,
+    clearRoutes,
     handleSearch,
   } = useJourney();
   const [isNavigating, setIsNavigating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const hasBothLocations = Boolean(fromLocation && toLocation);
-  const isSearchDisabled = !isFormValid || isRoutesLoading || isNavigating;
-  const showLoading =
-    (isLoading && hasBothLocations) || isRoutesLoading || isNavigating;
+  const isSearchDisabled = !isFormValid || isNavigating;
 
   useEffect(() => {
     if (errorMessage) {
       showError(errorMessage);
       setFormError(errorMessage);
 
-      // Clear form error after 5 seconds
       const timer = setTimeout(() => {
         setFormError(null);
       }, 5000);
@@ -43,12 +47,13 @@ export const JourneyForm = memo(function JourneyForm() {
     }
   }, [errorMessage]);
 
-  // Clear form error when locations change
   useEffect(() => {
-    setFormError(null);
-  }, [fromLocation, toLocation]);
+    if (formError) {
+      setFormError(null);
+    }
+  }, [fromLocation, toLocation, formError]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!fromLocation || !toLocation) {
@@ -56,72 +61,68 @@ export const JourneyForm = memo(function JourneyForm() {
       return;
     }
 
-    if (!isSearchDisabled) {
-      try {
-        setFormError(null);
+    if (isSearchDisabled) return;
 
-        // Create query parameters from the locations
-        const params = new URLSearchParams();
+    try {
+      setFormError(null);
+      resetError();
 
-        // Add coordinates as separate parameters
-        if (fromLocation) {
-          params.set('fromLat', fromLocation.lat.toString());
-          params.set('fromLng', fromLocation.lng.toString());
-        }
+      const params = new URLSearchParams();
 
-        if (toLocation) {
-          params.set('toLat', toLocation.lat.toString());
-          params.set('toLng', toLocation.lng.toString());
-        }
+      params.set('fromLat', fromLocation.lat.toString());
+      params.set('fromLng', fromLocation.lng.toString());
+      params.set('toLat', toLocation.lat.toString());
+      params.set('toLng', toLocation.lng.toString());
 
-        // Get the input values from DOM with more robust selectors
-        const fromInput = document.getElementById(
-          'from-location'
-        ) as HTMLInputElement;
-        const toInput = document.getElementById(
-          'to-location'
-        ) as HTMLInputElement;
+      const fromInput = document.getElementById(
+        'from-location'
+      ) as HTMLInputElement;
+      const toInput = document.getElementById(
+        'to-location'
+      ) as HTMLInputElement;
 
-        // Add text input values to URL params
-        if (fromInput && fromInput.value) {
-          params.set('fromText', encodeURIComponent(fromInput.value));
-        }
-        if (toInput && toInput.value) {
-          params.set('toText', encodeURIComponent(toInput.value));
-        }
-
-        const url = `/search-results?${params.toString()}`;
-
-        // Always update the URL, whether navigating for the first time or updating
-        if (window.location.pathname !== '/search-results') {
-          // If we're not on the results page, show navigating state and navigate
-          setIsNavigating(true);
-          router.push(url);
-        } else {
-          // If already on results page, use router.replace to update URL without adding history entry
-          setIsNavigating(true);
-          await router.replace(url);
-          // Only after the URL is updated, trigger the search
-          await handleSearch();
-          setIsNavigating(false);
-        }
-      } catch (error) {
-        console.error('Navigation error:', error);
-        setFormError('An error occurred. Please try again.');
-        setIsNavigating(false);
+      if (fromInput?.value) {
+        params.set('fromText', encodeURIComponent(fromInput.value));
       }
+      if (toInput?.value) {
+        params.set('toText', encodeURIComponent(toInput.value));
+      }
+
+      if (!isResultsPage) {
+        clearRoutes();
+        setIsNavigating(true);
+        const url = `/search-results?${params.toString()}`;
+        router.push(url);
+      } else {
+        clearRoutes();
+        setIsNavigating(true);
+
+        const url = `${pathname}?${params.toString()}`;
+
+        router.replace(url);
+
+        setTimeout(() => {
+          handleSearch().finally(() => {
+            setIsNavigating(false);
+          });
+        }, 10);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      setFormError('An error occurred. Please try again.');
+      setIsNavigating(false);
     }
-  };
+  }
 
   return (
     <Card
       className={cn(
-        'search-form-container relative', // Removed 'overflow-hidden'
+        'search-form-container relative',
         'bg-gradient-to-br from-[#012620] via-[#012620] to-[#023428]',
         'border-none shadow-xl mb-4 sm:mb-6 mt-1 sm:mt-2',
         'transition-all duration-300'
       )}
-      allowOverflow={true} // This prop should allow overflow
+      allowOverflow={true}
     >
       <motion.div
         className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"
@@ -166,7 +167,7 @@ export const JourneyForm = memo(function JourneyForm() {
         <Button
           onClick={handleSubmit}
           disabled={isSearchDisabled}
-          isLoading={showLoading}
+          isLoading={isNavigating}
           type="submit"
           variant="primary"
           size="lg"
@@ -188,11 +189,7 @@ export const JourneyForm = memo(function JourneyForm() {
             )
           }
         >
-          {isLoading && hasBothLocations
-            ? 'Finding Stations Nearby...'
-            : isRoutesLoading
-            ? 'Searching Routes...'
-            : isNavigating
+          {isNavigating
             ? 'Finding Your Routes...'
             : !hasBothLocations
             ? 'Select Both Locations'
@@ -200,8 +197,7 @@ export const JourneyForm = memo(function JourneyForm() {
         </Button>
       </form>
 
-      {/* Visual effects for loading states */}
-      {showLoading && (
+      {isNavigating && (
         <motion.div
           className="absolute bottom-0 left-0 h-1 bg-emerald-400"
           initial={{ width: '0%' }}

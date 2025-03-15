@@ -12,7 +12,7 @@ export const MAX_ROUTES_TO_GENERATE = 10;
 export const MAX_TRANSFERS = 3;
 
 // Station constants
-export const MAX_STATION_DISTANCE = 8; // kilometers
+export const MAX_STATION_DISTANCE = 2000; // kilometers
 export const STOP_WAIT_TIME_SECONDS = 20;
 
 // Walking constants

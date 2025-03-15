@@ -1,310 +1,200 @@
 'use client';
 
-import { MAPS_CONFIG } from '@lib/constants/maps';
-import usePlacesAutocomplete from 'use-places-autocomplete';
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useInputState } from '@/hooks/useInputState';
+import { useEffect, useRef, useState } from 'react';
+import usePlacesAutocomplete, {
+  getGeocode,
+  getLatLng,
+} from 'use-places-autocomplete';
 import { Coordinates } from '@/types/station';
-import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils/formatters';
 
 interface MapSearchProps {
+  id: string;
   onSelectPlace: (location: Coordinates | null) => void;
   placeholder: string;
-  value?: string;
-  onValueChange?: (value: string) => void;
+  value: string;
+  onValueChange: (value: string) => void;
   icon: string;
-  id?: string;
 }
 
 export default function MapSearch({
+  id,
   onSelectPlace,
   placeholder,
   value,
   onValueChange,
   icon,
-  id,
 }: MapSearchProps) {
-  const { isFocused, inputProps } = useInputState();
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
-  const dropdownRef = useRef<HTMLUListElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isOptionClicked, setIsOptionClicked] = useState(false);
+  const [hasSelectedLocation, setHasSelectedLocation] = useState(false);
+
+  const isUserTypingRef = useRef(false);
+  const internalValueRef = useRef(value);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isMicroLoading, setIsMicroLoading] = useState(false);
 
   const {
     ready,
-    value: inputValue,
     suggestions: { status, data },
-    setValue,
+    setValue: setPlacesValue,
     clearSuggestions,
   } = usePlacesAutocomplete({
+    callbackName: 'initMap',
     requestOptions: {
-      componentRestrictions: { country: 'PK' },
-      bounds: MAPS_CONFIG.islamabadRawalpindiBounds,
+      componentRestrictions: { country: 'pk' },
     },
-    defaultValue: value || '',
     debounce: 300,
   });
 
-  // Sync external value changes only when not selecting
   useEffect(() => {
-    if (!isSelecting && value !== undefined && value !== inputValue) {
-      setValue(value, false);
+    internalValueRef.current = value;
+    if (value) {
+      setPlacesValue(value, false);
     }
-  }, [value, setValue, inputValue, isSelecting]);
+  }, []);
 
-  // Status message handler
   useEffect(() => {
-    if (status === 'ZERO_RESULTS') {
-      setStatusMessage('No locations found. Try different search terms.');
-    } else if (status === 'OVER_QUERY_LIMIT') {
-      setStatusMessage('Too many requests. Please try again later.');
-    } else if (status === 'REQUEST_DENIED') {
-      setStatusMessage('Location search is currently unavailable.');
-    } else if (status === 'INVALID_REQUEST') {
-      setStatusMessage('Please enter a search term.');
+    if (!isUserTypingRef.current && value !== internalValueRef.current) {
+      internalValueRef.current = value;
+      setPlacesValue(value, false);
+      setHasSelectedLocation(Boolean(value));
+    }
+  }, [value, setPlacesValue]);
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newValue = e.target.value;
+
+    isUserTypingRef.current = true;
+
+    internalValueRef.current = newValue;
+    onValueChange(newValue);
+    setPlacesValue(newValue);
+
+    if (newValue === '') {
+      setHasSelectedLocation(false);
+      onSelectPlace(null);
     } else {
-      setStatusMessage('');
-    }
-  }, [status]);
-
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        inputRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        clearSuggestions();
-      }
+      setIsOptionClicked(false);
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [clearSuggestions]);
+    setTimeout(() => {
+      isUserTypingRef.current = false;
+    }, 100);
+  }
 
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!dropdownRef.current || status !== 'OK') return;
+  function handleClear() {
+    internalValueRef.current = '';
+    setPlacesValue('', false);
+    setHasSelectedLocation(false);
+    setIsOptionClicked(false);
 
-      const items = Array.from(dropdownRef.current.querySelectorAll('li'));
-      const activeElement = document.activeElement;
-      const activeIndex = items.findIndex((item) => item === activeElement);
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          if (activeIndex < items.length - 1) {
-            (items[activeIndex + 1] as HTMLElement).focus();
-          } else {
-            (items[0] as HTMLElement).focus();
-          }
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          if (activeIndex > 0) {
-            (items[activeIndex - 1] as HTMLElement).focus();
-          } else {
-            (items[items.length - 1] as HTMLElement).focus();
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          clearSuggestions();
-          inputRef.current?.focus();
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [status, clearSuggestions]);
-
-  const handleSelect = useCallback(
-    async (address: string) => {
-      setIsSelecting(true);
-      setIsMicroLoading(true);
-
-      // First update the visual input value immediately
-      setValue(address, false);
-      clearSuggestions();
-
-      try {
-        const geocoder = new google.maps.Geocoder();
-        const result = await geocoder.geocode({
-          address,
-          bounds: MAPS_CONFIG.islamabadRawalpindiBounds,
-          region: 'PK',
-        });
-
-        if (result.results[0]) {
-          const location = result.results[0].geometry.location;
-          const coordinates = { lat: location.lat(), lng: location.lng() };
-
-          // Update parent values synchronously
-          onValueChange?.(address);
-          onSelectPlace(coordinates);
-        } else {
-          setStatusMessage(
-            'No exact location found. Please try another search.'
-          );
-        }
-      } catch (error) {
-        console.error('Geocoding error:', error);
-        setStatusMessage('Could not find this location. Please try again.');
-      } finally {
-        setIsSelecting(false);
-        // Short delay to show loading state
-        setTimeout(() => setIsMicroLoading(false), 300);
-      }
-    },
-    [setValue, clearSuggestions, onSelectPlace, onValueChange]
-  );
-
-  const handleClear = useCallback(() => {
-    // First update UI state
-    setValue('');
-    clearSuggestions();
-    setStatusMessage('');
-
-    // Then immediately notify parent - don't wait for debounce
+    onValueChange('');
     onSelectPlace(null);
-    onValueChange?.('');
+    clearSuggestions();
 
-    // Focus on input after clearing
-    inputRef.current?.focus();
-  }, [setValue, clearSuggestions, onSelectPlace, onValueChange]);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
-      setValue(newValue);
-      onValueChange?.(newValue);
+  async function handleSelect(description: string) {
+    internalValueRef.current = description;
+    setPlacesValue(description, false);
+    setIsOptionClicked(true);
 
-      // If input is cleared, immediately reset location
-      if (newValue === '') {
-        onSelectPlace(null);
+    onValueChange(description);
+    clearSuggestions();
+
+    try {
+      const results = await getGeocode({ address: description });
+      const { lat, lng } = await getLatLng(results[0]);
+
+      setHasSelectedLocation(true);
+      onSelectPlace({ lat, lng });
+
+      if (inputRef.current) {
+        inputRef.current.blur();
+        setTimeout(() => {
+          if (
+            id === 'from-location' &&
+            document.getElementById('to-location')
+          ) {
+            document.getElementById('to-location')?.focus();
+          }
+        }, 10);
       }
-    },
-    [setValue, onSelectPlace, onValueChange]
-  );
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      setHasSelectedLocation(false);
+    }
+  }
 
-  const inputId =
-    id || `location-search-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
+  const suggestionItems = data.map((suggestion) => {
+    const {
+      place_id,
+      structured_formatting: { main_text, secondary_text },
+    } = suggestion;
+
+    return (
+      <li
+        key={place_id}
+        className="cursor-pointer px-4 py-2 hover:bg-gray-100 transition-colors"
+        onClick={() => {
+          handleSelect(suggestion.description);
+        }}
+      >
+        <div className="font-medium text-gray-800">{main_text}</div>
+        <div className="text-xs text-gray-500">{secondary_text}</div>
+      </li>
+    );
+  });
 
   return (
-    <div className="relative">
-      <div className="relative">
-        <motion.i
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: 1,
-            color: isFocused ? '#166534' : '#9ca3af',
-          }}
-          className={`${icon} absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300`}
-        ></motion.i>
-        <input
-          id={inputId}
-          ref={inputRef}
-          type="text"
-          className={`w-full text-sm p-4 pl-12 pr-10 border bg-white rounded-lg shadow-sm
-            ${
-              isFocused
-                ? 'border-green-700 shadow-sm shadow-green-100'
-                : 'border-gray-200'
-            }
-            ${!ready ? 'cursor-not-allowed bg-gray-50' : ''}
-            ${isMicroLoading ? 'bg-green-50/50' : ''}
-            focus:outline-none transition-all duration-300`}
-          value={inputValue}
-          onChange={handleInputChange}
-          disabled={!ready}
-          placeholder={!ready ? 'Loading...' : placeholder}
-          aria-label={placeholder}
-          {...inputProps}
-        />
-        <AnimatePresence>
-          {inputValue && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15 }}
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center"
-              onClick={handleClear}
-              aria-label="Clear input"
-            >
-              <i className="fas fa-times"></i>
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {isMicroLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute right-12 top-1/2 -translate-y-1/2"
-          >
-            <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          </motion.div>
-        )}
+    <div className="relative w-full">
+      <div className="absolute left-4 top-3.5 text-emerald-500">
+        <i className={icon}></i>
       </div>
-
-      <AnimatePresence>
-        {status === 'OK' && (
-          <motion.ul
-            ref={dropdownRef}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="absolute z-[9999] w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-auto shadow-xl"
-            style={{
-              top: '100%',
-              left: 0,
-              right: 0,
-              position: 'absolute',
-            }}
-            role="listbox"
-          >
-            {data.map(({ place_id, description }) => (
-              <li
-                key={place_id}
-                className="p-3 hover:bg-green-50 focus:bg-green-100 cursor-pointer border-b border-gray-100 last:border-b-0 flex gap-2 items-center text-sm outline-none transition-colors duration-150"
-                onClick={() => handleSelect(description)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' && handleSelect(description)
-                }
-                tabIndex={0}
-                role="option"
-              >
-                <i className="fas fa-map-marker-alt text-green-700 text-sm"></i>
-                <span className="line-clamp-2">{description}</span>
-              </li>
-            ))}
-          </motion.ul>
+      <input
+        ref={inputRef}
+        id={id}
+        value={value}
+        onChange={handleInputChange}
+        disabled={!ready}
+        className={cn(
+          'w-full h-12 pl-12 pr-10 rounded-lg border',
+          'transition-all duration-200 ease-in-out',
+          'focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none',
+          isFocused
+            ? 'border-emerald-500 bg-white shadow-md'
+            : hasSelectedLocation
+            ? 'border-green-200 bg-white'
+            : 'border-gray-200 bg-gray-50'
         )}
+        placeholder={placeholder}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setTimeout(() => {
+            setIsFocused(false);
+          }, 150);
+        }}
+      />
 
-        {statusMessage && !isMicroLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="mt-1 text-sm text-amber-600 pl-4"
-          >
-            <i className="fas fa-info-circle mr-1"></i> {statusMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {value && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded-full hover:bg-gray-100"
+          aria-label="Clear input"
+        >
+          <i className="fas fa-times text-sm"></i>
+        </button>
+      )}
+
+      {status === 'OK' && isFocused && !isOptionClicked && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+          {suggestionItems}
+        </ul>
+      )}
     </div>
   );
 }

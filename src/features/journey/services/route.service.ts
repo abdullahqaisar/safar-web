@@ -2,10 +2,8 @@ import { Route } from '@/types/route';
 import { Coordinates } from '@/types/station';
 
 export async function fetchRoutes(
-  fromStationId: string,
-  toStationId: string,
-  fromLocation?: Coordinates,
-  toLocation?: Coordinates
+  fromLocation: Coordinates,
+  toLocation: Coordinates
 ): Promise<Route[] | null> {
   try {
     const response = await fetch('/api/routes', {
@@ -14,20 +12,19 @@ export async function fetchRoutes(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        fromStationId,
-        toStationId,
         fromLocation,
         toLocation,
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch route');
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || 'Failed to fetch routes');
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error fetching route:', error);
-    return null;
+    console.error('Error fetching routes:', error);
+    throw error;
   }
 }
