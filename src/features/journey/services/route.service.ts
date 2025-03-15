@@ -1,12 +1,15 @@
-import { Route } from '@/types/route';
+'use server';
+
 import { Coordinates } from '@/types/station';
+import { Route } from '@/types/route';
 
 export async function fetchRoutes(
   fromLocation: Coordinates,
   toLocation: Coordinates
-): Promise<Route[] | null> {
+): Promise<Route[]> {
   try {
-    const response = await fetch('/api/routes', {
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/routes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -15,11 +18,12 @@ export async function fetchRoutes(
         fromLocation,
         toLocation,
       }),
+      // Cache control for server-side data fetching
+      cache: 'no-store', // or 'force-cache' for static data
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || 'Failed to fetch routes');
+      throw new Error(`Failed to fetch routes: ${response.statusText}`);
     }
 
     return await response.json();

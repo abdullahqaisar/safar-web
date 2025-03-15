@@ -12,6 +12,7 @@ export default function LocationSearchInput() {
   const { setFromLocation, setToLocation } = useJourney();
   const [pickupValue, setPickupValue] = useState('');
   const [destinationValue, setDestinationValue] = useState('');
+
   const searchParams = useSearchParams();
 
   const { isLoaded } = useLoadScript({

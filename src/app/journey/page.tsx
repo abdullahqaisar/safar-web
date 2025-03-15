@@ -1,7 +1,9 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Hero } from '@/components/common/Hero';
 import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner';
+import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 
 export default function SearchResultsPage() {
   return (
@@ -14,7 +16,9 @@ export default function SearchResultsPage() {
         paddingBottom="pb-28"
       />
       <div className="min-h-screen bg-gray-50 pb-16">
-        <JourneyPlanner showResults={true} />
+        <Suspense fallback={<SearchParamsFallback />}>
+          <JourneyPlanner showResults={true} />
+        </Suspense>
       </div>
     </main>
   );
