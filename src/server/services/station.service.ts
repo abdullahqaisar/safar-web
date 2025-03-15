@@ -24,14 +24,12 @@ export class StationService {
   initialize(): void {
     if (this.initialized) return;
 
-    // Clear any existing data
     this.stations.clear();
     this.stationLines.clear();
     this.spatialIndex.clear();
     this.stationsArray = [];
     this.stationPoints = [];
 
-    // Process all metro lines and their stations
     for (const line of metroLines) {
       for (let i = 0; i < line.stations.length; i++) {
         const station = line.stations[i];
@@ -43,7 +41,6 @@ export class StationService {
           this.stationLines.set(station.id, []);
         }
 
-        // Associate line with station
         const lines = this.stationLines.get(station.id)!;
         if (!lines.some((l) => l.id === line.id)) {
           lines.push(line);
@@ -57,10 +54,7 @@ export class StationService {
       lat: station.coordinates.lat,
     }));
 
-    this.stationsIndex = new KDBush(
-      this.stationPoints.length, // Number of points (capacity)
-      64 // Node size
-    );
+    this.stationsIndex = new KDBush(this.stationPoints.length, 64);
 
     // Add all points to the index
     for (let i = 0; i < this.stationPoints.length; i++) {
@@ -100,12 +94,10 @@ export class StationService {
 
     if (!location || !this.stationsIndex) return [];
 
-    // Calculate bounding box
     const radiusInDegrees = maxDistance / 111320;
     const latRad = (location.lat * Math.PI) / 180;
     const lngRadius = radiusInDegrees / Math.cos(latRad);
 
-    // Get indices within the bounding box
     const indices = this.stationsIndex.range(
       location.lng - lngRadius,
       location.lat - radiusInDegrees,
@@ -113,15 +105,11 @@ export class StationService {
       location.lat + radiusInDegrees
     );
 
-    // Map indices to stations and calculate distances
     const results = indices
       .map((idx: number) => {
-        // Use the idx to get the original station point's index
         const stationPoint = this.stationPoints[idx];
-        // Then use that index to get the original station
         const station = this.stationsArray[stationPoint.idx];
 
-        // Use consistent distance calculation
         const distanceInMeters = calculateDistanceSync(
           location,
           station.coordinates
@@ -150,12 +138,10 @@ export class StationService {
 
     if (!location) return [];
 
-    // Use KDBush for very fast nearest neighbors
     if (this.stationsIndex) {
       return this.findNearestStationsUsingKDBush(location, count, maxDistance);
     }
 
-    // Fallback to spatial index if KDBush isn't initialized
     const nearestResults = this.spatialIndex.findNearest(
       location,
       count,
@@ -198,7 +184,6 @@ export class StationService {
 
     if (!location) return [];
 
-    // Get twice as many stations as needed initially
     const candidates = this.findNearestStations(
       location,
       count * 2,
@@ -206,12 +191,10 @@ export class StationService {
       includeLines
     );
 
-    // Apply filter if needed
     const filtered = filter
       ? candidates.filter((result) => filter(result.station))
       : candidates;
 
-    // If not enough results, try with larger distance
     if (filtered.length < count) {
       const expanded = this.findNearestStations(
         location,
@@ -234,13 +217,11 @@ export class StationService {
       filtered.push(...additionalFiltered);
     }
 
-    // Score stations using multiple factors
     const scored = filtered.map((result) => ({
       ...result,
       score: this.calculateStationScore(result),
     }));
 
-    // Return highest scoring stations
     return scored.sort((a, b) => b.score - a.score).slice(0, count);
   }
 
@@ -251,7 +232,6 @@ export class StationService {
     const distanceWeight = Math.max(0, 1 - result.distance / 1500);
     const lineFactor = lineCountValue * distanceWeight;
 
-    // Distance contributes 70% of the score, lines 30%
     return distanceFactor * 0.7 + lineFactor * 0.3;
   }
 
@@ -262,5 +242,4 @@ export class StationService {
   }
 }
 
-// Export singleton instance
 export const stationService = new StationService();

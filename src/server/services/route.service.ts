@@ -14,8 +14,8 @@ import { stationService } from './station.service';
 export async function findBestRoutes(
   fromStationId: string,
   toStationId: string,
-  fromLocation?: Coordinates,
-  toLocation?: Coordinates
+  fromLocation: Coordinates,
+  toLocation: Coordinates
 ): Promise<Route[] | null> {
   // Validate stations
   const fromStation = stationService.findStationById(fromStationId);
@@ -28,11 +28,9 @@ export async function findBestRoutes(
     return null;
   }
 
-  // Use station coordinates as fallback if no specific locations provided
   const startLocation = fromLocation || fromStation.coordinates;
   const endLocation = toLocation || toStation.coordinates;
 
-  // Check cache first
   const cacheKey = routeCache.createKey(startLocation, endLocation);
   const cachedRoutes = routeCache.get(cacheKey);
 
@@ -41,10 +39,8 @@ export async function findBestRoutes(
     return cachedRoutes;
   }
 
-  // Calculate direct distance for classification
   const directDistance = calculateDistanceSync(startLocation, endLocation);
 
-  // Distance classification for route optimization
   const isVeryShortDistance = directDistance < DISTANCE_THRESHOLDS.VERY_SHORT;
   const isMediumDistance =
     directDistance >= DISTANCE_THRESHOLDS.MEDIUM_MIN &&
@@ -53,10 +49,8 @@ export async function findBestRoutes(
 
   try {
     console.time('Route finding');
-    // Find all possible routes (both walking and transit)
     const allRoutes = await findRoutes(startLocation, endLocation);
 
-    // If no routes found
     if (!allRoutes || allRoutes.length === 0) {
       console.error('No routes found between:', {
         fromStation: fromStationId,
@@ -66,13 +60,11 @@ export async function findBestRoutes(
         directDistance,
       });
 
-      console.timeEnd('Route finding');
       return null;
     }
 
     console.log(`Found ${allRoutes.length} potential routes`);
 
-    // Optimize and filter routes
     let optimizedRoutes = filterAndRankRoutes(
       allRoutes,
       isVeryShortDistance,
@@ -80,10 +72,9 @@ export async function findBestRoutes(
       isLongDistance
     );
 
-    // Fallback if optimization filters out all routes
     if (optimizedRoutes.length === 0 && allRoutes.length > 0) {
       console.warn('All routes filtered out, using fallback logic');
-      // Just return the fastest route
+
       optimizedRoutes = [
         allRoutes.reduce(
           (fastest, route) =>
@@ -95,7 +86,6 @@ export async function findBestRoutes(
 
     optimizedRoutes = optimizedRoutes.slice(0, MAX_ROUTES_TO_RETURN);
 
-    // Cache the result
     routeCache.set(cacheKey, optimizedRoutes);
 
     console.timeEnd('Route finding');

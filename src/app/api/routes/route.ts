@@ -8,6 +8,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { fromLocation, toLocation } = body;
 
+    console.log('Locationnnnn ', fromLocation, toLocation);
+
     // Validate required parameters
     if (
       !fromLocation ||
@@ -34,7 +36,11 @@ export async function POST(request: Request) {
 
     if (!fromStation) {
       return NextResponse.json(
-        { message: 'No transit stations found near your starting location' },
+        {
+          message:
+            'No transit stations found near your starting location. Try selecting a location closer to public transportation.',
+          code: 'NO_START_STATION',
+        },
         { status: 404 }
       );
     }
@@ -47,7 +53,11 @@ export async function POST(request: Request) {
 
     if (!toStation) {
       return NextResponse.json(
-        { message: 'No transit stations found near your destination location' },
+        {
+          message:
+            'No transit stations found near your destination location. Try selecting a location closer to public transportation.',
+          code: 'NO_END_STATION',
+        },
         { status: 404 }
       );
     }
@@ -64,7 +74,14 @@ export async function POST(request: Request) {
     );
 
     if (!routes || routes.length === 0) {
-      return NextResponse.json([], { status: 200 });
+      return NextResponse.json(
+        {
+          message:
+            'No routes found between these stations. The locations may be too far apart or not connected by our transit network.',
+          code: 'NO_ROUTES_FOUND',
+        },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(routes);
@@ -76,6 +93,7 @@ export async function POST(request: Request) {
           error instanceof Error
             ? error.message
             : 'Failed to search for routes',
+        code: 'SERVER_ERROR',
       },
       { status: 500 }
     );

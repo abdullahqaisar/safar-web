@@ -1,46 +1,59 @@
 'use client';
 
+import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
-import { cn } from '@/lib/utils/formatters';
 
-export function JourneyErrorFallback() {
-  const handleRefresh = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    window.location.reload();
-  };
+interface JourneyErrorFallbackProps {
+  error?: Error;
+  resetErrorBoundary?: () => void;
+}
+
+export function JourneyErrorFallback({
+  error,
+  resetErrorBoundary,
+}: JourneyErrorFallbackProps) {
+  // Get error details
+  const errorMessage =
+    error?.message || 'Something went wrong with the journey planner';
+
+  function handleReset() {
+    // Reload the page if no reset function provided
+    if (typeof resetErrorBoundary === 'function') {
+      resetErrorBoundary();
+    } else {
+      window.location.href = '/';
+    }
+  }
 
   return (
-    <Card
-      className={cn(
-        'relative',
-        'bg-gradient-to-br from-red-600/95 via-red-700/95 to-red-800/95',
-        'border-none shadow-xl mb-8'
-      )}
-      allowOverflow={true}
-    >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-400/30 to-transparent"></div>
-      <div className="py-8 px-5 sm:py-12 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10">
-        <div className="flex flex-col items-center justify-center text-center">
-          <div className="bg-white/10 p-4 rounded-full mb-6 backdrop-blur-sm">
-            <i className="fas fa-exclamation-triangle text-white text-2xl"></i>
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-3">
-            We hit a roadblock
-          </h3>
-          <p className="text-white/80 mb-6 max-w-md">
-            Something went wrong with the journey planner. Please try refreshing
-            the page.
-          </p>
-          <button
-            onClick={handleRefresh}
-            className="bg-white text-red-700 px-6 py-2.5 rounded-md 
-            hover:shadow-lg transition-all duration-300 flex items-center gap-2 font-medium"
-            type="button"
-            aria-label="Refresh page"
+    <Card className="mt-8 border border-red-100 bg-white shadow-lg">
+      <div className="p-8 flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+          <i className="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Journey Planner Error
+        </h2>
+
+        <p className="text-gray-600 mb-6 max-w-md">{errorMessage}</p>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="primary"
+            onClick={handleReset}
+            leftIcon={<i className="fas fa-redo"></i>}
           >
-            <i className="fas fa-redo-alt" aria-hidden="true"></i>
-            Refresh Page
-          </button>
+            Try Again
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => (window.location.href = '/')}
+            leftIcon={<i className="fas fa-home"></i>}
+          >
+            Return Home
+          </Button>
         </div>
       </div>
     </Card>
