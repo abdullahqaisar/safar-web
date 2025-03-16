@@ -1,29 +1,15 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  ReactNode,
-} from 'react';
-import { Route } from '@/types/route';
-import { fetchRoutes } from '../services/route.service';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { Coordinates } from '@/types/station';
 
 interface JourneyContextType {
   fromLocation: Coordinates | null;
   toLocation: Coordinates | null;
-  routes: Route[] | null;
   isFormValid: boolean;
-  isRoutesLoading: boolean;
   setFromLocation: (location: Coordinates | null) => void;
   setToLocation: (location: Coordinates | null) => void;
-  handleSearch: () => Promise<void>;
-  errorMessage: string | null;
-  routesError: Error | null;
-  resetError: () => void;
-  clearRoutes: () => void;
+  resetJourney: () => void;
 }
 
 const JourneyContext = createContext<JourneyContextType | undefined>(undefined);
@@ -33,43 +19,6 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     null
   );
   const [toLocation, setToLocationState] = useState<Coordinates | null>(null);
-  const [routes, setRoutes] = useState<Route[] | null>(null);
-  const [isRoutesLoading, setIsRoutesLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [routesError, setRoutesError] = useState<Error | null>(null);
-
-  const handleSearch = useCallback(async () => {
-    if (!fromLocation || !toLocation) {
-      setErrorMessage('Both origin and destination locations are required');
-      return;
-    }
-
-    setErrorMessage(null);
-    setRoutesError(null);
-    setIsRoutesLoading(true);
-
-    try {
-      const routesResult = await fetchRoutes(fromLocation, toLocation);
-      setRoutes(routesResult || []);
-    } catch (error) {
-      console.error('Error searching routes:', error);
-      setRoutesError(
-        error instanceof Error ? error : new Error('Failed to search routes')
-      );
-      setRoutes(null);
-    } finally {
-      setIsRoutesLoading(false);
-    }
-  }, [fromLocation, toLocation]);
-
-  function resetError() {
-    setErrorMessage(null);
-    setRoutesError(null);
-  }
-
-  function clearRoutes() {
-    setRoutes(null);
-  }
 
   function setFromLocation(location: Coordinates | null) {
     if (location === null) {
@@ -103,6 +52,11 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function resetJourney() {
+    setFromLocationState(null);
+    setToLocationState(null);
+  }
+
   const isFormValid = Boolean(
     fromLocation &&
       toLocation &&
@@ -117,16 +71,10 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   const contextValue = {
     fromLocation,
     toLocation,
-    routes,
     isFormValid,
-    isRoutesLoading,
     setFromLocation,
     setToLocation,
-    handleSearch,
-    errorMessage,
-    routesError,
-    resetError,
-    clearRoutes,
+    resetJourney,
   };
 
   return (
@@ -136,10 +84,10 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useJourney = (): JourneyContextType => {
+export const useJourneyContext = (): JourneyContextType => {
   const context = useContext(JourneyContext);
   if (context === undefined) {
-    throw new Error('useJourney must be used within a JourneyProvider');
+    throw new Error('useJourneyContext must be used within a JourneyProvider');
   }
   return context;
 };

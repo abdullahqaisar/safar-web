@@ -4,9 +4,9 @@ import { useLoadScript } from '@react-google-maps/api';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import MapSearch from './MapSearch';
-import LoadingSkeleton from './LoadingSkeleton';
-import { useJourney } from '@/features/journey/context/JourneyContext';
 import { Coordinates } from '@/types/station';
+import { useJourney } from '@/features/journey/hooks/useJourney';
+import LoadingSkeleton from './LoadingSkeleton';
 
 export default function LocationSearchInput() {
   const { setFromLocation, setToLocation } = useJourney();

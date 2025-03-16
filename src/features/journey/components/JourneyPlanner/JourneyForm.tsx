@@ -5,8 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils/formatters';
-import { useJourney } from '@/features/journey/context/JourneyContext';
-import { showError } from '@/lib/utils/toast';
+import { useJourney } from '@/features/journey/hooks/useJourney';
 import { Card } from '@/components/common/Card';
 import LocationSearchInput from '../../../location/components/LocationSearchInput';
 
@@ -19,15 +18,8 @@ export const JourneyForm = memo(function JourneyForm({
 }: JourneyFormProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    fromLocation,
-    toLocation,
-    isFormValid,
-    errorMessage,
-    resetError,
-    clearRoutes,
-    handleSearch,
-  } = useJourney();
+  const { fromLocation, toLocation, isFormValid, searchRoutes } = useJourney();
+
   const [isNavigating, setIsNavigating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -35,20 +27,7 @@ export const JourneyForm = memo(function JourneyForm({
   const isSearchDisabled = !isFormValid || isNavigating;
 
   useEffect(() => {
-    if (errorMessage) {
-      showError(errorMessage);
-      setFormError(errorMessage);
-
-      const timer = setTimeout(() => {
-        setFormError(null);
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
-
-  useEffect(() => {
-    if (formError) {
+    if (formError && (fromLocation || toLocation)) {
       setFormError(null);
     }
   }, [fromLocation, toLocation, formError]);
@@ -65,8 +44,6 @@ export const JourneyForm = memo(function JourneyForm({
 
     try {
       setFormError(null);
-      resetError();
-
       const params = new URLSearchParams();
 
       params.set('fromLat', fromLocation.lat.toString());
@@ -88,27 +65,20 @@ export const JourneyForm = memo(function JourneyForm({
         params.set('toText', encodeURIComponent(toInput.value));
       }
 
+      params.set('ts', Date.now().toString());
+
       if (!isResultsPage) {
-        clearRoutes();
         setIsNavigating(true);
         const url = `/journey?${params.toString()}`;
         router.push(url);
       } else {
-        clearRoutes();
         setIsNavigating(true);
-
         const url = `${pathname}?${params.toString()}`;
-
         router.replace(url);
-
-        setTimeout(() => {
-          handleSearch().finally(() => {
-            setIsNavigating(false);
-          });
-        }, 10);
+        setIsNavigating(false);
       }
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('Form submission error:', error);
       setFormError('An error occurred. Please try again.');
       setIsNavigating(false);
     }

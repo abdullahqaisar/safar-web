@@ -1,15 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { JourneyForm } from './JourneyForm';
 import { RouteLoadingSkeleton } from '../LoadingSkeleton';
-import {
-  JourneyProvider,
-  useJourney,
-} from '@/features/journey/context/JourneyContext';
+import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
-import { JourneyErrorFallback } from '../../../../components/common/errors/JourneyErrorFallback';
+import { JourneyErrorFallback } from '@/components/common/errors/JourneyErrorFallback';
 import { showError } from '@/lib/utils/toast';
 import { ErrorBoundary } from '@/components/layouts/ErrorBoundary';
 import { RouteResults } from '../RouteResults';
@@ -23,94 +20,99 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
   const searchParams = useSearchParams();
   const {
     routes,
-    isRoutesLoading,
-    routesError,
+    isLoading,
+    error,
     fromLocation,
     toLocation,
     setFromLocation,
     setToLocation,
-    handleSearch,
+    searchRoutes,
+    resetJourney,
   } = useJourney();
+
   const [isInitialized, setIsInitialized] = useState(false);
-
-  const initialSearchDoneRef = useRef(false);
-
   const [currentUrlParams, setCurrentUrlParams] = useState('');
+  const [shouldSearch, setShouldSearch] = useState(false);
 
-  const initFromParams = useCallback(() => {
+  useEffect(() => {
     if (!searchParams) {
       setIsInitialized(true);
-      return false;
+      return;
     }
-
-    const fromLat = searchParams.get('fromLat');
-    const fromLng = searchParams.get('fromLng');
-    const toLat = searchParams.get('toLat');
-    const toLng = searchParams.get('toLng');
 
     const paramsString = searchParams.toString();
 
     if (currentUrlParams !== paramsString) {
       setCurrentUrlParams(paramsString);
-    }
 
-    let hasLocationData = false;
+      const fromLat = searchParams.get('fromLat');
+      const fromLng = searchParams.get('fromLng');
+      const toLat = searchParams.get('toLat');
+      const toLng = searchParams.get('toLng');
 
-    if (
-      fromLat &&
-      fromLng &&
-      !isNaN(parseFloat(fromLat)) &&
-      !isNaN(parseFloat(fromLng))
-    ) {
-      const fromLocation = {
-        lat: parseFloat(fromLat),
-        lng: parseFloat(fromLng),
-      };
-      setFromLocation(fromLocation);
-      hasLocationData = true;
-    }
+      let hasValidLocations = false;
 
-    if (
-      toLat &&
-      toLng &&
-      !isNaN(parseFloat(toLat)) &&
-      !isNaN(parseFloat(toLng))
-    ) {
-      const toLocation = {
-        lat: parseFloat(toLat),
-        lng: parseFloat(toLng),
-      };
-      setToLocation(toLocation);
-      hasLocationData = true;
+      if (
+        fromLat &&
+        fromLng &&
+        !isNaN(parseFloat(fromLat)) &&
+        !isNaN(parseFloat(fromLng))
+      ) {
+        setFromLocation({
+          lat: parseFloat(fromLat),
+          lng: parseFloat(fromLng),
+        });
+        hasValidLocations = true;
+      }
+
+      if (
+        toLat &&
+        toLng &&
+        !isNaN(parseFloat(toLat)) &&
+        !isNaN(parseFloat(toLng))
+      ) {
+        setToLocation({
+          lat: parseFloat(toLat),
+          lng: parseFloat(toLng),
+        });
+        hasValidLocations = true;
+      }
+
+      if (hasValidLocations && showResults) {
+        setShouldSearch(true);
+      }
     }
 
     setIsInitialized(true);
-    return hasLocationData;
-  }, [searchParams, currentUrlParams, setFromLocation, setToLocation]);
+  }, [
+    searchParams,
+    currentUrlParams,
+    setFromLocation,
+    setToLocation,
+    showResults,
+  ]);
 
   useEffect(() => {
-    initFromParams();
-  }, [initFromParams]);
+    if (shouldSearch && fromLocation && toLocation && isInitialized) {
+      setShouldSearch(false);
 
-  useEffect(() => {
-    if (showResults && isInitialized && !initialSearchDoneRef.current) {
-      if (fromLocation && toLocation) {
-        initialSearchDoneRef.current = true;
-
-        setTimeout(() => {
-          handleSearch();
-        }, 0);
-      }
+      setTimeout(async () => {
+        try {
+          await searchRoutes();
+        } catch (err) {
+          console.error('Error searching routes:', err);
+        }
+      }, 10);
     }
-  }, [isInitialized, showResults, fromLocation, toLocation, handleSearch]);
+  }, [shouldSearch, fromLocation, toLocation, searchRoutes, isInitialized]);
 
   useEffect(() => {
-    if (routesError) {
-      const errorMessage =
-        routesError.message || 'An error occurred while searching for routes';
-      showError(errorMessage);
+    if (error && error instanceof Error) {
+      showError(
+        error.message || 'An error occurred while searching for routes'
+      );
     }
-  }, [routesError]);
+  }, [error]);
 
   return (
     <div className="w-full max-w-[1200px] mx-auto rounded-lg relative -mt-20 z-10">
@@ -119,7 +121,7 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
 
         {showResults && isInitialized && (
           <AnimatePresence mode="wait">
-            {isRoutesLoading && (
+            {isLoading && (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0, y: 20 }}
@@ -131,61 +133,53 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
               </motion.div>
             )}
 
-            {!isRoutesLoading &&
-              !routesError &&
-              routes &&
-              routes.length > 0 && (
-                <motion.div
-                  key="results"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <RouteResults routes={routes} />
-                </motion.div>
-              )}
+            {!isLoading && !error && routes && routes.length > 0 && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <RouteResults routes={routes} />
+              </motion.div>
+            )}
 
-            {!isRoutesLoading &&
-              !routesError &&
-              routes &&
-              routes.length === 0 && (
-                <motion.div
-                  key="no-results"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center"
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4">
-                      <i className="fas fa-route text-amber-500 text-xl"></i>
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      No Routes Found
-                    </h3>
-                    <p className="text-gray-600 mb-4 max-w-md">
-                      We couldn&apos;t find any routes between these locations.
-                      Try different locations or check back later.
-                    </p>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        const fromInput =
-                          document.getElementById('from-location');
-                        if (fromInput) fromInput.focus();
-                      }}
-                      size="sm"
-                    >
-                      <i className="fas fa-search mr-2"></i>
-                      Try Different Locations
-                    </Button>
+            {!isLoading && !error && routes && routes.length === 0 && (
+              <motion.div
+                key="no-results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4">
+                    <i className="fas fa-route text-amber-500 text-xl"></i>
                   </div>
-                </motion.div>
-              )}
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    No Routes Found
+                  </h3>
+                  <p className="text-gray-600 mb-4 max-w-md">
+                    We couldn&apos;t find any routes between these locations.
+                    Try different locations or check back later.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      document.getElementById('from-location')?.focus();
+                    }}
+                    size="sm"
+                  >
+                    <i className="fas fa-search mr-2"></i>
+                    Try Different Locations
+                  </Button>
+                </div>
+              </motion.div>
+            )}
 
-            {!isRoutesLoading && routesError && (
+            {!isLoading && error && (
               <motion.div
                 key="error"
                 initial={{ opacity: 0, y: 20 }}
@@ -202,15 +196,14 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
                     Error Finding Routes
                   </h3>
                   <p className="text-gray-600 mb-4 max-w-md">
-                    {routesError.message ||
-                      "We couldn't find routes for your selected locations. No public transit station was found nearby or the service is temporarily unavailable."}
+                    {error instanceof Error
+                      ? error.message
+                      : "We couldn't find routes for your selected locations. No public transit station was found nearby or the service is temporarily unavailable."}
                   </p>
                   <Button
                     variant="secondary"
                     onClick={() => {
-                      const fromInput =
-                        document.getElementById('from-location');
-                      if (fromInput) fromInput.focus();
+                      document.getElementById('from-location')?.focus();
                     }}
                     size="sm"
                   >
@@ -234,9 +227,7 @@ interface JourneyPlannerProps {
 export function JourneyPlanner({ showResults = false }: JourneyPlannerProps) {
   return (
     <ErrorBoundary fallback={<JourneyErrorFallback />}>
-      <JourneyProvider>
-        <JourneyContent showResults={showResults} />
-      </JourneyProvider>
+      <JourneyContent showResults={showResults} />
     </ErrorBoundary>
   );
 }
