@@ -1,6 +1,5 @@
 import { useJourneyContext } from '../context/JourneyContext';
 import { useRoutes } from './useRoutes';
-import { Coordinates } from '@/types/station';
 import { Route } from '@/types/route';
 
 /**
@@ -30,17 +29,6 @@ export const useJourney = (enableAutoFetch = false) => {
   };
 
   /**
-   * Set both locations at once (useful for map interactions)
-   */
-  const updateLocations = (
-    from: Coordinates | null,
-    to: Coordinates | null
-  ) => {
-    journeyContext.setFromLocation(from);
-    journeyContext.setToLocation(to);
-  };
-
-  /**
    * Reset all journey state (locations and routes)
    */
   const resetJourney = () => {
@@ -54,7 +42,6 @@ export const useJourney = (enableAutoFetch = false) => {
     toLocation: journeyContext.toLocation,
     setFromLocation: journeyContext.setFromLocation,
     setToLocation: journeyContext.setToLocation,
-    updateLocations,
 
     // Form state
     isFormValid: journeyContext.isFormValid,
@@ -69,6 +56,5 @@ export const useJourney = (enableAutoFetch = false) => {
     // Actions
     searchRoutes,
     resetJourney,
-    refetch: routesQuery.refetch,
   };
 };

@@ -18,7 +18,7 @@ export const SearchForm = memo(function SearchForm({
 }: SearchFormProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { fromLocation, toLocation, isFormValid, searchRoutes } = useJourney();
+  const { fromLocation, toLocation, isFormValid } = useJourney();
 
   const [isNavigating, setIsNavigating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);

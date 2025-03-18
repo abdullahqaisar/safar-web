@@ -27,7 +27,6 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
     setFromLocation,
     setToLocation,
     searchRoutes,
-    resetJourney,
   } = useJourney();
 
   const [isInitialized, setIsInitialized] = useState(false);
