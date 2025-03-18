@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { JourneyForm } from './JourneyForm';
-import { RouteLoadingSkeleton } from '../LoadingSkeleton';
+import { SearchForm } from './SearchForm';
+import { RouteLoadingSkeleton } from '../RouteResults/LoadingSkeleton';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import { JourneyErrorFallback } from '@/components/common/errors/JourneyErrorFallback';
 import { showError } from '@/lib/utils/toast';
 import { ErrorBoundary } from '@/components/layouts/ErrorBoundary';
-import { RouteResults } from '../RouteResults';
+import { RouteResults } from '../RouteResults/RouteResults';
 import { Button } from '@/components/common/Button';
 
 interface JourneyContentProps {
@@ -117,7 +117,7 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
   return (
     <div className="w-full max-w-[1200px] mx-auto rounded-lg relative -mt-20 z-10">
       <div className="px-2 sm:mx-6">
-        <JourneyForm isResultsPage={showResults} />
+        <SearchForm isResultsPage={showResults} />
 
         {showResults && isInitialized && (
           <AnimatePresence mode="wait">

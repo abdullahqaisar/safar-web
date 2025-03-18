@@ -7,15 +7,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { Card } from '@/components/common/Card';
-import LocationSearchInput from '../../../location/components/LocationSearchInput';
+import LocationSearchInput from '../LocationSearchInput/LocationSearchInput';
 
-interface JourneyFormProps {
+interface SearchFormProps {
   isResultsPage?: boolean;
 }
 
-export const JourneyForm = memo(function JourneyForm({
+export const SearchForm = memo(function SearchForm({
   isResultsPage = false,
-}: JourneyFormProps) {
+}: SearchFormProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { fromLocation, toLocation, isFormValid, searchRoutes } = useJourney();

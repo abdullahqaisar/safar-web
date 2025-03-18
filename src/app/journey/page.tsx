@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { Hero } from '@/components/common/Hero';
-import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner';
+import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner/JourneyPlanner';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 
 export default function SearchResultsPage() {

@@ -1,7 +1,11 @@
 import { Suspense } from 'react';
 import { Hero } from '@/components/common/Hero';
-import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner';
+import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner/JourneyPlanner';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
+import { FeaturesSection } from '@/features/landing/components/FeaturesSection';
+import { HowItWorksSection } from '@/features/landing/components/HowItWorksSection';
+import { ContributeSection } from '@/features/landing/components/ContributeSection';
+import { NewsletterSection } from '@/features/landing/components/NewsletterSection';
 
 export default function HomePage() {
   return (
@@ -18,6 +22,10 @@ export default function HomePage() {
           <JourneyPlanner showResults={false} />
         </Suspense>
       </div>
+      <FeaturesSection />
+      <HowItWorksSection />
+      <ContributeSection />
+      <NewsletterSection />
     </main>
   );
 }
