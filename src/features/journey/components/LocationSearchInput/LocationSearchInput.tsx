@@ -43,6 +43,12 @@ export default function LocationSearchInput() {
   return (
     <div className="w-full space-y-4">
       <div className="relative">
+        <label
+          htmlFor="from-location"
+          className="block mb-1 text-sm text-gray-200 font-medium"
+        >
+          From
+        </label>
         <MapSearch
           id="from-location"
           onSelectPlace={handleFromLocationSelect}
@@ -60,6 +66,12 @@ export default function LocationSearchInput() {
       </div>
 
       <div className="relative">
+        <label
+          htmlFor="to-location"
+          className="block mb-1 text-sm text-gray-200 font-medium"
+        >
+          To
+        </label>
         <MapSearch
           id="to-location"
           onSelectPlace={handleToLocationSelect}
