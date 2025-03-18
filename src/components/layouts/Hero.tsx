@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { TopographyPattern } from './TopographyPattern';
+import { TopographyPattern } from '../common/TopographyPattern';
 
 interface HeroProps {
   badgeText?: string;

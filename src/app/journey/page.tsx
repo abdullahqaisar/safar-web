@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Hero } from '@/components/common/Hero';
+import { Hero } from '@/components/layouts/Hero';
 import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner/JourneyPlanner';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 
