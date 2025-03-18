@@ -1,6 +1,5 @@
-import { Route } from '@/types/route';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchRoutes, RouteError } from '../services/route.service';
+import { fetchRoutes } from '../services/route.service';
 import { useJourneyContext } from '../context/JourneyContext';
 
 // Query keys for React Query cache management

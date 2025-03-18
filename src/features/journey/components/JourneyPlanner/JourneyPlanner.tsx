@@ -114,8 +114,8 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
   }, [error]);
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto rounded-lg relative -mt-20 z-10">
-      <div className="px-2 sm:mx-6">
+    <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
+      <div className="px-0 sm:px-2">
         <SearchForm isResultsPage={showResults} />
 
         {showResults && isInitialized && (

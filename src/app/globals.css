@@ -11,6 +11,10 @@
   .animate-wave {
     animation: waveEffect 3s ease-in-out infinite;
   }
+
+  .animate-pulse-slow {
+    animation: pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 /* Base Themes and Variables */
@@ -24,19 +28,17 @@
   --color-dark-black: #0a0a0a;
   --color-light-white: #f9fafb;
 
-  /* Primary theme */
-  --color-primary: #012620;
-  --color-primary-dark: #001813;
-  --color-primary-light: #023428;
+  --color-primary: #004036;
+  --color-primary-dark: #00332b;
+  --color-primary-light: #005346;
 
-  /* Accent theme */
-  --color-accent: #00a745;
-  --color-accent-dark: #008e3a;
-  --color-accent-light: #25c266;
+  --color-accent: #00a67e;
+  --color-accent-dark: #008e34;
+  --color-accent-light: #20c25b;
 
   /* Background shades */
-  --color-bg-light: #fff5ee;
-  --color-bg-light-hover: #ffeee4;
+  --color-bg-light: #ffffff;
+  --color-bg-light-hover: #f9f9f9;
   --color-bg-muted: #f3f4f6;
 
   /* Gray scale */
@@ -67,57 +69,65 @@
   --color-indigo-500: #6366f1;
   --color-orange-500: #f97316;
 
-  /* UI Theme variables */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* UI Theme variables - Updated to match Safar theme */
+  --background: #ffffff;
+  --foreground: hsl(222.2 84% 4.9%);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: hsl(222.2 84% 4.9%);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover: #ffffff;
+  --popover-foreground: hsl(222.2 84% 4.9%);
 
-  --primary: #012620;
+  --primary: #00a63e;
   --primary-foreground: #ffffff;
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary: hsl(36 100% 96%);
+  --secondary-foreground: hsl(222.2 47.4% 11.2%);
 
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
 
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: hsl(210 40% 96.1%);
+  --accent-foreground: hsl(222.2 47.4% 11.2%);
 
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
 
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(222.2 84% 4.9%);
 }
 
-/* Dark mode theme variables */
+/* Dark mode theme variables - Updated to match Safar dark theme */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --background: hsl(164 47% 13%);
+  --foreground: hsl(210 40% 98%);
+
+  --card: hsl(164 47% 10%);
+  --card-foreground: hsl(210 40% 98%);
+
+  --popover: hsl(164 47% 13%);
+  --popover-foreground: hsl(210 40% 98%);
+
+  --primary: hsl(153 100% 33%);
+  --primary-foreground: #ffffff;
+
+  --secondary: hsl(36 100% 96%);
+  --secondary-foreground: hsl(222.2 47.4% 11.2%);
+
+  --muted: hsl(164 47% 18%);
+  --muted-foreground: hsl(215 20.2% 75.1%);
+
+  --accent: hsl(164 47% 18%);
+  --accent-foreground: hsl(210 40% 98%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --border: hsl(164 47% 18%);
+  --input: hsl(164 47% 18%);
+  --ring: hsl(212.7 26.8% 83.9%);
 }
 
 /* Base styles */
@@ -135,25 +145,35 @@
     @apply bg-white min-h-screen;
   }
 
-  /* Hero Component */
+  /* Hero Component - Updated with Safar styling */
   .hero-section {
-    background: linear-gradient(120deg, var(--color-bg-light) 0%, #fff9f5 100%);
+    background: linear-gradient(
+      120deg,
+      var(--background) 0%,
+      var(--background) 100%
+    );
     position: relative;
     width: 100%;
     overflow: hidden;
   }
 
+  /* Hero spacing improvements */
+  .hero-content-wrapper {
+    @apply flex flex-col items-center justify-center;
+    padding-block: clamp(3rem, 8vh, 7rem);
+  }
+
   .hero-badge {
     @apply inline-block py-1.5 px-3 font-semibold text-xs rounded-full transition-all;
-    background-color: rgba(1, 38, 32, 0.08);
-    color: #012620;
+    background-color: rgba(0, 166, 62, 0.1);
+    color: var(--primary);
     letter-spacing: 0.01em;
-    margin-bottom: 1rem;
+    margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
   }
 
   .hero-badge:hover {
     transform: translateY(-1px);
-    background-color: rgba(1, 38, 32, 0.12);
+    background-color: rgba(0, 166, 62, 0.15);
   }
 
   .hero-title {
@@ -163,7 +183,7 @@
   .hero-title-main {
     font-size: clamp(1.75rem, 5vw, 2rem);
     font-weight: 700;
-    color: var(--color-gray-800);
+    color: var(--foreground);
     letter-spacing: -0.01em;
     display: inline-flex;
   }
@@ -173,7 +193,7 @@
     font-size: clamp(2.75rem, 8vw, 3.25rem);
     font-weight: 700;
     font-style: italic;
-    color: #012620;
+    color: var(--primary);
     position: relative;
     display: inline-flex;
   }
@@ -185,7 +205,7 @@
     left: 0;
     width: 100%;
     height: 6px;
-    background-color: rgba(1, 38, 32, 0.1);
+    background-color: rgba(0, 166, 62, 0.1);
     z-index: -1;
     border-radius: 3px;
     transform-origin: bottom;
@@ -204,10 +224,23 @@
   .hero-decoration-line {
     height: 3px;
     width: 60px;
-    background: linear-gradient(90deg, #023428, #00a745);
+    background: linear-gradient(90deg, var(--color-primary), var(--primary));
     margin: 1rem 0;
     border-radius: 4px;
     transition: width 0.3s ease;
+  }
+
+  /* Glass effect from Safar */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass-effect {
+    background: rgba(0, 64, 54, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   /* Route results */
@@ -231,14 +264,39 @@
 
   .route-card.selected-route {
     @apply border-emerald-200 shadow-md;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 166, 62, 0.08);
   }
 
   .route-header {
     @apply p-4 text-white flex justify-between items-center;
-    background: linear-gradient(135deg, #012620, #023428);
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-primary-light)
+    );
     position: relative;
     overflow: hidden;
+  }
+
+  /* Additional Safar-specific styles */
+  .clip-path-slant {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  }
+
+  .backdrop-blur-input {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Hover lift effect from Safar */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 166, 62, 0.1),
+      0 8px 10px -6px rgba(0, 166, 62, 0.1);
   }
 
   .route-time {
@@ -391,6 +449,45 @@
   .places-dropdown-item i {
     @apply text-green-700 flex-shrink-0;
   }
+
+  /* Stats Bar Styling */
+  .stats-item {
+    @apply flex flex-col items-center justify-center;
+    transition: transform 0.2s ease;
+  }
+
+  .stats-item:hover {
+    transform: translateY(-2px);
+  }
+
+  .stats-number {
+    @apply font-bold text-2xl md:text-3xl lg:text-4xl;
+    color: var(--color-primary);
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+  }
+
+  .stats-label {
+    @apply text-xs md:text-sm;
+    color: var(--color-gray-600);
+  }
+
+  /* Mobile optimizations for search form */
+  .search-form-container {
+    @apply px-0 sm:px-2 mx-auto;
+  }
+
+  @media (max-width: 640px) {
+    .search-form-container {
+      @apply px-0 mx-0;
+      width: 100%;
+    }
+
+    /* Reduce padding inside the search form on mobile */
+    .search-form {
+      @apply px-2 sm:px-4;
+    }
+  }
 }
 
 /* Utility Classes */
@@ -461,6 +558,16 @@
   }
 }
 
+@keyframes pulseSlow {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 @keyframes slowFloat {
   0%,
   100% {
@@ -497,6 +604,10 @@
   .hero-decoration-line {
     margin: 1rem auto;
   }
+
+  .hero-content-wrapper {
+    padding-block: clamp(3.5rem, 10vh, 8rem);
+  }
 }
 
 @media (max-width: 640px) {
@@ -514,6 +625,7 @@
 
   .hero-section {
     padding-bottom: 0.5rem;
+    padding-block: clamp(2rem, 6vh, 3rem);
   }
 
   .search-form-container {
@@ -531,6 +643,14 @@
 
   .hero-subtitle {
     font-size: 0.875rem;
+  }
+
+  .stats-number {
+    font-size: 1.5rem;
+  }
+
+  .stats-label {
+    font-size: 0.7rem;
   }
 }
 

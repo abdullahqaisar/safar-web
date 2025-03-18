@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { TopographyPattern } from '../common/TopographyPattern';
 
 interface HeroProps {
   badgeText?: string;
@@ -20,17 +19,11 @@ export function Hero({
 }: HeroProps) {
   return (
     <section
-      className={`bg-[var(--color-bg-light)] ${paddingTop} ${paddingBottom} relative overflow-hidden`}
+      className={`bg-[var(--background)] ${paddingTop} ${paddingBottom} relative overflow-hidden`}
     >
-      {/* Topographic pattern background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <TopographyPattern
-          color="var(--color-primary)"
-          opacity={0.05}
-          className="w-full h-full transform scale-150"
-        />
-      </div>
 
+      </div>
       <div className="max-w-3xl mx-auto text-center relative z-10 px-4 md:px-0">
         {badgeText && (
           <div className="text-center mb-2 sm:mb-2">
