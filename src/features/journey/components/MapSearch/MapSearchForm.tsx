@@ -9,7 +9,7 @@ import { Coordinates } from '@/types/station';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import LoadingSkeleton from './LoadingSkeleton';
 
-interface LocationSearchInputProps {
+interface MapSearchFormProps {
   initialFromText?: string;
   initialToText?: string;
   onFromValueChange?: (value: string) => void;
@@ -17,7 +17,7 @@ interface LocationSearchInputProps {
   lightMode?: boolean;
 }
 
-const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
+const MapSearchForm: React.FC<MapSearchFormProps> = ({
   initialFromText = '',
   initialToText = '',
   onFromValueChange,
@@ -120,4 +120,4 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   );
 };
 
-export default LocationSearchInput;
+export default MapSearchForm;

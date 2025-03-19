@@ -5,9 +5,8 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
-import LocationSearchInput from '@/features/journey/components/LocationSearchInput/LocationSearchInput';
 import { useRouter, usePathname } from 'next/navigation';
-import { Coordinates } from '@/types/station';
+import MapSearchForm from '../MapSearch/MapSearchForm';
 
 interface SearchSectionProps {
   fromText?: string;
@@ -24,13 +23,7 @@ export function SearchSection({
 }: SearchSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    fromLocation,
-    toLocation,
-    setFromLocation,
-    setToLocation,
-    isFormValid,
-  } = useJourney();
+  const { fromLocation, toLocation, isFormValid } = useJourney();
 
   const [isModifying, setIsModifying] = useState(false);
   const [pickupValue, setPickupValue] = useState(fromText || '');
@@ -40,21 +33,10 @@ export function SearchSection({
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Update local state when props change
   useEffect(() => {
     if (fromText !== undefined) setPickupValue(fromText);
     if (toText !== undefined) setDestinationValue(toText);
   }, [fromText, toText]);
-
-  const handleFromLocationSelect = (location: Coordinates | null) => {
-    setFromLocation(location);
-    if (formError) setFormError(null);
-  };
-
-  const handleToLocationSelect = (location: Coordinates | null) => {
-    setToLocation(location);
-    if (formError) setFormError(null);
-  };
 
   const handleSearchSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -100,10 +82,8 @@ export function SearchSection({
     }
   };
 
-  // Make sure we update CSS variables to help with positioning
   useEffect(() => {
     if (isModifying) {
-      // Ensure all parent containers have proper overflow
       const setOverflowVisible = (element: HTMLElement | null) => {
         while (element && element !== document.body) {
           if (getComputedStyle(element).overflow !== 'visible') {
@@ -113,28 +93,23 @@ export function SearchSection({
         }
       };
 
-      // Apply to our form container
       if (formRef.current) {
         setOverflowVisible(formRef.current);
       }
     }
   }, [isModifying]);
 
-  // Add a small delay before allowing dropdown to show to avoid animation conflicts
   const handleStartModifying = () => {
     setIsModifying(true);
-    // Allow animations to complete before enabling dropdown
     document.body.classList.add('search-section-editing');
   };
 
-  // Clean up when done editing
   useEffect(() => {
     if (!isModifying) {
       document.body.classList.remove('search-section-editing');
     }
   }, [isModifying]);
 
-  // If we're not on results page, don't show this component
   if (!isResultsPage) {
     return null;
   }
@@ -191,7 +166,7 @@ export function SearchSection({
                     className="relative z-50"
                     style={{ overflow: 'visible' }}
                   >
-                    <LocationSearchInput
+                    <MapSearchForm
                       initialFromText={pickupValue}
                       initialToText={destinationValue}
                       onFromValueChange={setPickupValue}

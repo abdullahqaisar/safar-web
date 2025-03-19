@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 import { SectionBadge } from '@/components/common/SectionBadge';
-import { StatsBarSection } from './StatsBarSection';
-import { HomeSearchForm } from './HomeSearchForm';
+import { StatsBarSection } from './StatsBar';
+import { HeroSearchForm } from './HomeSearchForm';
 
 export function HeroSection() {
   return (
@@ -29,10 +29,10 @@ export function HeroSection() {
             </p>
           </div>
 
-          {/* Search Form Container - Now using the dedicated HomeSearchForm */}
+          {/* Search Form Container - Now using the dedicated HeroSearchForm */}
           <div className="max-w-[1000px] mx-auto relative z-20 px-0 sm:px-2 mt-6 sm:mt-8 md:mt-10 mb-8 sm:mb-10">
             <Suspense fallback={<SearchParamsFallback />}>
-              <HomeSearchForm />
+              <HeroSearchForm />
             </Suspense>
           </div>
         </div>

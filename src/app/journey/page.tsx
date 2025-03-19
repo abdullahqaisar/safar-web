@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner/JourneyPlanner';
+import { JourneyPlanner } from '@/features/journey/components/Planner/JourneyPlanner';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 
 export default function SearchResultsPage() {

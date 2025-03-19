@@ -7,11 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { JourneyErrorFallback } from '@/components/common/errors/JourneyErrorFallback';
 import { showError } from '@/lib/utils/toast';
 import { ErrorBoundary } from '@/components/layouts/ErrorBoundary';
-import { RouteResults } from '../RouteResults/RouteResults';
+import { RouteResults } from '../Results/JourneyResults';
 import { Button } from '@/components/common/Button';
-import { SearchSection } from '../Search/SearchSection';
 import { useRouter } from 'next/navigation';
-import { LoadingState } from '../RouteResults/LoadingState';
+import { LoadingState } from '../Results/LoadingState';
+import { SearchSection } from '@/features/journey/components/Search/SearchSection';
 
 interface JourneyContentProps {
   showResults?: boolean;

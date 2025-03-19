@@ -1,31 +1,24 @@
 'use client';
 
-import { memo, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { Button } from '@/components/common/Button';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/common/Button';
+import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
-import { Card } from '@/components/common/Card';
-import LocationSearchInput from '../LocationSearchInput/LocationSearchInput';
+import MapSearchForm from '@/features/journey/components/MapSearch/MapSearchForm';
 
-interface SearchFormProps {
-  isResultsPage?: boolean;
-}
-
-export const SearchForm = memo(function SearchForm({
-  isResultsPage = false,
-}: SearchFormProps) {
+export function HeroSearchForm() {
   const router = useRouter();
-  const pathname = usePathname();
   const { fromLocation, toLocation, isFormValid } = useJourney();
 
   const [isNavigating, setIsNavigating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const hasBothLocations = Boolean(fromLocation && toLocation);
-  const isSearchDisabled = !isFormValid || isNavigating;
 
+  // Clear error when location is selected
   useEffect(() => {
     if (formError && (fromLocation || toLocation)) {
       setFormError(null);
@@ -40,17 +33,21 @@ export const SearchForm = memo(function SearchForm({
       return;
     }
 
-    if (isSearchDisabled) return;
+    if (!isFormValid || isNavigating) return;
 
     try {
+      setIsNavigating(true);
       setFormError(null);
+
       const params = new URLSearchParams();
 
+      // Add coordinates
       params.set('fromLat', fromLocation.lat.toString());
       params.set('fromLng', fromLocation.lng.toString());
       params.set('toLat', toLocation.lat.toString());
       params.set('toLng', toLocation.lng.toString());
 
+      // Add text labels if available
       const fromInput = document.getElementById(
         'from-location'
       ) as HTMLInputElement;
@@ -67,16 +64,8 @@ export const SearchForm = memo(function SearchForm({
 
       params.set('ts', Date.now().toString());
 
-      if (!isResultsPage) {
-        setIsNavigating(true);
-        const url = `/journey?${params.toString()}`;
-        router.push(url);
-      } else {
-        setIsNavigating(true);
-        const url = `${pathname}?${params.toString()}`;
-        router.replace(url);
-        setIsNavigating(false);
-      }
+      const url = `/journey?${params.toString()}`;
+      router.push(url);
     } catch (error) {
       console.error('Form submission error:', error);
       setFormError('An error occurred. Please try again.');
@@ -100,12 +89,12 @@ export const SearchForm = memo(function SearchForm({
         initial={{ scaleX: 0.5, opacity: 0.5 }}
         animate={{ scaleX: 1, opacity: 1 }}
         transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
-      ></motion.div>
+      />
 
       <form
         className="py-5 sm:py-6 md:py-10 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10 overflow-visible"
         onSubmit={handleSubmit}
-        aria-label="JourneyPlanner search form"
+        aria-label="Journey search form"
       >
         <motion.h2
           className="text-white text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center"
@@ -113,12 +102,12 @@ export const SearchForm = memo(function SearchForm({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <i className="fas fa-route mr-2 sm:mr-3 text-emerald-400"></i>
+          <i className="fas fa-route mr-2 sm:mr-3 text-emerald-400" />
           Find Your Route
         </motion.h2>
 
         <div className="relative overflow-visible">
-          <LocationSearchInput />
+          <MapSearchForm />
         </div>
 
         <AnimatePresence>
@@ -129,7 +118,7 @@ export const SearchForm = memo(function SearchForm({
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 p-2.5 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600"
             >
-              <i className="fas fa-exclamation-circle mr-2"></i>
+              <i className="fas fa-exclamation-circle mr-2" />
               {formError}
             </motion.div>
           )}
@@ -137,7 +126,7 @@ export const SearchForm = memo(function SearchForm({
 
         <Button
           onClick={handleSubmit}
-          disabled={isSearchDisabled}
+          disabled={!isFormValid || isNavigating}
           isLoading={isNavigating}
           type="submit"
           variant="primary"
@@ -178,4 +167,4 @@ export const SearchForm = memo(function SearchForm({
       )}
     </Card>
   );
-});
+}

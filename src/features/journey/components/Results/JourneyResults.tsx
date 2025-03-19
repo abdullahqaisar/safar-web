@@ -1,5 +1,5 @@
 import { Route } from '@/types/route';
-import { RouteCard } from './RouteCard';
+import { JourneyCard } from './JourneyCard';
 
 interface RouteResultsProps {
   routes: Route[];
@@ -26,7 +26,7 @@ export function RouteResults({ routes }: RouteResultsProps) {
       </header>
 
       <div className="p-4 sm:p-6 space-y-6">
-        <RouteCard routes={routes} />
+        <JourneyCard routes={routes} />
       </div>
     </section>
   );
