@@ -1,6 +1,7 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function LoadingSkeleton() {
+const LoadingSkeleton: React.FC = () => {
   const pulseVariants = {
     initial: { opacity: 0.6 },
     animate: {
@@ -40,4 +41,6 @@ export default function LoadingSkeleton() {
       </motion.div>
     </div>
   );
-}
+};
+
+export default LoadingSkeleton;

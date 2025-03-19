@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useLoadScript } from '@react-google-maps/api';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -8,10 +9,24 @@ import { Coordinates } from '@/types/station';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import LoadingSkeleton from './LoadingSkeleton';
 
-export default function LocationSearchInput() {
+interface LocationSearchInputProps {
+  initialFromText?: string;
+  initialToText?: string;
+  onFromValueChange?: (value: string) => void;
+  onToValueChange?: (value: string) => void;
+  lightMode?: boolean;
+}
+
+const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
+  initialFromText = '',
+  initialToText = '',
+  onFromValueChange,
+  onToValueChange,
+  lightMode = false,
+}) => {
   const { setFromLocation, setToLocation } = useJourney();
-  const [pickupValue, setPickupValue] = useState('');
-  const [destinationValue, setDestinationValue] = useState('');
+  const [pickupValue, setPickupValue] = useState(initialFromText);
+  const [destinationValue, setDestinationValue] = useState(initialToText);
 
   const searchParams = useSearchParams();
 
@@ -38,14 +53,26 @@ export default function LocationSearchInput() {
     setToLocation(location);
   }
 
+  const handleFromValueChange = (value: string) => {
+    setPickupValue(value);
+    if (onFromValueChange) onFromValueChange(value);
+  };
+
+  const handleToValueChange = (value: string) => {
+    setDestinationValue(value);
+    if (onToValueChange) onToValueChange(value);
+  };
+
   if (!isLoaded) return <LoadingSkeleton />;
 
   return (
-    <div className="w-full space-y-4">
-      <div className="relative">
+    <div className="w-full space-y-4 relative" style={{ overflow: 'visible' }}>
+      <div className="relative" style={{ overflow: 'visible' }}>
         <label
           htmlFor="from-location"
-          className="block mb-1 text-sm text-gray-200 font-medium"
+          className={`block mb-1 text-sm ${
+            lightMode ? 'text-gray-600' : 'text-gray-200'
+          } font-medium`}
         >
           From
         </label>
@@ -54,21 +81,28 @@ export default function LocationSearchInput() {
           onSelectPlace={handleFromLocationSelect}
           placeholder="From (e.g., Khanna Pul)"
           value={pickupValue}
-          onValueChange={setPickupValue}
+          onValueChange={handleFromValueChange}
           icon="far fa-circle"
+          lightMode={lightMode}
         />
       </div>
 
       <div className="relative">
         <div className="absolute left-4 h-full flex items-center justify-center z-10">
-          <div className="h-full border-l border-dashed border-gray-300 ml-[1px]"></div>
+          <div
+            className={`h-full border-l border-dashed ${
+              lightMode ? 'border-gray-300' : 'border-gray-600'
+            } ml-[1px]`}
+          ></div>
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative" style={{ overflow: 'visible' }}>
         <label
           htmlFor="to-location"
-          className="block mb-1 text-sm text-gray-200 font-medium"
+          className={`block mb-1 text-sm ${
+            lightMode ? 'text-gray-600' : 'text-gray-200'
+          } font-medium`}
         >
           To
         </label>
@@ -77,10 +111,13 @@ export default function LocationSearchInput() {
           onSelectPlace={handleToLocationSelect}
           placeholder="To (e.g., Air University)"
           value={destinationValue}
-          onValueChange={setDestinationValue}
+          onValueChange={handleToValueChange}
           icon="fas fa-map-marker-alt"
+          lightMode={lightMode}
         />
       </div>
     </div>
   );
-}
+};
+
+export default LocationSearchInput;

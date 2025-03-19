@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
-import MapSearch from '../LocationSearchInput/MapSearch';
+import LocationSearchInput from '@/features/journey/components/LocationSearchInput/LocationSearchInput';
 import { useRouter, usePathname } from 'next/navigation';
 import { Coordinates } from '@/types/station';
 
@@ -37,6 +37,8 @@ export function SearchSection({
   const [destinationValue, setDestinationValue] = useState(toText || '');
   const [isSearching, setIsSearching] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Update local state when props change
   useEffect(() => {
@@ -98,13 +100,50 @@ export function SearchSection({
     }
   };
 
+  // Make sure we update CSS variables to help with positioning
+  useEffect(() => {
+    if (isModifying) {
+      // Ensure all parent containers have proper overflow
+      const setOverflowVisible = (element: HTMLElement | null) => {
+        while (element && element !== document.body) {
+          if (getComputedStyle(element).overflow !== 'visible') {
+            element.style.overflow = 'visible';
+          }
+          element = element.parentElement;
+        }
+      };
+
+      // Apply to our form container
+      if (formRef.current) {
+        setOverflowVisible(formRef.current);
+      }
+    }
+  }, [isModifying]);
+
+  // Add a small delay before allowing dropdown to show to avoid animation conflicts
+  const handleStartModifying = () => {
+    setIsModifying(true);
+    // Allow animations to complete before enabling dropdown
+    document.body.classList.add('search-section-editing');
+  };
+
+  // Clean up when done editing
+  useEffect(() => {
+    if (!isModifying) {
+      document.body.classList.remove('search-section-editing');
+    }
+  }, [isModifying]);
+
   // If we're not on results page, don't show this component
   if (!isResultsPage) {
     return null;
   }
 
   return (
-    <Card className="bg-white/95 shadow-sm border border-gray-100 p-4 sm:p-6 rounded-xl mb-8">
+    <Card
+      className="bg-white/95 shadow-sm border border-gray-100 p-4 sm:p-6 rounded-xl mb-8"
+      style={{ overflow: 'visible' }}
+    >
       <AnimatePresence mode="wait">
         {isModifying ? (
           <motion.div
@@ -112,8 +151,13 @@ export function SearchSection({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
+            style={{ overflow: 'visible' }}
           >
-            <form onSubmit={handleSearchSubmit}>
+            <form
+              ref={formRef}
+              onSubmit={handleSearchSubmit}
+              style={{ overflow: 'visible' }}
+            >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-medium">Modify Your Journey</h2>
                 <Button
@@ -128,47 +172,33 @@ export function SearchSection({
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                <div className="relative">
+              <div
+                className="space-y-4"
+                style={{
+                  overflow: 'visible',
+                  position: 'relative',
+                  zIndex: 50,
+                }}
+              >
+                <div className="relative z-50" style={{ overflow: 'visible' }}>
                   <label
                     htmlFor="from-location"
                     className="block mb-1 text-xs text-gray-500 font-medium"
                   >
                     From
                   </label>
-                  <MapSearch
-                    id="from-location"
-                    onSelectPlace={handleFromLocationSelect}
-                    placeholder="From (e.g., Khanna Pul)"
-                    value={pickupValue}
-                    onValueChange={setPickupValue}
-                    icon="far fa-circle"
-                    lightMode
-                  />
-                </div>
-
-                <div className="relative">
-                  <div className="absolute left-4 h-full flex items-center justify-center z-10">
-                    <div className="h-full border-l border-dashed border-gray-300 ml-[1px]"></div>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <label
-                    htmlFor="to-location"
-                    className="block mb-1 text-xs text-gray-500 font-medium"
+                  <div
+                    className="relative z-50"
+                    style={{ overflow: 'visible' }}
                   >
-                    To
-                  </label>
-                  <MapSearch
-                    id="to-location"
-                    onSelectPlace={handleToLocationSelect}
-                    placeholder="To (e.g., Air University)"
-                    value={destinationValue}
-                    onValueChange={setDestinationValue}
-                    icon="fas fa-map-marker-alt"
-                    lightMode
-                  />
+                    <LocationSearchInput
+                      initialFromText={pickupValue}
+                      initialToText={destinationValue}
+                      onFromValueChange={setPickupValue}
+                      onToValueChange={setDestinationValue}
+                      lightMode={true}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -228,7 +258,7 @@ export function SearchSection({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setIsModifying(true)}
+                onClick={handleStartModifying}
                 className="border-[color:var(--color-accent)]/50 text-[color:var(--color-accent)] hover:bg-[color:var(--color-accent)]/10"
                 leftIcon={<i className="fas fa-search" />}
                 disabled={isLoading}
