@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { ErrorDisplay } from './ErrorDisplay';
 import { AppError } from '@/lib/errors/AppError';
-import { Button } from '../common/Button';
+import { Button } from '../Button';
 
 interface ErrorStateProps {
   title?: string;

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { JourneyPlanner } from '@/features/journey/components/JourneyPlanner/JourneyPlanner';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
-import { SectionBadge } from '@/components/ui/SectionBadge';
+import { SectionBadge } from '@/components/common/SectionBadge';
 import { StatsBarSection } from './StatsBarSection';
 
 export function HeroSection() {
