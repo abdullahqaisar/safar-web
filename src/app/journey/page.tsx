@@ -7,10 +7,12 @@ import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFa
 export default function SearchResultsPage() {
   return (
     <main>
-      <div className="min-h-screen bg-gray-50 pb-16">
-        <Suspense fallback={<SearchParamsFallback />}>
-          <JourneyPlanner showResults={true} />
-        </Suspense>
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-[#FEF6EC] pb-16 pt-10">
+        <div className="container mx-auto px-4 sm:px-6">
+          <Suspense fallback={<SearchParamsFallback />}>
+            <JourneyPlanner showResults={true} />
+          </Suspense>
+        </div>
       </div>
     </main>
   );

@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { SearchForm } from './SearchForm';
-import { RouteLoadingSkeleton } from '../RouteResults/LoadingSkeleton';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import { JourneyErrorFallback } from '@/components/common/errors/JourneyErrorFallback';
@@ -11,6 +9,9 @@ import { showError } from '@/lib/utils/toast';
 import { ErrorBoundary } from '@/components/layouts/ErrorBoundary';
 import { RouteResults } from '../RouteResults/RouteResults';
 import { Button } from '@/components/common/Button';
+import { SearchSection } from '../Search/SearchSection';
+import { useRouter } from 'next/navigation';
+import { LoadingState } from '../RouteResults/LoadingState';
 
 interface JourneyContentProps {
   showResults?: boolean;
@@ -18,6 +19,8 @@ interface JourneyContentProps {
 
 function JourneyContent({ showResults = false }: JourneyContentProps) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const {
     routes,
     isLoading,
@@ -32,6 +35,26 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentUrlParams, setCurrentUrlParams] = useState('');
   const [shouldSearch, setShouldSearch] = useState(false);
+  const [isModifyingSearch, setIsModifyingSearch] = useState(false);
+  const [fromText, setFromText] = useState<string | null>(null);
+  const [toText, setToText] = useState<string | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  const toggleModifySearch = () => {
+    setIsModifyingSearch(!isModifyingSearch);
+  };
+
+  const simulateLoadingProgress = useCallback(() => {
+    setLoadingProgress(0);
+    const interval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        const newProgress = prev + Math.random() * 15;
+        return newProgress > 90 ? 90 : newProgress;
+      });
+    }, 300);
+
+    return interval;
+  }, []);
 
   useEffect(() => {
     if (!searchParams) {
@@ -48,6 +71,13 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
       const fromLng = searchParams.get('fromLng');
       const toLat = searchParams.get('toLat');
       const toLng = searchParams.get('toLng');
+
+      // Get location text if available
+      const fromTextParam = searchParams.get('fromText');
+      const toTextParam = searchParams.get('toText');
+
+      if (fromTextParam) setFromText(decodeURIComponent(fromTextParam));
+      if (toTextParam) setToText(decodeURIComponent(toTextParam));
 
       let hasValidLocations = false;
 
@@ -95,15 +125,28 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
     if (shouldSearch && fromLocation && toLocation && isInitialized) {
       setShouldSearch(false);
 
+      const progressInterval = simulateLoadingProgress();
+
       setTimeout(async () => {
         try {
           await searchRoutes();
+          setLoadingProgress(100);
+
+          clearInterval(progressInterval);
         } catch (err) {
           console.error('Error searching routes:', err);
+          clearInterval(progressInterval);
         }
       }, 10);
     }
-  }, [shouldSearch, fromLocation, toLocation, searchRoutes, isInitialized]);
+  }, [
+    shouldSearch,
+    fromLocation,
+    toLocation,
+    searchRoutes,
+    isInitialized,
+    simulateLoadingProgress,
+  ]);
 
   useEffect(() => {
     if (error && error instanceof Error) {
@@ -116,7 +159,31 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
   return (
     <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
       <div className="px-0 sm:px-2">
-        <SearchForm isResultsPage={showResults} />
+        {showResults && (
+          <div className="flex items-center mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
+              onClick={() => router.push('/')}
+              leftIcon={<i className="fas fa-arrow-left" />}
+            >
+              Back
+            </Button>
+            {/* <h1 className="text-xl sm:text-2xl font-semibold ml-2">
+              Route Results
+            </h1> */}
+          </div>
+        )}
+
+        <SearchSection
+          fromText={fromText || ''}
+          toText={toText || ''}
+          isResultsPage={showResults}
+          isModifyingSearch={isModifyingSearch}
+          toggleModifySearch={toggleModifySearch}
+          isLoading={isLoading}
+        />
 
         {showResults && isInitialized && (
           <AnimatePresence mode="wait">
@@ -128,7 +195,11 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <RouteLoadingSkeleton />
+                <LoadingState
+                  fromText={fromText || 'selected location'}
+                  toText={toText || 'destination'}
+                  loadingProgress={loadingProgress}
+                />
               </motion.div>
             )}
 
@@ -166,12 +237,10 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
                   </p>
                   <Button
                     variant="secondary"
-                    onClick={() => {
-                      document.getElementById('from-location')?.focus();
-                    }}
+                    onClick={toggleModifySearch}
                     size="sm"
+                    leftIcon={<i className="fas fa-search" />}
                   >
-                    <i className="fas fa-search mr-2"></i>
                     Try Different Locations
                   </Button>
                 </div>
@@ -201,12 +270,10 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
                   </p>
                   <Button
                     variant="secondary"
-                    onClick={() => {
-                      document.getElementById('from-location')?.focus();
-                    }}
+                    onClick={toggleModifySearch}
                     size="sm"
+                    leftIcon={<i className="fas fa-search" />}
                   >
-                    <i className="fas fa-search mr-2"></i>
                     Try Different Locations
                   </Button>
                 </div>
