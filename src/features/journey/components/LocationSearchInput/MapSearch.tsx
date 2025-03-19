@@ -15,6 +15,7 @@ interface MapSearchProps {
   value: string;
   onValueChange: (value: string) => void;
   icon: string;
+  lightMode?: boolean;
 }
 
 export default function MapSearch({
@@ -24,6 +25,7 @@ export default function MapSearch({
   value,
   onValueChange,
   icon,
+  lightMode = false,
 }: MapSearchProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [hasSelectedLocation, setHasSelectedLocation] = useState(
@@ -105,7 +107,12 @@ export default function MapSearch({
 
   return (
     <div className="relative w-full">
-      <div className="absolute left-4 top-3.5 text-emerald-500">
+      <div
+        className={cn(
+          'absolute left-4 top-3.5',
+          lightMode ? 'text-[color:var(--color-accent)]' : 'text-emerald-500'
+        )}
+      >
         <i className={icon}></i>
       </div>
       <input
@@ -117,11 +124,15 @@ export default function MapSearch({
         className={cn(
           'w-full h-12 pl-12 pr-10 rounded-lg border',
           'transition-all duration-200 ease-in-out',
-          'focus:ring-2 focus:ring-emerald-500 focus:border-transparent focus:outline-none',
+          'focus:ring-2 focus:ring-[color:var(--color-accent)] focus:border-transparent focus:outline-none',
           isFocused
-            ? 'border-emerald-500 bg-white shadow-md'
+            ? 'border-[color:var(--color-accent)] bg-white shadow-md'
             : hasSelectedLocation
-            ? 'border-green-200 bg-white'
+            ? lightMode
+              ? 'border-gray-100 bg-white'
+              : 'border-green-200 bg-white'
+            : lightMode
+            ? 'border-gray-100 bg-white'
             : 'border-gray-200 bg-gray-50'
         )}
         placeholder={placeholder}
@@ -142,25 +153,41 @@ export default function MapSearch({
         </button>
       )}
 
+      {/* Fix for dropdown - use portal positioning */}
       {status === 'OK' && isFocused && (
-        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-          {data.map(
-            ({
-              place_id,
-              description,
-              structured_formatting: { main_text, secondary_text },
-            }) => (
-              <li
-                key={place_id}
-                className="cursor-pointer px-4 py-2 hover:bg-gray-100 transition-colors"
-                onClick={() => handleSelect(description)}
-              >
-                <div className="font-medium text-gray-800">{main_text}</div>
-                <div className="text-xs text-gray-500">{secondary_text}</div>
-              </li>
-            )
-          )}
-        </ul>
+        <div className="fixed inset-0 z-[999] pointer-events-none">
+          <div
+            className="pointer-events-auto absolute z-[1000] w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+            style={{
+              top: inputRef.current
+                ? inputRef.current.getBoundingClientRect().bottom + 4
+                : 0,
+              left: inputRef.current
+                ? inputRef.current.getBoundingClientRect().left
+                : 0,
+              width: inputRef.current
+                ? inputRef.current.getBoundingClientRect().width
+                : '100%',
+            }}
+          >
+            {data.map(
+              ({
+                place_id,
+                description,
+                structured_formatting: { main_text, secondary_text },
+              }) => (
+                <li
+                  key={place_id}
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-100 transition-colors list-none"
+                  onClick={() => handleSelect(description)}
+                >
+                  <div className="font-medium text-gray-800">{main_text}</div>
+                  <div className="text-xs text-gray-500">{secondary_text}</div>
+                </li>
+              )
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

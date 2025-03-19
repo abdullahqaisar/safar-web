@@ -35,14 +35,9 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentUrlParams, setCurrentUrlParams] = useState('');
   const [shouldSearch, setShouldSearch] = useState(false);
-  const [isModifyingSearch, setIsModifyingSearch] = useState(false);
   const [fromText, setFromText] = useState<string | null>(null);
   const [toText, setToText] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
-
-  const toggleModifySearch = () => {
-    setIsModifyingSearch(!isModifyingSearch);
-  };
 
   const simulateLoadingProgress = useCallback(() => {
     setLoadingProgress(0);
@@ -170,9 +165,6 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
             >
               Back
             </Button>
-            {/* <h1 className="text-xl sm:text-2xl font-semibold ml-2">
-              Route Results
-            </h1> */}
           </div>
         )}
 
@@ -180,8 +172,6 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
           fromText={fromText || ''}
           toText={toText || ''}
           isResultsPage={showResults}
-          isModifyingSearch={isModifyingSearch}
-          toggleModifySearch={toggleModifySearch}
           isLoading={isLoading}
         />
 
@@ -237,7 +227,6 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
                   </p>
                   <Button
                     variant="secondary"
-                    onClick={toggleModifySearch}
                     size="sm"
                     leftIcon={<i className="fas fa-search" />}
                   >
@@ -270,7 +259,6 @@ function JourneyContent({ showResults = false }: JourneyContentProps) {
                   </p>
                   <Button
                     variant="secondary"
-                    onClick={toggleModifySearch}
                     size="sm"
                     leftIcon={<i className="fas fa-search" />}
                   >
