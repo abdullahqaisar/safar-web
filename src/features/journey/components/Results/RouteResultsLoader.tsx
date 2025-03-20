@@ -4,17 +4,17 @@ import React from 'react';
 import { Card } from '@/components/common/Card';
 import { Progress } from '@/components/ui/progress';
 
-interface LoadingStateProps {
+interface RouteResultsLoaderProps {
   fromText?: string;
   toText?: string;
   loadingProgress?: number;
 }
 
-export function LoadingState({
+export function RouteResultsLoader({
   fromText = 'selected location',
   toText = 'destination',
   loadingProgress = 0,
-}: LoadingStateProps) {
+}: RouteResultsLoaderProps) {
   return (
     <Card className="bg-white/95 shadow-md border border-gray-100 p-6 rounded-xl">
       <div className="flex flex-col items-center justify-center py-8">

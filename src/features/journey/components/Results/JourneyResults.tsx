@@ -1,11 +1,11 @@
 import { Route } from '@/types/route';
 import { JourneyCard } from './JourneyCard';
 
-interface RouteResultsProps {
+interface JourneyResultsProps {
   routes: Route[];
 }
 
-export function RouteResults({ routes }: RouteResultsProps) {
+export function JourneyResults({ routes }: JourneyResultsProps) {
   if (!routes.length) {
     return null;
   }

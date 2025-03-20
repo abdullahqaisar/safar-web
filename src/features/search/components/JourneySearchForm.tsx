@@ -40,10 +40,18 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
       const fromText = searchParams.get('fromText');
       const toText = searchParams.get('toText');
 
-      if (fromText) setPickupValue(decodeURIComponent(fromText));
-      if (toText) setDestinationValue(decodeURIComponent(toText));
+      if (fromText) {
+        const decodedText = decodeURIComponent(fromText);
+        setPickupValue(decodedText);
+        if (onFromValueChange) onFromValueChange(decodedText);
+      }
+      if (toText) {
+        const decodedText = decodeURIComponent(toText);
+        setDestinationValue(decodedText);
+        if (onToValueChange) onToValueChange(decodedText);
+      }
     }
-  }, [isLoaded, searchParams]);
+  }, [isLoaded, searchParams, onFromValueChange, onToValueChange]);
 
   function handleFromLocationSelect(location: Coordinates | null) {
     setFromLocation(location);
@@ -84,6 +92,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
           onValueChange={handleFromValueChange}
           icon="far fa-circle"
           lightMode={lightMode}
+          aria-label="Origin location"
         />
       </div>
 
@@ -93,6 +102,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
             className={`h-full ${
               lightMode ? 'border-gray-300' : 'border-gray-600'
             } ml-[1px]`}
+            aria-hidden="true"
           ></div>
         </div>
       </div>
@@ -114,6 +124,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
           onValueChange={handleToValueChange}
           icon="fas fa-map-marker-alt"
           lightMode={lightMode}
+          aria-label="Destination location"
         />
       </div>
     </div>
