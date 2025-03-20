@@ -596,9 +596,6 @@ body.search-section-editing .dropdown-portal {
   z-index: 100 !important;
 }
 
-body.search-section-editing .dropdown-portal {
-  z-index: 9999 !important;
-}
 
 /* Animations */
 @keyframes scaleIn {
