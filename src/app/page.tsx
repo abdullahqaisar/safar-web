@@ -1,8 +1,8 @@
-import { HeroSection } from '@/features/landing/components/hero/HeroSection';
-import { FeaturesSection } from '@/features/landing/components/sections/FeaturesSection';
-import { HowItWorksSection } from '@/features/landing/components/sections/HowItWorksSection';
-import { ContributeSection } from '@/features/landing/components/sections/ContributeSection';
-import { NewsletterSection } from '@/features/landing/components/sections/NewsletterSection';
+import { HeroSection } from '@/features/landing/components/Hero/HeroSection';
+import { FeaturesSection } from '@/features/landing/components/Sections/FeaturesSection';
+import { HowItWorksSection } from '@/features/landing/components/Sections/HowItWorksSection';
+import { ContributeSection } from '@/features/landing/components/Sections/ContributeSection';
+import { NewsletterSection } from '@/features/landing/components/Sections/NewsletterSection';
 
 export default function HomePage() {
   return (
