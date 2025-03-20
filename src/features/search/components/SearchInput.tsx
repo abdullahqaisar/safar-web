@@ -8,7 +8,7 @@ import usePlacesAutocomplete, {
 import { Coordinates } from '@/types/station';
 import { cn } from '@/lib/utils/formatters';
 
-interface MapSearchProps {
+interface SearchInputProps {
   id: string;
   onSelectPlace: (location: Coordinates | null) => void;
   placeholder: string;
@@ -18,7 +18,7 @@ interface MapSearchProps {
   lightMode?: boolean;
 }
 
-export default function MapSearch({
+export default function SearchInput({
   id,
   onSelectPlace,
   placeholder,
@@ -26,7 +26,7 @@ export default function MapSearch({
   onValueChange,
   icon,
   lightMode = false,
-}: MapSearchProps) {
+}: SearchInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [hasSelectedLocation, setHasSelectedLocation] = useState(
     Boolean(value)

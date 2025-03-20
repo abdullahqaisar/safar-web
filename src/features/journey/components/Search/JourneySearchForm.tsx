@@ -4,12 +4,12 @@ import React from 'react';
 import { useLoadScript } from '@react-google-maps/api';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import MapSearch from './MapSearch';
+import SearchInput from '../../../search/components/SearchInput';
 import { Coordinates } from '@/types/station';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import LoadingSkeleton from './LoadingSkeleton';
 
-interface MapSearchFormProps {
+interface JourneySearchFormProps {
   initialFromText?: string;
   initialToText?: string;
   onFromValueChange?: (value: string) => void;
@@ -17,7 +17,7 @@ interface MapSearchFormProps {
   lightMode?: boolean;
 }
 
-const MapSearchForm: React.FC<MapSearchFormProps> = ({
+const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
   initialFromText = '',
   initialToText = '',
   onFromValueChange,
@@ -68,15 +68,7 @@ const MapSearchForm: React.FC<MapSearchFormProps> = ({
   return (
     <div className="w-full space-y-4 relative" style={{ overflow: 'visible' }}>
       <div className="relative" style={{ overflow: 'visible' }}>
-        <label
-          htmlFor="from-location"
-          className={`block mb-1 text-sm ${
-            lightMode ? 'text-gray-600' : 'text-gray-200'
-          } font-medium`}
-        >
-          From
-        </label>
-        <MapSearch
+        <SearchInput
           id="from-location"
           onSelectPlace={handleFromLocationSelect}
           placeholder="From (e.g., Khanna Pul)"
@@ -106,7 +98,7 @@ const MapSearchForm: React.FC<MapSearchFormProps> = ({
         >
           To
         </label>
-        <MapSearch
+        <SearchInput
           id="to-location"
           onSelectPlace={handleToLocationSelect}
           placeholder="To (e.g., Air University)"
@@ -120,4 +112,4 @@ const MapSearchForm: React.FC<MapSearchFormProps> = ({
   );
 };
 
-export default MapSearchForm;
+export default JourneySearchForm;

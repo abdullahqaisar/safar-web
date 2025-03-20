@@ -6,7 +6,7 @@ import { Button } from '@/components/common/Button';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
-import MapSearchForm from '../MapSearch/MapSearchForm';
+import JourneySearchForm from './JourneySearchForm';
 
 interface SearchSectionProps {
   fromText?: string;
@@ -166,7 +166,7 @@ export function SearchSection({
                     className="relative z-50"
                     style={{ overflow: 'visible' }}
                   >
-                    <MapSearchForm
+                    <JourneySearchForm
                       initialFromText={pickupValue}
                       initialToText={destinationValue}
                       onFromValueChange={setPickupValue}

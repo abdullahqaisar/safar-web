@@ -7,7 +7,7 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
-import MapSearchForm from '@/features/journey/components/MapSearch/MapSearchForm';
+import JourneySearchForm from '@/features/journey/components/Search/JourneySearchForm';
 
 export function HeroSearchForm() {
   const router = useRouter();
@@ -107,7 +107,7 @@ export function HeroSearchForm() {
         </motion.h2>
 
         <div className="relative overflow-visible">
-          <MapSearchForm />
+          <JourneySearchForm />
         </div>
 
         <AnimatePresence>
