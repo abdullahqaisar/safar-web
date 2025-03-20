@@ -4,7 +4,7 @@ import React from 'react';
 import { useLoadScript } from '@react-google-maps/api';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import SearchInput from '../../../search/components/SearchInput';
+import SearchInput from './SearchInput';
 import { Coordinates } from '@/types/station';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import LoadingSkeleton from './LoadingSkeleton';
@@ -63,11 +63,19 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
     if (onToValueChange) onToValueChange(value);
   };
 
-  if (!isLoaded) return <LoadingSkeleton />;
+  if (!isLoaded) return <LoadingSkeleton lightMode={lightMode} />;
 
   return (
     <div className="w-full space-y-4 relative" style={{ overflow: 'visible' }}>
       <div className="relative" style={{ overflow: 'visible' }}>
+        <label
+          htmlFor="from-location"
+          className={`block mb-1 text-sm ${
+            lightMode ? 'text-gray-600' : 'text-gray-200'
+          } font-medium`}
+        >
+          From
+        </label>
         <SearchInput
           id="from-location"
           onSelectPlace={handleFromLocationSelect}
@@ -82,7 +90,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
       <div className="relative">
         <div className="absolute left-4 h-full flex items-center justify-center z-10">
           <div
-            className={`h-full border-l border-dashed ${
+            className={`h-full ${
               lightMode ? 'border-gray-300' : 'border-gray-600'
             } ml-[1px]`}
           ></div>

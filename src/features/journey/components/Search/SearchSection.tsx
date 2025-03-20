@@ -6,7 +6,7 @@ import { Button } from '@/components/common/Button';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
-import JourneySearchForm from './JourneySearchForm';
+import JourneySearchForm from '../../../search/components/JourneySearchForm';
 
 interface SearchSectionProps {
   fromText?: string;

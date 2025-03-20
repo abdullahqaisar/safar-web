@@ -7,7 +7,7 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
-import JourneySearchForm from '@/features/journey/components/Search/JourneySearchForm';
+import JourneySearchForm from '@/features/search/components/JourneySearchForm';
 
 export function HeroSearchForm() {
   const router = useRouter();
