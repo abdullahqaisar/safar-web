@@ -29,15 +29,14 @@ export function HeroSection() {
             </p>
           </div>
 
-          {/* Search Form Container - Now using the dedicated HeroSearchForm */}
-          <div className="max-w-[1000px] mx-auto relative z-20 px-0 sm:px-2 mt-6 sm:mt-8 md:mt-10 mb-8 sm:mb-10">
+          <div className="max-w-[1000px] mx-auto relative search-form-container px-0 sm:px-2 mt-6 sm:mt-8 md:mt-10 mb-8 sm:mb-10">
             <Suspense fallback={<SearchParamsFallback />}>
               <HeroSearchForm />
             </Suspense>
           </div>
         </div>
       </div>
-      {/* Stats Bar */}
+
       <StatsBarSection />
     </section>
   );

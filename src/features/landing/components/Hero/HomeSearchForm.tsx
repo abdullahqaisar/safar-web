@@ -6,7 +6,7 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
-import { useJourneySearch } from '@/features/journey/hooks/useJourneySearch';
+import { useJourneySearch } from '@/features/search/hooks/useJourneySearch';
 import JourneySearchForm from '@/features/search/components/JourneySearchForm';
 
 export function HeroSearchForm() {

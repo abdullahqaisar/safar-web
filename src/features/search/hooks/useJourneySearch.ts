@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useJourney } from './useJourney';
+import { useJourney } from '../../journey/hooks/useJourney';
 
 interface UseJourneySearchOptions {
   redirectPath?: string;
