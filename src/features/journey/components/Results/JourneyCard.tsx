@@ -1,7 +1,7 @@
 import { Route } from '@/types/route';
 
 import { RouteSegment } from './RouteSegment';
-import { JourneySummary } from '../JourneyPlanner/JourneySummary';
+import { JourneySummary } from './JourneySummary';
 import { formatDuration } from '../../utils';
 
 interface RouteCardProps {
@@ -17,7 +17,7 @@ function getSegmentPosition(
   return 'middle';
 }
 
-export function RouteCard({ routes }: RouteCardProps) {
+export function JourneyCard({ routes }: RouteCardProps) {
   return (
     <>
       {routes.map((route, index) => {

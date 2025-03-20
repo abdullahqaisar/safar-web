@@ -1,61 +1,67 @@
-import { Coordinates, Station } from '@/types/station';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchRoutes } from '../services/route.service';
+import { useJourneyContext } from '../context/JourneyContext';
 
-interface UseRoutesParams {
-  fromStation?: Station | null | undefined;
-  toStation?: Station | null | undefined;
-  fromLocation?: Coordinates | null | undefined;
-  toLocation?: Coordinates | null | undefined;
-  enabled?: boolean;
-}
+// Query keys for React Query cache management
+export const routeQueryKeys = {
+  all: ['routes'] as const,
+  byLocations: (
+    fromLat?: number,
+    fromLng?: number,
+    toLat?: number,
+    toLng?: number
+  ) => [...routeQueryKeys.all, fromLat, fromLng, toLat, toLng] as const,
+};
 
-export const useRoutes = ({
-  fromStation,
-  toStation,
-  fromLocation,
-  toLocation,
-  enabled = false,
-}: UseRoutesParams = {}) => {
-  // Generate query key based on stations and locations
-  const queryKey = [
-    'routes',
-    fromStation?.id,
-    toStation?.id,
+/**
+ * Hook to handle route data fetching with React Query
+ * @internal Use useJourney instead for components
+ */
+export const useRoutes = (enabled = false) => {
+  const { fromLocation, toLocation, isFormValid } = useJourneyContext();
+  const queryClient = useQueryClient();
+
+  // Generate query key based on current locations
+  const currentQueryKey = routeQueryKeys.byLocations(
     fromLocation?.lat,
     fromLocation?.lng,
     toLocation?.lat,
-    toLocation?.lng,
-  ];
+    toLocation?.lng
+  );
 
-  // The main query
-  const query = useQuery({
-    queryKey,
-    queryFn: async () => {
-      if (!fromStation || !toStation || !fromLocation || !toLocation) {
+  // Query for automatic fetching when enabled
+  const routesQuery = useQuery({
+    queryKey: currentQueryKey,
+    queryFn: () => {
+      if (!fromLocation || !toLocation) {
         throw new Error('Missing required parameters');
       }
-
-      const routes = await fetchRoutes(
-        fromStation.id,
-        toStation.id,
-        fromLocation,
-        toLocation
-      );
-
-      if (!routes || routes.length === 0) {
-        throw new Error('No route found between these stations');
-      }
-
-      return routes;
+      return fetchRoutes(fromLocation, toLocation);
     },
-    enabled:
-      enabled && !!fromStation && !!toStation && !!fromLocation && !!toLocation,
-    retry: 1,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
-    gcTime: 600000, // 10 minutes
+    enabled: enabled && isFormValid,
   });
 
-  return query;
+  // Mutation for manual fetching
+  const searchRoutesMutation = useMutation({
+    mutationFn: async () => {
+      if (!fromLocation || !toLocation) {
+        throw new Error('Both origin and destination locations are required');
+      }
+      return await fetchRoutes(fromLocation, toLocation);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(currentQueryKey, data);
+    },
+  });
+
+  return {
+    routes: routesQuery.data,
+    isLoading: routesQuery.isLoading,
+    isSearching: searchRoutesMutation.isPending,
+    error: routesQuery.error || null,
+    searchError: searchRoutesMutation.error || null,
+    searchRoutes: searchRoutesMutation.mutateAsync,
+    refetch: routesQuery.refetch,
+    reset: () => queryClient.removeQueries({ queryKey: routeQueryKeys.all }),
+  };
 };

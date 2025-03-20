@@ -7,6 +7,7 @@ import { Footer } from '@/components/layouts/Footer';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { JourneyProvider } from '@/features/journey/context/JourneyContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,10 +38,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <QueryProvider>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <Toaster />
+          <JourneyProvider>
+            <Navbar />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+            <Toaster />
+          </JourneyProvider>
         </QueryProvider>
       </body>
     </html>

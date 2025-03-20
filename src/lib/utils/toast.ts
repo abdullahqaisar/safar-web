@@ -1,22 +1,65 @@
 import { toast } from 'sonner';
 
-export const showError = (message: string) => {
-  toast.error(message, {
-    duration: 5000,
-    className: 'error-toast',
-  });
+export interface ToastOptions {
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  description?: string;
+  id?: string;
+  position?:
+    | 'top-right'
+    | 'top-center'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-center'
+    | 'bottom-left';
+}
+
+export const showError = (
+  message: string,
+  options: ToastOptions = { duration: 5000 }
+) => {
+  return toast.error(message, options);
 };
 
-export const showSuccess = (message: string) => {
-  toast.success(message, {
-    duration: 4000,
-    className: 'success-toast',
-  });
+export const showSuccess = (
+  message: string,
+  options: ToastOptions = { duration: 4000 }
+) => {
+  return toast.success(message, options);
 };
 
-export const showInfo = (message: string) => {
-  toast.info(message, {
-    duration: 4000,
-    className: 'info-toast',
+export const showInfo = (
+  message: string,
+  options: ToastOptions = { duration: 4000 }
+) => {
+  return toast.info(message, options);
+};
+
+export const showWarning = (
+  message: string,
+  options: ToastOptions = { duration: 5000 }
+) => {
+  return toast.warning(message, options);
+};
+
+export const dismissToast = (id: string) => {
+  toast.dismiss(id);
+};
+
+export const showErrorWithAction = (
+  message: string,
+  actionLabel: string,
+  onAction: () => void,
+  options: Omit<ToastOptions, 'action'> = {}
+) => {
+  return showError(message, {
+    ...options,
+    action: {
+      label: actionLabel,
+      onClick: onAction,
+    },
   });
 };
