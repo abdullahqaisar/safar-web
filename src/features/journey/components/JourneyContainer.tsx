@@ -10,6 +10,7 @@ import { Button } from '@/components/common/Button';
 import { useRouter } from 'next/navigation';
 import { SearchSection } from '@/features/journey/components/Search/SearchSection';
 import { RouteResultsView } from './Results/RouteResultsView';
+import { ArrowLeft } from 'lucide-react';
 
 function JourneyContent() {
   const searchParams = useSearchParams();
@@ -148,7 +149,7 @@ function JourneyContent() {
             size="sm"
             className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
             onClick={() => router.push('/')}
-            leftIcon={<i className="fas fa-arrow-left" />}
+            leftIcon={<ArrowLeft size={16} />}
           >
             Back
           </Button>

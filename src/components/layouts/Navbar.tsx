@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 const navigationLinks = [
   { href: '/', label: 'Home' },
@@ -62,11 +63,7 @@ export function Navbar() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
-            <i
-              className={`fas ${
-                isMobileMenuOpen ? 'fa-times' : 'fa-bars'
-              } text-xl`}
-            ></i>
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 

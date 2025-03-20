@@ -555,6 +555,7 @@
 .dropdown-portal {
   position: fixed !important;
   z-index: 9999 !important;
+  pointer-events: auto !important;
 }
 
 .search-form-container,
@@ -567,6 +568,34 @@ form,
 body.search-section-editing .dropdown-portal {
   z-index: 9999 !important;
 }
+
+.dropdown-portal {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
+.hero-section-wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+.stats-bar-section {
+  position: relative;
+  z-index: 5;
+}
+
+.search-form-container {
+  position: relative;
+  z-index: 50 !important;
+}
+
+.places-dropdown,
+.places-dropdown-content,
+.places-dropdown-overlay {
+  z-index: 100 !important;
+}
+
 
 /* Animations */
 @keyframes scaleIn {

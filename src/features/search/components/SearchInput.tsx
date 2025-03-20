@@ -5,6 +5,8 @@ import { Coordinates } from '@/types/station';
 import { cn } from '@/lib/utils/formatters';
 import usePlacesSearch from '../hooks/usePlacesSearch';
 import SearchDropdown from './SearchDropdown';
+import { LucideIcon, Loader2, X } from 'lucide-react';
+import React from 'react';
 
 interface SearchInputProps {
   id: string;
@@ -12,7 +14,7 @@ interface SearchInputProps {
   placeholder: string;
   value: string;
   onValueChange: (value: string) => void;
-  icon: string;
+  icon: LucideIcon;
   lightMode?: boolean;
 }
 
@@ -22,7 +24,7 @@ export default function SearchInput({
   placeholder,
   value,
   onValueChange,
-  icon,
+  icon: Icon, // Rename to Icon for direct usage
   lightMode = false,
 }: SearchInputProps) {
   const [isFocused, setIsFocused] = useState(false);
@@ -196,17 +198,15 @@ export default function SearchInput({
 
   return (
     <div className="relative w-full">
-      {/* Input icon */}
       <div
         className={cn(
           'absolute left-4 top-3.5',
           lightMode ? 'text-[color:var(--color-accent)]' : 'text-emerald-500'
         )}
       >
-        <i className={icon}></i>
+        <Icon size={18} />
       </div>
 
-      {/* Input field */}
       <input
         ref={inputRef}
         id={id}
@@ -241,30 +241,24 @@ export default function SearchInput({
         }
       />
 
-      {/* Loading indicator */}
       {isLoading && inputValue && (
-        <div className="absolute right-10 top-3.5 text-gray-400">
-          <i
-            className="fas fa-circle-notch fa-spin text-sm"
-            aria-hidden="true"
-          ></i>
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400">
+          <Loader2 size={16} className="animate-spin" />
           <span className="sr-only">Loading</span>
         </div>
       )}
 
-      {/* Clear button */}
       {inputValue && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded-full hover:bg-gray-100"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded-full hover:bg-gray-100"
           aria-label="Clear input"
         >
-          <i className="fas fa-times text-sm" aria-hidden="true"></i>
+          <X size={16} />
         </button>
       )}
 
-      {/* Suggestions dropdown */}
       <SearchDropdown
         id={id}
         show={showDropdown && inputValue.length > 0}

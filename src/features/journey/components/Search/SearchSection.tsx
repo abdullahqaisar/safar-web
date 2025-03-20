@@ -6,8 +6,9 @@ import { Button } from '@/components/common/Button';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { useJourneySearch } from '@/features/journey/hooks/useJourneySearch';
+import { useJourneySearch } from '@/features/search/hooks/useJourneySearch';
 import JourneySearchForm from '../../../search/components/JourneySearchForm';
+import { X, AlertCircle, ArrowRight, Search } from 'lucide-react';
 
 interface SearchSectionProps {
   fromText?: string;
@@ -110,7 +111,7 @@ export function SearchSection({
                   variant="ghost"
                   className="text-gray-500 hover:text-[color:var(--color-accent)]"
                   onClick={() => setIsModifying(false)}
-                  leftIcon={<i className="fas fa-times" aria-hidden="true" />}
+                  leftIcon={<X size={16} />}
                   type="button"
                 >
                   Cancel
@@ -150,10 +151,7 @@ export function SearchSection({
                   role="alert"
                   aria-live="polite"
                 >
-                  <i
-                    className="fas fa-exclamation-circle mr-2"
-                    aria-hidden="true"
-                  ></i>
+                  <AlertCircle size={16} className="inline mr-2" />
                   {formError}
                 </motion.div>
               )}
@@ -165,7 +163,7 @@ export function SearchSection({
                   isLoading={isLoading || isSearching}
                   disabled={!isFormValid || isLoading || isSearching}
                   className="bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
-                  leftIcon={<i className="fas fa-search" aria-hidden="true" />}
+                  leftIcon={<Search size={16} />}
                   type="submit"
                 >
                   {isLoading || isSearching ? 'Searching...' : 'Find Routes'}
@@ -190,10 +188,7 @@ export function SearchSection({
                 <p className="font-medium">{fromText || 'Selected location'}</p>
               </div>
               <div className="hidden md:flex items-center text-gray-400">
-                <i
-                  className="fas fa-arrow-right text-sm"
-                  aria-hidden="true"
-                ></i>
+                <ArrowRight size={16} />
               </div>
               <div className="flex-1 p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-500 mb-1">To</p>
@@ -207,7 +202,7 @@ export function SearchSection({
                 variant="outline"
                 onClick={handleStartModifying}
                 className="border-[color:var(--color-accent)]/50 text-[color:var(--color-accent)] hover:bg-[color:var(--color-accent)]/10"
-                leftIcon={<i className="fas fa-search" aria-hidden="true" />}
+                leftIcon={<Search size={16} />}
                 disabled={isLoading}
               >
                 Modify Search

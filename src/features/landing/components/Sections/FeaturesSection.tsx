@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { Container } from '@/components/common/Container';
+import { Clock, Route as RouteIcon, Ticket } from 'lucide-react';
 
 interface FeatureCardProps {
   icon: ReactNode;
@@ -24,19 +25,19 @@ function FeatureCard({ icon, title, description }: FeatureCardProps) {
 export function FeaturesSection() {
   const features = [
     {
-      icon: <i className="fas fa-clock text-2xl"></i>,
+      icon: <Clock size={24} />,
       title: 'Real-Time Updates',
       description:
         'Get live updates on transit schedules, delays, and service changes to plan your trip better.',
     },
     {
-      icon: <i className="fas fa-route text-2xl"></i>,
+      icon: <RouteIcon size={24} />,
       title: 'Smart Route Planning',
       description:
         'Our algorithm finds the fastest routes with the fewest transfers to save you time and hassle.',
     },
     {
-      icon: <i className="fas fa-ticket-alt text-2xl"></i>,
+      icon: <Ticket size={24} />,
       title: 'Fare Estimates',
       description:
         'Know exactly how much your journey will cost with accurate fare calculations for all routes.',
@@ -44,10 +45,7 @@ export function FeaturesSection() {
   ];
 
   return (
-    <section 
-      className="py-16 sm:py-20 bg-white"
-      id="features"
-    >
+    <section className="py-16 sm:py-20 bg-white" id="features">
       <Container className="relative z-10">
         <SectionHeading
           tag="Benefits"

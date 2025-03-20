@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface JourneyErrorFallbackProps {
   error?: Error;
@@ -29,7 +30,7 @@ export function JourneyErrorFallback({
     <Card className="mt-8 border border-red-100 bg-white shadow-lg">
       <div className="p-8 flex flex-col items-center text-center">
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
-          <i className="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+          <AlertTriangle className="text-red-500" size={32} />
         </div>
 
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -42,7 +43,7 @@ export function JourneyErrorFallback({
           <Button
             variant="primary"
             onClick={handleReset}
-            leftIcon={<i className="fas fa-redo"></i>}
+            leftIcon={<RefreshCw size={16} />}
           >
             Try Again
           </Button>
@@ -50,7 +51,7 @@ export function JourneyErrorFallback({
           <Button
             variant="secondary"
             onClick={() => (window.location.href = '/')}
-            leftIcon={<i className="fas fa-home"></i>}
+            leftIcon={<Home size={16} />}
           >
             Return Home
           </Button>

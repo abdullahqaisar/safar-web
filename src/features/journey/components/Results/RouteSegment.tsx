@@ -5,6 +5,7 @@ import {
   WalkSegment,
 } from '@/types/route';
 import { getTransitSegmentDetails, getWalkSegmentDetails } from '../../utils';
+import { LucideIcon, ArrowLeftRight } from 'lucide-react';
 
 interface RouteSegmentProps {
   segment: RouteSegmentType;
@@ -14,7 +15,7 @@ interface RouteSegmentProps {
 }
 
 interface SegmentDetails {
-  icon: string;
+  icon: LucideIcon;
   iconBgColor: string;
   title: string;
   description: string;
@@ -37,10 +38,12 @@ export function RouteSegment({
   const connectorColorClass = details.lineColorClass;
   const segmentTypeClass = segment.type === 'walk' ? 'walk-segment' : '';
 
+  const Icon = details.icon;
+
   return (
     <div className={`route-segment ${segmentTypeClass}`}>
       <div className={`route-icon ${details.iconBgColor} shadow-md`}>
-        <i className={details.icon}></i>
+        <Icon size={16} />
       </div>
       <div className="route-text flex justify-between items-start w-full">
         <div>
@@ -66,7 +69,7 @@ export function RouteSegment({
 
               <div className="transfer-label">
                 <div className="transfer-label-content">
-                  <i className="fas fa-exchange-alt text-xs mr-1 text-emerald-600"></i>
+                  <ArrowLeftRight size={12} className="mr-1 text-emerald-600" />
                   <span className="text-gray-700">
                     Change at {details.transferStation}
                   </span>

@@ -1,5 +1,13 @@
 import Link from 'next/link';
 import { Container } from '@/components/common/Container';
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
+} from 'lucide-react';
 
 // Extract footer data into organized objects for maintainability
 const quickLinks = [
@@ -16,25 +24,21 @@ const resourceLinks = [
 ];
 
 const contactInfo = [
-  { icon: 'fas fa-envelope', text: 'info@safar.pk', ariaLabel: 'Email' },
-  { icon: 'fas fa-phone-alt', text: '+92 51 123 4567', ariaLabel: 'Phone' },
-  {
-    icon: 'fas fa-map-marker-alt',
-    text: 'Islamabad, Pakistan',
-    ariaLabel: 'Location',
-  },
+  { icon: Mail, text: 'info@safar.pk', ariaLabel: 'Email' },
+  { icon: Phone, text: '+92 51 123 4567', ariaLabel: 'Phone' },
+  { icon: MapPin, text: 'Islamabad, Pakistan', ariaLabel: 'Location' },
 ];
 
 const socialLinks = [
   {
     href: 'https://facebook.com',
-    icon: 'fab fa-facebook-f',
+    icon: Facebook,
     label: 'Facebook',
   },
-  { href: 'https://twitter.com', icon: 'fab fa-twitter', label: 'Twitter' },
+  { href: 'https://twitter.com', icon: Twitter, label: 'Twitter' },
   {
     href: 'https://instagram.com',
-    icon: 'fab fa-instagram',
+    icon: Instagram,
     label: 'Instagram',
   },
 ];
@@ -124,30 +128,36 @@ export function Footer() {
           <div>
             <h5 className="font-medium mb-4 text-gray-200">Contact</h5>
             <ul className="space-y-2 text-gray-400">
-              {contactInfo.map((item, index) => (
-                <li key={index} className="flex items-center">
-                  <i
-                    className={`${item.icon} mr-2 text-[color:var(--color-accent)]`}
-                    aria-hidden="true"
-                  ></i>
-                  <span>{item.text}</span>
-                </li>
-              ))}
+              {contactInfo.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <li key={index} className="flex items-center">
+                    <Icon
+                      size={16}
+                      className="mr-2 text-[color:var(--color-accent)]"
+                    />
+                    <span>{item.text}</span>
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="mt-4 flex space-x-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-white transition-colors"
-                  aria-label={social.label}
-                >
-                  <i className={social.icon} aria-hidden="true"></i>
-                </a>
-              ))}
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors"
+                    aria-label={social.label}
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
