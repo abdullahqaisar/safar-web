@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useJourney } from '../../journey/hooks/useJourney';
 
@@ -18,20 +18,46 @@ export function useJourneySearch(options: UseJourneySearchOptions = {}) {
   const [fromValue, setFromValue] = useState('');
   const [toValue, setToValue] = useState('');
 
+  const navTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasInitializedRef = useRef(false);
+  const explicitSearchTriggeredRef = useRef(false);
+
   const hasBothLocations = Boolean(fromLocation && toLocation);
+
+  useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+  }, []);
+
+  // Reset navigation state after timeout
+  useEffect(() => {
+    if (isNavigating) {
+      const timeout = setTimeout(() => {
+        setIsNavigating(false);
+      }, 5000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isNavigating]);
+
+  useEffect(() => {
+    return () => {
+      if (navTimeoutRef.current) {
+        clearTimeout(navTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const buildUrlParams = useCallback(() => {
     if (!fromLocation || !toLocation) return null;
 
     const params = new URLSearchParams();
 
-    // Add coordinates
     params.set('fromLat', fromLocation.lat.toString());
     params.set('fromLng', fromLocation.lng.toString());
     params.set('toLat', toLocation.lat.toString());
     params.set('toLng', toLocation.lng.toString());
 
-    // Add text labels if available
     if (fromValue) {
       params.set('fromText', encodeURIComponent(fromValue));
     }
@@ -56,10 +82,19 @@ export function useJourneySearch(options: UseJourneySearchOptions = {}) {
 
       try {
         setIsNavigating(true);
+        explicitSearchTriggeredRef.current = true;
         setFormError(null);
 
         const params = buildUrlParams();
         if (!params) return;
+
+        if (navTimeoutRef.current) {
+          clearTimeout(navTimeoutRef.current);
+        }
+
+        navTimeoutRef.current = setTimeout(() => {
+          setIsNavigating(false);
+        }, 5000);
 
         const url = `${redirectPath}?${params.toString()}`;
         router.push(url);
@@ -67,6 +102,9 @@ export function useJourneySearch(options: UseJourneySearchOptions = {}) {
         console.error('Form submission error:', error);
         setFormError('An error occurred. Please try again.');
         setIsNavigating(false);
+        if (navTimeoutRef.current) {
+          clearTimeout(navTimeoutRef.current);
+        }
       }
     },
     [
@@ -88,6 +126,7 @@ export function useJourneySearch(options: UseJourneySearchOptions = {}) {
     formError,
     setFormError,
     isNavigating,
+    setIsNavigating,
     hasBothLocations,
     submitSearch,
     buildUrlParams,

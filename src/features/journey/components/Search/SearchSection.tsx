@@ -27,6 +27,8 @@ export function SearchSection({
   const { isFormValid } = useJourney();
   const [isModifying, setIsModifying] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const prevLoadingRef = useRef(isLoading);
+  const userInitiatedSearchRef = useRef(false);
 
   const {
     fromValue,
@@ -35,10 +37,29 @@ export function SearchSection({
     setToValue,
     formError,
     isNavigating: isSearching,
+    setIsNavigating,
     submitSearch,
   } = useJourneySearch({
     redirectPath: pathname,
   });
+
+  useEffect(() => {
+    if (
+      userInitiatedSearchRef.current &&
+      prevLoadingRef.current &&
+      !isLoading
+    ) {
+      setIsNavigating(false);
+
+      if (isModifying) {
+        setIsModifying(false);
+      }
+
+      userInitiatedSearchRef.current = false;
+    }
+
+    prevLoadingRef.current = isLoading;
+  }, [isLoading, isModifying, setIsNavigating]);
 
   useEffect(() => {
     if (fromText !== undefined) setFromValue(fromText);
@@ -46,11 +67,9 @@ export function SearchSection({
   }, [fromText, toText, setFromValue, setToValue]);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    userInitiatedSearchRef.current = true;
     submitSearch(e);
-    if (isResultsPage) {
-      // Only close form after submission on results page
-      setIsModifying(false);
-    }
   };
 
   useEffect(() => {
@@ -84,6 +103,9 @@ export function SearchSection({
   if (!isResultsPage) {
     return null;
   }
+
+  const buttonIsLoading =
+    userInitiatedSearchRef.current && (isLoading || isSearching);
 
   return (
     <Card
@@ -160,13 +182,13 @@ export function SearchSection({
                 <Button
                   size="sm"
                   variant="primary"
-                  isLoading={isLoading || isSearching}
-                  disabled={!isFormValid || isLoading || isSearching}
+                  isLoading={buttonIsLoading}
+                  disabled={!isFormValid || buttonIsLoading}
                   className="bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
                   leftIcon={<Search size={16} />}
                   type="submit"
                 >
-                  {isLoading || isSearching ? 'Searching...' : 'Find Routes'}
+                  {buttonIsLoading ? 'Searching...' : 'Find Routes'}
                 </Button>
               </div>
             </form>
