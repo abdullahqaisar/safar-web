@@ -1,77 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
+import { useJourneySearch } from '@/features/journey/hooks/useJourneySearch';
 import JourneySearchForm from '@/features/search/components/JourneySearchForm';
 
 export function HeroSearchForm() {
-  const router = useRouter();
-  const { fromLocation, toLocation, isFormValid } = useJourney();
-
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const hasBothLocations = Boolean(fromLocation && toLocation);
-
-  // Clear error when location is selected
-  useEffect(() => {
-    if (formError && (fromLocation || toLocation)) {
-      setFormError(null);
-    }
-  }, [fromLocation, toLocation, formError]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!fromLocation || !toLocation) {
-      setFormError('Please select both origin and destination locations');
-      return;
-    }
-
-    if (!isFormValid || isNavigating) return;
-
-    try {
-      setIsNavigating(true);
-      setFormError(null);
-
-      const params = new URLSearchParams();
-
-      // Add coordinates
-      params.set('fromLat', fromLocation.lat.toString());
-      params.set('fromLng', fromLocation.lng.toString());
-      params.set('toLat', toLocation.lat.toString());
-      params.set('toLng', toLocation.lng.toString());
-
-      // Add text labels if available
-      const fromInput = document.getElementById(
-        'from-location'
-      ) as HTMLInputElement;
-      const toInput = document.getElementById(
-        'to-location'
-      ) as HTMLInputElement;
-
-      if (fromInput?.value) {
-        params.set('fromText', encodeURIComponent(fromInput.value));
-      }
-      if (toInput?.value) {
-        params.set('toText', encodeURIComponent(toInput.value));
-      }
-
-      params.set('ts', Date.now().toString());
-
-      const url = `/journey?${params.toString()}`;
-      router.push(url);
-    } catch (error) {
-      console.error('Form submission error:', error);
-      setFormError('An error occurred. Please try again.');
-      setIsNavigating(false);
-    }
-  }
+  const { isFormValid } = useJourney();
+  const {
+    setFromValue,
+    setToValue,
+    formError,
+    isNavigating,
+    hasBothLocations,
+    submitSearch,
+  } = useJourneySearch();
 
   return (
     <Card
@@ -93,7 +40,7 @@ export function HeroSearchForm() {
 
       <form
         className="py-5 sm:py-6 md:py-10 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10 overflow-visible"
-        onSubmit={handleSubmit}
+        onSubmit={submitSearch}
         aria-label="Journey search form"
       >
         <motion.h2
@@ -102,12 +49,18 @@ export function HeroSearchForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <i className="fas fa-route mr-2 sm:mr-3 text-emerald-400" />
+          <i
+            className="fas fa-route mr-2 sm:mr-3 text-emerald-400"
+            aria-hidden="true"
+          />
           Find Your Route
         </motion.h2>
 
         <div className="relative overflow-visible">
-          <JourneySearchForm />
+          <JourneySearchForm
+            onFromValueChange={setFromValue}
+            onToValueChange={setToValue}
+          />
         </div>
 
         <AnimatePresence>
@@ -117,15 +70,20 @@ export function HeroSearchForm() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 p-2.5 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600"
+              role="alert"
+              aria-live="polite"
             >
-              <i className="fas fa-exclamation-circle mr-2" />
+              <i
+                className="fas fa-exclamation-circle mr-2"
+                aria-hidden="true"
+              />
               {formError}
             </motion.div>
           )}
         </AnimatePresence>
 
         <Button
-          onClick={handleSubmit}
+          onClick={submitSearch}
           disabled={!isFormValid || isNavigating}
           isLoading={isNavigating}
           type="submit"
@@ -141,11 +99,14 @@ export function HeroSearchForm() {
           )}
           leftIcon={
             !hasBothLocations ? (
-              <i className="fas fa-map-marker-alt" />
+              <i className="fas fa-map-marker-alt" aria-hidden="true" />
             ) : isNavigating ? (
-              <i className="fas fa-location-arrow animate-pulse" />
+              <i
+                className="fas fa-location-arrow animate-pulse"
+                aria-hidden="true"
+              />
             ) : (
-              <i className="fas fa-search" />
+              <i className="fas fa-search" aria-hidden="true" />
             )
           }
         >
@@ -163,6 +124,7 @@ export function HeroSearchForm() {
           initial={{ width: '0%' }}
           animate={{ width: '100%' }}
           transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+          aria-hidden="true"
         />
       )}
     </Card>

@@ -5,7 +5,8 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useJourneySearch } from '@/features/journey/hooks/useJourneySearch';
 import JourneySearchForm from '../../../search/components/JourneySearchForm';
 
 interface SearchSectionProps {
@@ -21,64 +22,33 @@ export function SearchSection({
   isResultsPage,
   isLoading,
 }: SearchSectionProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const { fromLocation, toLocation, isFormValid } = useJourney();
-
+  const { isFormValid } = useJourney();
   const [isModifying, setIsModifying] = useState(false);
-  const [pickupValue, setPickupValue] = useState(fromText || '');
-  const [destinationValue, setDestinationValue] = useState(toText || '');
-  const [isSearching, setIsSearching] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
   const formRef = useRef<HTMLFormElement>(null);
 
+  const {
+    fromValue,
+    toValue,
+    setFromValue,
+    setToValue,
+    formError,
+    isNavigating: isSearching,
+    submitSearch,
+  } = useJourneySearch({
+    redirectPath: pathname,
+  });
+
   useEffect(() => {
-    if (fromText !== undefined) setPickupValue(fromText);
-    if (toText !== undefined) setDestinationValue(toText);
-  }, [fromText, toText]);
+    if (fromText !== undefined) setFromValue(fromText);
+    if (toText !== undefined) setToValue(toText);
+  }, [fromText, toText, setFromValue, setToValue]);
 
-  const handleSearchSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
-    if (!fromLocation || !toLocation) {
-      setFormError('Please select both origin and destination locations');
-      return;
-    }
-
-    try {
-      setIsSearching(true);
-      setFormError(null);
-
-      const params = new URLSearchParams();
-
-      params.set('fromLat', fromLocation.lat.toString());
-      params.set('fromLng', fromLocation.lng.toString());
-      params.set('toLat', toLocation.lat.toString());
-      params.set('toLng', toLocation.lng.toString());
-
-      if (pickupValue) {
-        params.set('fromText', encodeURIComponent(pickupValue));
-      }
-      if (destinationValue) {
-        params.set('toText', encodeURIComponent(destinationValue));
-      }
-
-      params.set('ts', Date.now().toString());
-
-      if (!isResultsPage) {
-        const url = `/journey?${params.toString()}`;
-        router.push(url);
-      } else {
-        const url = `${pathname}?${params.toString()}`;
-        router.replace(url);
-        setIsSearching(false);
-        setIsModifying(false);
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-      setFormError('An error occurred. Please try again.');
-      setIsSearching(false);
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    submitSearch(e);
+    if (isResultsPage) {
+      // Only close form after submission on results page
+      setIsModifying(false);
     }
   };
 
@@ -140,7 +110,7 @@ export function SearchSection({
                   variant="ghost"
                   className="text-gray-500 hover:text-[color:var(--color-accent)]"
                   onClick={() => setIsModifying(false)}
-                  leftIcon={<i className="fas fa-times" />}
+                  leftIcon={<i className="fas fa-times" aria-hidden="true" />}
                   type="button"
                 >
                   Cancel
@@ -156,21 +126,15 @@ export function SearchSection({
                 }}
               >
                 <div className="relative z-50" style={{ overflow: 'visible' }}>
-                  <label
-                    htmlFor="from-location"
-                    className="block mb-1 text-xs text-gray-500 font-medium"
-                  >
-                    From
-                  </label>
                   <div
                     className="relative z-50"
                     style={{ overflow: 'visible' }}
                   >
                     <JourneySearchForm
-                      initialFromText={pickupValue}
-                      initialToText={destinationValue}
-                      onFromValueChange={setPickupValue}
-                      onToValueChange={setDestinationValue}
+                      initialFromText={fromValue}
+                      initialToText={toValue}
+                      onFromValueChange={setFromValue}
+                      onToValueChange={setToValue}
                       lightMode={true}
                     />
                   </div>
@@ -183,8 +147,13 @@ export function SearchSection({
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4 p-2.5 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600"
+                  role="alert"
+                  aria-live="polite"
                 >
-                  <i className="fas fa-exclamation-circle mr-2"></i>
+                  <i
+                    className="fas fa-exclamation-circle mr-2"
+                    aria-hidden="true"
+                  ></i>
                   {formError}
                 </motion.div>
               )}
@@ -196,7 +165,7 @@ export function SearchSection({
                   isLoading={isLoading || isSearching}
                   disabled={!isFormValid || isLoading || isSearching}
                   className="bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
-                  leftIcon={<i className="fas fa-search" />}
+                  leftIcon={<i className="fas fa-search" aria-hidden="true" />}
                   type="submit"
                 >
                   {isLoading || isSearching ? 'Searching...' : 'Find Routes'}
@@ -221,7 +190,10 @@ export function SearchSection({
                 <p className="font-medium">{fromText || 'Selected location'}</p>
               </div>
               <div className="hidden md:flex items-center text-gray-400">
-                <i className="fas fa-arrow-right text-sm"></i>
+                <i
+                  className="fas fa-arrow-right text-sm"
+                  aria-hidden="true"
+                ></i>
               </div>
               <div className="flex-1 p-3 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-500 mb-1">To</p>
@@ -235,7 +207,7 @@ export function SearchSection({
                 variant="outline"
                 onClick={handleStartModifying}
                 className="border-[color:var(--color-accent)]/50 text-[color:var(--color-accent)] hover:bg-[color:var(--color-accent)]/10"
-                leftIcon={<i className="fas fa-search" />}
+                leftIcon={<i className="fas fa-search" aria-hidden="true" />}
                 disabled={isLoading}
               >
                 Modify Search
