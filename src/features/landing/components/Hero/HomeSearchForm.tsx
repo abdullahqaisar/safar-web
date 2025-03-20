@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -27,6 +27,14 @@ export function HeroSearchForm() {
     submitSearch,
   } = useJourneySearch();
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    submitSearch();
+  };
+
   return (
     <Card
       className={cn(
@@ -47,7 +55,7 @@ export function HeroSearchForm() {
 
       <form
         className="py-5 sm:py-6 md:py-10 px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 relative z-10 overflow-visible"
-        onSubmit={submitSearch}
+        onSubmit={handleSubmit}
         aria-label="Journey search form"
       >
         <motion.h2
@@ -84,9 +92,9 @@ export function HeroSearchForm() {
         </AnimatePresence>
 
         <Button
-          onClick={submitSearch}
-          disabled={!isFormValid || isNavigating}
-          isLoading={isNavigating}
+          onClick={handleSubmit}
+          disabled={!isFormValid || isNavigating || isLoading}
+          isLoading={isNavigating || isLoading}
           type="submit"
           variant="primary"
           size="lg"
@@ -95,20 +103,20 @@ export function HeroSearchForm() {
             'mt-6 sm:mt-8 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/30',
             'transition-all duration-300',
             hasBothLocations
-              ? 'bg-green-600 hover:bg-green-700'
+              ? 'bg-emerald-600 hover:bg-emerald-700'
               : 'bg-gray-600 hover:bg-gray-700'
           )}
           leftIcon={
             !hasBothLocations ? (
               <MapPin size={16} />
-            ) : isNavigating ? (
+            ) : isNavigating || isLoading ? (
               <Navigation size={16} className="animate-pulse" />
             ) : (
               <Search size={16} />
             )
           }
         >
-          {isNavigating
+          {isNavigating || isLoading
             ? 'Finding Your Routes...'
             : !hasBothLocations
             ? 'Select Both Locations'
@@ -118,7 +126,7 @@ export function HeroSearchForm() {
 
       {isNavigating && (
         <motion.div
-          className="absolute bottom-0 left-0 h-1 bg-emerald-400"
+          className="absolute bottom-0 left-0 h-1 bg-emerald-600"
           initial={{ width: '0%' }}
           animate={{ width: '100%' }}
           transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}

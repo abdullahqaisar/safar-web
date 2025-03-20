@@ -1,8 +1,21 @@
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 import { SectionBadge } from '@/components/common/SectionBadge';
-import { StatsBarSection } from './StatsBar';
 import { HeroSearchForm } from './HomeSearchForm';
+
+const StatsBarSection = dynamic(
+  () =>
+    import('./StatsBar').then((mod) => ({
+      default: mod.StatsBarSection,
+    })),
+  {
+    ssr: true,
+    loading: () => (
+      <div className="h-24 animate-pulse bg-gray-100 rounded-lg"></div>
+    ),
+  }
+);
 
 export function HeroSection() {
   return (

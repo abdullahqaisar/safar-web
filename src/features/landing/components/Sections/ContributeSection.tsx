@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { Container } from '@/components/common/Container';
-import { Check, Map, PlusCircle } from 'lucide-react';
+import { Check, MapIcon, PlusCircle } from 'lucide-react';
 
 interface BenefitProps {
   text: string;
@@ -41,7 +41,7 @@ export function ContributeSection() {
           <div className="p-8 md:p-12">
             <div className="max-w-3xl mx-auto">
               <div className="w-16 h-16 bg-emerald-500 text-white rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-200/40">
-                <Map size={24} />
+                <MapIcon size={24} />
               </div>
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 Add Missing Stations
@@ -51,7 +51,6 @@ export function ContributeSection() {
                 stations, routes, and schedule information from your local area
                 to help fellow travelers.
               </p>
-
               <div className="space-y-4 mb-8">
                 {benefits.map((benefit, index) => (
                   <Benefit key={index} text={benefit} />
