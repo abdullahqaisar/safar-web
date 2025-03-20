@@ -8,6 +8,7 @@ import SearchInput from './SearchInput';
 import { Coordinates } from '@/types/station';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import LoadingSkeleton from './LoadingSkeleton';
+import { Circle, MapPin } from 'lucide-react';
 
 interface JourneySearchFormProps {
   initialFromText?: string;
@@ -90,7 +91,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
           placeholder="From (e.g., Khanna Pul)"
           value={pickupValue}
           onValueChange={handleFromValueChange}
-          icon="far fa-circle"
+          icon={Circle}
           lightMode={lightMode}
           aria-label="Origin location"
         />
@@ -122,7 +123,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
           placeholder="To (e.g., Air University)"
           value={destinationValue}
           onValueChange={handleToValueChange}
-          icon="fas fa-map-marker-alt"
+          icon={MapPin}
           lightMode={lightMode}
           aria-label="Destination location"
         />

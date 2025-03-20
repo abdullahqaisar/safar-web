@@ -8,6 +8,13 @@ import { cn } from '@/lib/utils/formatters';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { useJourneySearch } from '@/features/search/hooks/useJourneySearch';
 import JourneySearchForm from '@/features/search/components/JourneySearchForm';
+import {
+  Route as RouteIcon,
+  AlertCircle,
+  MapPin,
+  Navigation,
+  Search,
+} from 'lucide-react';
 
 export function HeroSearchForm() {
   const { isFormValid } = useJourney();
@@ -49,10 +56,7 @@ export function HeroSearchForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <i
-            className="fas fa-route mr-2 sm:mr-3 text-emerald-400"
-            aria-hidden="true"
-          />
+          <RouteIcon className="mr-2 sm:mr-3 text-emerald-400" size={20} />
           Find Your Route
         </motion.h2>
 
@@ -73,10 +77,7 @@ export function HeroSearchForm() {
               role="alert"
               aria-live="polite"
             >
-              <i
-                className="fas fa-exclamation-circle mr-2"
-                aria-hidden="true"
-              />
+              <AlertCircle className="inline mr-2" size={16} />
               {formError}
             </motion.div>
           )}
@@ -99,14 +100,11 @@ export function HeroSearchForm() {
           )}
           leftIcon={
             !hasBothLocations ? (
-              <i className="fas fa-map-marker-alt" aria-hidden="true" />
+              <MapPin size={16} />
             ) : isNavigating ? (
-              <i
-                className="fas fa-location-arrow animate-pulse"
-                aria-hidden="true"
-              />
+              <Navigation size={16} className="animate-pulse" />
             ) : (
-              <i className="fas fa-search" aria-hidden="true" />
+              <Search size={16} />
             )
           }
         >

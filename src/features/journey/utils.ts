@@ -1,6 +1,7 @@
 import { TransitSegment, WalkSegment } from '@/types/route';
 import { SegmentDetails } from './types';
 import { getBusColor } from '@/lib/utils/route';
+import { Bus, FootprintsIcon } from 'lucide-react';
 
 export function getWalkSegmentDetails(
   segment: WalkSegment,
@@ -14,7 +15,7 @@ export function getWalkSegmentDetails(
       : 'Walk to next station';
 
   return {
-    icon: 'fas fa-walking',
+    icon: FootprintsIcon,
     iconBgColor: 'bg-blue-500',
     title: walkTitle,
     description: `${formatDuration(segment.duration)} (${formatDistance(
@@ -36,7 +37,7 @@ export function getTransitSegmentDetails(
   const lastStation = segment.stations[segment.stations.length - 1];
 
   return {
-    icon: 'fas fa-bus',
+    icon: Bus,
     iconBgColor: lineColor,
     title: isFirstTransit
       ? `Take ${lineName} at ${stationName}`

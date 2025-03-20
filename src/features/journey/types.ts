@@ -1,5 +1,7 @@
+import { LucideIcon } from 'lucide-react';
+
 export interface SegmentDetails {
-  icon: string;
+  icon: LucideIcon;
   iconBgColor: string;
   title: string;
   description: string;

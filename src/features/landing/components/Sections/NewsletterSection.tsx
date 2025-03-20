@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { Container } from '@/components/common/Container';
+import { Loader2 } from 'lucide-react';
 
 export function NewsletterSection() {
   const [email, setEmail] = useState('');
@@ -80,10 +81,7 @@ export function NewsletterSection() {
           >
             {isSubmitting ? (
               <>
-                <i
-                  className="fas fa-circle-notch fa-spin mr-2"
-                  aria-hidden="true"
-                ></i>
+                <Loader2 className="inline animate-spin mr-2" size={16} />
                 Subscribing...
               </>
             ) : (

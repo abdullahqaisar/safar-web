@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils/formatters';
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 export interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'disabled'> {
@@ -59,7 +60,7 @@ export function Button({
     >
       {isLoading ? (
         <span className="flex items-center justify-center">
-          <i className="fas fa-spinner fa-spin mr-2"></i>
+          <Loader2 className="animate-spin mr-2" size={16} />
           {children}
         </span>
       ) : (

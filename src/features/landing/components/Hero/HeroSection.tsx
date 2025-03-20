@@ -7,7 +7,7 @@ import { HeroSearchForm } from './HomeSearchForm';
 export function HeroSection() {
   return (
     <section className="relative">
-      <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)]/5 to-transparent opacity-70 animate-pulse-slow"></div>
+      <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)]/5 to-transparent opacity-70"></div>
 
       <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative py-12 sm:py-16 md:py-20 lg:py-28 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -16,14 +16,11 @@ export function HeroSection() {
               Public Transportation Made Easy
             </SectionBadge>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[color:var(--color-gray-700)] tracking-tight mb-3 sm:mb-4 md:mb-5 lg:mb-6 animate-fade-in">
-              Your Journey,{' '}
-              <span className="text-[color:var(--color-accent)]">
-                Simplified
-              </span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-700 mb-3 sm:mb-4 md:mb-5 lg:mb-6">
+              Your Journey, <span className="text-emerald-600">Simplified</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto mb-4 sm:mb-6 animate-fade-in">
+            <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto mb-4 sm:mb-6">
               Find the fastest metro routes optimized for your journey and enjoy
               a stress-free commute with our smart navigation system.
             </p>

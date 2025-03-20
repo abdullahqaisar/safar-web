@@ -5,6 +5,7 @@ import { JourneyResults } from './JourneyResults';
 import { RouteResultsLoader } from './RouteResultsLoader';
 import { Button } from '@/components/common/Button';
 import { Route } from '@/types/route';
+import { Route as RouteIcon, AlertTriangle, Search } from 'lucide-react';
 
 export interface RouteResultsViewProps {
   isLoading: boolean;
@@ -64,7 +65,7 @@ export function RouteResultsView({
         >
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4">
-              <i className="fas fa-route text-amber-500 text-xl"></i>
+              <RouteIcon className="text-amber-500" size={24} />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               No Routes Found
@@ -76,7 +77,7 @@ export function RouteResultsView({
             <Button
               variant="secondary"
               size="sm"
-              leftIcon={<i className="fas fa-search" />}
+              leftIcon={<Search size={16} />}
             >
               Try Different Locations
             </Button>
@@ -95,7 +96,7 @@ export function RouteResultsView({
         >
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-              <i className="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+              <AlertTriangle className="text-red-500" size={24} />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               Error Finding Routes
@@ -108,7 +109,7 @@ export function RouteResultsView({
             <Button
               variant="secondary"
               size="sm"
-              leftIcon={<i className="fas fa-search" />}
+              leftIcon={<Search size={16} />}
             >
               Try Different Locations
             </Button>

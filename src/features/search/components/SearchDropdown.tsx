@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils/formatters';
+import { Loader2, Search, AlertTriangle } from 'lucide-react';
 
 interface Suggestion {
   place_id: string;
@@ -47,11 +48,8 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
     >
       {!isReady && (
         <div className="py-4 px-4 text-center text-gray-500">
-          <div className="animate-pulse flex justify-center">
-            <i
-              className="fas fa-circle-notch fa-spin mr-2"
-              aria-hidden="true"
-            ></i>
+          <div className="flex justify-center items-center">
+            <Loader2 size={16} className="animate-spin mr-2" />
             <span>Initializing...</span>
           </div>
         </div>
@@ -59,11 +57,8 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
       {isReady && isLoading && (
         <div className="py-4 px-4 text-center text-gray-500">
-          <div className="animate-pulse flex justify-center">
-            <i
-              className="fas fa-circle-notch fa-spin mr-2"
-              aria-hidden="true"
-            ></i>
+          <div className="flex justify-center items-center">
+            <Loader2 size={16} className="animate-spin mr-2" />
             <span>Searching...</span>
           </div>
         </div>
@@ -71,17 +66,14 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
       {isReady && !isLoading && status === 'ZERO_RESULTS' && (
         <div className="py-4 px-4 text-center text-gray-500">
-          <i className="fas fa-search mr-2" aria-hidden="true"></i>
+          <Search size={16} className="inline mr-2" />
           <span>No results found</span>
         </div>
       )}
 
       {status === 'REQUEST_DENIED' && (
         <div className="py-4 px-4 text-center text-red-500">
-          <i
-            className="fas fa-exclamation-triangle mr-2"
-            aria-hidden="true"
-          ></i>
+          <AlertTriangle size={16} className="inline mr-2" />
           <span>API error: Request denied</span>
         </div>
       )}
