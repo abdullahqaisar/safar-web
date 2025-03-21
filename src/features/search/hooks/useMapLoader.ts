@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useLoadScript } from '@react-google-maps/api';
 import { googleMapsApiKey, googleMapsLibraries } from '@/lib/utils/googleMaps';
 
+export const GOOGLE_MAPS_LOADED_EVENT = 'google-maps-loaded';
+
 export function useMapLoader({
   lazy = true,
   observerOptions = { rootMargin: '200px' },
@@ -13,6 +15,7 @@ export function useMapLoader({
 } = {}) {
   const [shouldLoad, setShouldLoad] = useState(!lazy);
   const [error, setError] = useState<string | null>(null);
+  const [hasEmittedLoadedEvent, setHasEmittedLoadedEvent] = useState(false);
 
   useEffect(() => {
     if (lazy && !shouldLoad) {
@@ -25,14 +28,13 @@ export function useMapLoader({
 
       // Observe map-related elements
       const mapElements = document.querySelectorAll(
-        '.map-search-container, .map-container'
+        '.map-search-container, .map-container, .search-section'
       );
 
       if (mapElements.length > 0) {
         mapElements.forEach((el) => observer.observe(el));
       } else {
-        // If no map elements found, load the script anyway after a delay
-        const timer = setTimeout(() => setShouldLoad(true), 1500);
+        const timer = setTimeout(() => setShouldLoad(true), 800);
         return () => clearTimeout(timer);
       }
 
@@ -46,6 +48,14 @@ export function useMapLoader({
     preventGoogleFontsLoading: true,
     ...(shouldLoad ? {} : { skip: true }),
   });
+  useEffect(() => {
+    if (isLoaded && !loadError && !hasEmittedLoadedEvent) {
+      const event = new CustomEvent(GOOGLE_MAPS_LOADED_EVENT);
+      window.dispatchEvent(event);
+
+      setHasEmittedLoadedEvent(true);
+    }
+  }, [isLoaded, loadError, hasEmittedLoadedEvent]);
 
   useEffect(() => {
     if (loadError) {

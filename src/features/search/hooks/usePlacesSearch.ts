@@ -6,6 +6,7 @@ import usePlacesAutocomplete, {
   getLatLng,
 } from 'use-places-autocomplete';
 import { Coordinates } from '@/types/station';
+import { storeUserSelectedLocation } from '../services/geocoding.service';
 
 interface UsePlacesSearchProps {
   initialValue: string;
@@ -140,6 +141,8 @@ export default function usePlacesSearch({
 
       const results = await getGeocode({ address: description });
       const { lat, lng } = await getLatLng(results[0]);
+
+      storeUserSelectedLocation(lat, lng, description);
 
       setHasSelectedLocation(true);
       onLocationSelect({ lat, lng });

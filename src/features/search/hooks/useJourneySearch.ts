@@ -6,10 +6,12 @@ import { useJourney } from '../../journey/hooks/useJourney';
 
 interface UseJourneySearchOptions {
   redirectPath?: string;
+  includeTextInUrl?: boolean;
 }
 
 export function useJourneySearch(options: UseJourneySearchOptions = {}) {
-  const { redirectPath = '/journey' } = options;
+  // Default to NOT including text in URLs for shorter, cleaner URLs
+  const { redirectPath = '/journey', includeTextInUrl = false } = options;
   const router = useRouter();
   const { fromLocation, toLocation, isFormValid } = useJourney();
 
@@ -53,21 +55,25 @@ export function useJourneySearch(options: UseJourneySearchOptions = {}) {
 
     const params = new URLSearchParams();
 
+    // Always include the essential coordinate parameters
     params.set('fromLat', fromLocation.lat.toString());
     params.set('fromLng', fromLocation.lng.toString());
     params.set('toLat', toLocation.lat.toString());
     params.set('toLng', toLocation.lng.toString());
 
-    if (fromValue) {
-      params.set('fromText', encodeURIComponent(fromValue));
-    }
-    if (toValue) {
-      params.set('toText', encodeURIComponent(toValue));
+    if (includeTextInUrl) {
+      if (fromValue) {
+        params.set('fromText', encodeURIComponent(fromValue));
+      }
+      if (toValue) {
+        params.set('toText', encodeURIComponent(toValue));
+      }
+
+      params.set('ts', Date.now().toString());
     }
 
-    params.set('ts', Date.now().toString());
     return params;
-  }, [fromLocation, toLocation, fromValue, toValue]);
+  }, [fromLocation, toLocation, fromValue, toValue, includeTextInUrl]);
 
   const submitSearch = useCallback(
     async (e?: React.FormEvent) => {
