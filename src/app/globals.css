@@ -243,11 +243,18 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  /* Route results */
-  .route-results {
-    padding: 0;
-    @apply transition-all duration-500;
-    animation: slideUp 0.5s ease-out;
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
   }
 
   .results-header {
@@ -595,7 +602,6 @@ body.search-section-editing .dropdown-portal {
 .places-dropdown-overlay {
   z-index: 100 !important;
 }
-
 
 /* Animations */
 @keyframes scaleIn {

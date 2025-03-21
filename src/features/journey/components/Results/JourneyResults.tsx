@@ -10,23 +10,19 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
     return null;
   }
 
-  const routeCount = routes.length;
-  const routeText = `${routeCount} route${routeCount !== 1 ? 's' : ''} found`;
-
   return (
-    <section
-      className="route-results rounded-2xl bg-white shadow-lg border border-gray-100 mt-6"
-      aria-label="Route Results"
-    >
-      <header className="results-header px-6 py-5 border-b border-gray-100">
-        <div className="space-y-1">
-          <h3 className="font-bold text-lg text-gray-800">Suggested Routes</h3>
-          <p className="text-sm text-gray-500">{routeText}</p>
-        </div>
-      </header>
+    <section className="animate-fade-in  mt-2" aria-label="Route Results">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+        <h2 className="text-xl font-medium">Recommended Routes</h2>
+      </div>
 
-      <div className="p-4 sm:p-6 space-y-6">
-        <JourneyCard routes={routes} />
+      <div className=" space-y-6">
+        {routes.map((route, index) => (
+          <JourneyCard
+            key={`route-${route.totalDuration}-${index}`}
+            route={route}
+          />
+        ))}
       </div>
     </section>
   );

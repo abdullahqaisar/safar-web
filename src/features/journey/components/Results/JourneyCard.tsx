@@ -5,7 +5,7 @@ import { JourneySummary } from './JourneySummary';
 import { formatDuration } from '../../utils';
 
 interface RouteCardProps {
-  routes: Route[];
+  route: Route;
 }
 
 function getSegmentPosition(
@@ -17,45 +17,31 @@ function getSegmentPosition(
   return 'middle';
 }
 
-export function JourneyCard({ routes }: RouteCardProps) {
+export function JourneyCard({ route }: RouteCardProps) {
+  const firstTransitIndex = route.segments.findIndex(
+    (segment) => segment.type === 'transit'
+  );
   return (
-    <>
-      {routes.map((route, index) => {
-        const firstTransitIndex = route.segments.findIndex(
-          (segment) => segment.type === 'transit'
-        );
+    <div className="route-card group">
+      <JourneySummary
+        journeyDuration={formatDuration(route.totalDuration)}
+        stops={route.totalStops ?? 0}
+        transfers={route.transfers ?? 0}
+      />
 
-        return (
-          <div
-            key={`route-${route.totalDuration}-${index}`}
-            className="route-card group"
-          >
-            <JourneySummary
-              journeyDuration={formatDuration(route.totalDuration)}
-              stops={route.totalStops ?? 0}
-              transfers={route.transfers ?? 0}
-            />
-
-            <div className="route-details">
-              {route.segments.map((segment, segmentIndex) => (
-                <RouteSegment
-                  key={segmentIndex}
-                  segment={segment}
-                  isLast={segmentIndex === route.segments.length - 1}
-                  position={getSegmentPosition(
-                    segmentIndex,
-                    route.segments.length
-                  )}
-                  isFirstTransit={
-                    segment.type === 'transit' &&
-                    segmentIndex === firstTransitIndex
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </>
+      <div className="route-details">
+        {route.segments.map((segment, segmentIndex) => (
+          <RouteSegment
+            key={segmentIndex}
+            segment={segment}
+            isLast={segmentIndex === route.segments.length - 1}
+            position={getSegmentPosition(segmentIndex, route.segments.length)}
+            isFirstTransit={
+              segment.type === 'transit' && segmentIndex === firstTransitIndex
+            }
+          />
+        ))}
+      </div>
+    </div>
   );
 }
