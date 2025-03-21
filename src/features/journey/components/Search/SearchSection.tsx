@@ -14,6 +14,7 @@ interface SearchSectionProps {
   fromText?: string;
   toText?: string;
   isResultsPage: boolean;
+  isSearchMode?: boolean;
   isLoading: boolean;
 }
 
@@ -21,6 +22,7 @@ export function SearchSection({
   fromText,
   toText,
   isResultsPage,
+  isSearchMode = false,
   isLoading,
 }: SearchSectionProps) {
   const pathname = usePathname();
@@ -100,6 +102,89 @@ export function SearchSection({
     }
   }, [isModifying]);
 
+  // If we're in search mode, always show the search form
+  if (isSearchMode) {
+    return (
+      <Card
+        className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300 shadow-sm hover:shadow-md"
+        style={{ overflow: 'visible' }}
+      >
+        <motion.div
+          key="search-form"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 sm:p-6"
+          style={{ overflow: 'visible' }}
+        >
+          <form
+            ref={formRef}
+            onSubmit={handleSearchSubmit}
+            style={{ overflow: 'visible' }}
+            className="relative"
+          >
+            <div className="mb-5">
+              <h2 className="text-base sm:text-lg font-medium text-gray-800 flex items-center">
+                <Search size={18} className="mr-2 text-emerald-500" />
+                Find Routes
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Enter your starting point and destination to discover available
+                routes
+              </p>
+            </div>
+
+            <div
+              className="space-y-4"
+              style={{
+                overflow: 'visible',
+                position: 'relative',
+                zIndex: 50,
+              }}
+            >
+              <div className="relative z-50" style={{ overflow: 'visible' }}>
+                <JourneySearchForm
+                  initialFromText={fromValue}
+                  initialToText={toValue}
+                  onFromValueChange={setFromValue}
+                  onToValueChange={setToValue}
+                  lightMode={true}
+                />
+              </div>
+            </div>
+
+            {formError && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600 flex items-start"
+                role="alert"
+                aria-live="polite"
+              >
+                <AlertCircle size={16} className="mt-0.5 mr-2 flex-shrink-0" />
+                <span>{formError}</span>
+              </motion.div>
+            )}
+
+            <div className="mt-5">
+              <Button
+                size="lg"
+                variant="primary"
+                isLoading={isLoading || isSearching}
+                disabled={!isFormValid || isLoading || isSearching}
+                className="w-full justify-center bg-emerald-500 hover:bg-emerald-600"
+                leftIcon={<Search size={16} />}
+                type="submit"
+              >
+                {isLoading || isSearching ? 'Searching...' : 'Search Routes'}
+              </Button>
+            </div>
+          </form>
+        </motion.div>
+      </Card>
+    );
+  }
+
   if (!isResultsPage) {
     return null;
   }
@@ -109,7 +194,7 @@ export function SearchSection({
 
   return (
     <Card
-      className="relative bg-white border border-gray-200  rounded-xl mb-6 overflow-visible transition-all duration-300"
+      className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300"
       style={{ overflow: 'visible' }}
     >
       {!isModifying && (
@@ -117,7 +202,7 @@ export function SearchSection({
           <Button
             size="sm"
             variant="primary"
-            className="flex items-center gap-1.5 py-1.5 px-2.5 text-xs bg-emerald-500 text-white  hover:bg-emerald-600 "
+            className="flex items-center gap-1.5 py-1.5 px-2.5 text-xs bg-emerald-500 text-white hover:bg-emerald-600"
             onClick={handleStartModifying}
             disabled={isLoading}
             aria-label="Modify search"
