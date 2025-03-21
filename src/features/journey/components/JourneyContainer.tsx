@@ -12,6 +12,8 @@ import { SearchSection } from '@/features/journey/components/Search/SearchSectio
 import { RouteResultsView } from './Results/RouteResultsView';
 import { ArrowLeft } from 'lucide-react';
 import { getCachedLocationName } from '@/features/search/services/geocoding.service';
+import { PopularDestinations } from './Search/PopularDestinations';
+import { JourneyTips } from './Search/JourneyTips';
 
 function JourneyContent() {
   const searchParams = useSearchParams();
@@ -35,6 +37,7 @@ function JourneyContent() {
   const [toText, setToText] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoadingPlaceNames, setIsLoadingPlaceNames] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   const simulateLoadingProgress = useCallback(() => {
     setLoadingProgress(0);
@@ -62,9 +65,6 @@ function JourneyContent() {
 
       try {
         // Load place names in parallel
-        // Pass the isFromSharedUrl flag to determine if we should prefer user selections
-        // When from a shared URL, we'll still check user selections first (in case this user
-        // previously selected these points) but will fall back to reverse geocoding
         const [fromPlaceName, toPlaceName] = await Promise.all([
           getCachedLocationName(fromLat, fromLng, true),
           getCachedLocationName(toLat, toLng, true),
@@ -84,10 +84,16 @@ function JourneyContent() {
   useEffect(() => {
     if (!searchParams) {
       setIsInitialized(true);
+      setIsSearchMode(true);
       return;
     }
 
     const paramsString = searchParams.toString();
+    if (paramsString === '') {
+      setIsSearchMode(true);
+      setIsInitialized(true);
+      return;
+    }
 
     if (currentUrlParams !== paramsString) {
       setCurrentUrlParams(paramsString);
@@ -104,14 +110,32 @@ function JourneyContent() {
       let hasValidLocations = false;
       let needsPlaceNames = false;
 
-      if (
+      // Check if we have valid coordinates
+      const hasValidFrom =
         fromLat &&
         fromLng &&
         !isNaN(parseFloat(fromLat)) &&
-        !isNaN(parseFloat(fromLng))
-      ) {
-        const fromLatNum = parseFloat(fromLat);
-        const fromLngNum = parseFloat(fromLng);
+        !isNaN(parseFloat(fromLng));
+
+      const hasValidTo =
+        toLat &&
+        toLng &&
+        !isNaN(parseFloat(toLat)) &&
+        !isNaN(parseFloat(toLng));
+
+      // Enter search mode if any required params are missing
+      if (!hasValidFrom || !hasValidTo) {
+        setIsSearchMode(true);
+        setIsInitialized(true);
+        return;
+      }
+
+      // We have valid parameters, exit search mode
+      setIsSearchMode(false);
+
+      if (hasValidFrom) {
+        const fromLatNum = parseFloat(fromLat!);
+        const fromLngNum = parseFloat(fromLng!);
 
         setFromLocation({
           lat: fromLatNum,
@@ -130,14 +154,9 @@ function JourneyContent() {
         hasValidLocations = true;
       }
 
-      if (
-        toLat &&
-        toLng &&
-        !isNaN(parseFloat(toLat)) &&
-        !isNaN(parseFloat(toLng))
-      ) {
-        const toLatNum = parseFloat(toLat);
-        const toLngNum = parseFloat(toLng);
+      if (hasValidTo) {
+        const toLatNum = parseFloat(toLat!);
+        const toLngNum = parseFloat(toLng!);
 
         setToLocation({
           lat: toLatNum,
@@ -231,16 +250,32 @@ function JourneyContent() {
           >
             Back
           </Button>
+          {isSearchMode && (
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 ml-2">
+              Plan Your Journey
+            </h1>
+          )}
         </div>
+
+        {isSearchMode && (
+          <div className="mb-8">
+            <p className="text-gray-600 max-w-2xl">
+              Find the best transit routes to get you where you need to go.
+              Enter your starting point and destination to see available
+              options, estimated travel times, and more.
+            </p>
+          </div>
+        )}
 
         <SearchSection
           fromText={fromText || ''}
           toText={toText || ''}
-          isResultsPage={true}
+          isResultsPage={!isSearchMode}
+          isSearchMode={isSearchMode}
           isLoading={isLoading || isLoadingPlaceNames}
         />
 
-        {isInitialized && (
+        {isInitialized && !isSearchMode && (
           <RouteResultsView
             isLoading={isLoading}
             loadingProgress={loadingProgress}
@@ -249,6 +284,13 @@ function JourneyContent() {
             fromText={fromText}
             toText={toText}
           />
+        )}
+
+        {isSearchMode && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <PopularDestinations />
+            <JourneyTips />
+          </div>
         )}
       </div>
     </div>

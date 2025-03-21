@@ -1,5 +1,12 @@
 import React from 'react';
 import { GoogleMapsLoader } from '@/components/common/GoogleMapsLoader';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Plan Your Journey | Find Transit Routes and Directions',
+  description:
+    'Use our journey planner to find the best routes in Islamabad and Rawalpindi, schedules, and transit options to get you where you need to go quickly and easily.',
+};
 
 export default function JourneyLayout({
   children,
@@ -8,7 +15,6 @@ export default function JourneyLayout({
 }) {
   return (
     <>
-      {/* Load Google Maps early and not lazily for journey pages */}
       <GoogleMapsLoader lazy={false} />
       {children}
     </>

@@ -3,7 +3,14 @@ import {
   TransitSegment,
   WalkSegment,
 } from '@/types/route';
-import { Train, Info, MapPin, Clock, ChevronDown } from 'lucide-react';
+import {
+  Train,
+  Info,
+  MapPin,
+  Clock,
+  ChevronDown,
+  Footprints,
+} from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,18 +38,7 @@ export function RouteSegment({
     } else if (segment.type === 'walk') {
       return {
         bgColor: 'bg-gray-200 text-gray-700',
-        icon: (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M13 4C13 5.10457 12.1046 6 11 6C9.89543 6 9 5.10457 9 4C9 2.89543 9.89543 2 11 2C12.1046 2 13 2.89543 13 4Z"
-              fill="currentColor"
-            />
-            <path
-              d="M9.5 8H12.5L14.5 17H16V22H14V19H10V22H8V17H9.5L9.5 8Z"
-              fill="currentColor"
-            />
-          </svg>
-        ),
+        icon: <Footprints className="w-5 h-5" />,
       };
     } else {
       return {
@@ -157,7 +153,7 @@ export function RouteSegment({
 
                   {segment.stations && segment.stations.length > 1 && (
                     <button
-                      className="mt-1 inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 rounded-md transition-colors"
+                      className="mt-1 inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700 rounded-md transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleExpand();
@@ -227,7 +223,7 @@ export function RouteSegment({
                         )}
                         {idx === segment.stations.length - 1 && (
                           <span className="px-1.5 py-0.5 bg-red-50 text-red-700 text-[10px] rounded-md font-medium border border-red-100">
-                            Alight
+                            Exit
                           </span>
                         )}
                       </div>

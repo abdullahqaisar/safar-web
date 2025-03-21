@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   ChevronRight,
   Award,
+  Footprints,
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { Button } from '@/components/common/Button';
@@ -85,20 +86,7 @@ export function JourneyCard({
 
           {totalWalkingTime > 0 && (
             <div className="flex items-center col-span-2">
-              <svg
-                className="w-4 h-4 text-emerald-500 mr-1.5"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M13 4C13 5.10457 12.1046 6 11 6C9.89543 6 9 5.10457 9 4C9 2.89543 9.89543 2 11 2C12.1046 2 13 2.89543 13 4Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M9.5 8H12.5L14.5 17H16V22H14V19H10V22H8V17H9.5L9.5 8Z"
-                  fill="currentColor"
-                />
-              </svg>
+              <Footprints className="w-4 h-4 text-emerald-500 mr-1.5" />
               <span className="text-xs sm:text-sm text-gray-700">
                 {formatDuration(totalWalkingTime)} walking
               </span>
