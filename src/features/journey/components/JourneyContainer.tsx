@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { SearchSection } from '@/features/journey/components/Search/SearchSection';
 import { RouteResultsView } from './Results/RouteResultsView';
 import { ArrowLeft } from 'lucide-react';
+import { getCachedLocationName } from '@/features/search/services/geocoding.service';
 
 function JourneyContent() {
   const searchParams = useSearchParams();
@@ -33,6 +34,7 @@ function JourneyContent() {
   const [fromText, setFromText] = useState<string | null>(null);
   const [toText, setToText] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoadingPlaceNames, setIsLoadingPlaceNames] = useState(false);
 
   const simulateLoadingProgress = useCallback(() => {
     setLoadingProgress(0);
@@ -45,6 +47,39 @@ function JourneyContent() {
 
     return interval;
   }, []);
+
+  // New function to fetch missing place names
+  const fetchMissingPlaceNames = useCallback(
+    async (
+      fromLat?: number,
+      fromLng?: number,
+      toLat?: number,
+      toLng?: number
+    ) => {
+      if (!fromLat || !fromLng || !toLat || !toLng) return;
+
+      setIsLoadingPlaceNames(true);
+
+      try {
+        // Load place names in parallel
+        // Pass the isFromSharedUrl flag to determine if we should prefer user selections
+        // When from a shared URL, we'll still check user selections first (in case this user
+        // previously selected these points) but will fall back to reverse geocoding
+        const [fromPlaceName, toPlaceName] = await Promise.all([
+          getCachedLocationName(fromLat, fromLng, true),
+          getCachedLocationName(toLat, toLng, true),
+        ]);
+
+        setFromText(fromPlaceName);
+        setToText(toPlaceName);
+      } catch (error) {
+        console.error('Error fetching place names:', error);
+      } finally {
+        setIsLoadingPlaceNames(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!searchParams) {
@@ -66,10 +101,8 @@ function JourneyContent() {
       const fromTextParam = searchParams.get('fromText');
       const toTextParam = searchParams.get('toText');
 
-      if (fromTextParam) setFromText(decodeURIComponent(fromTextParam));
-      if (toTextParam) setToText(decodeURIComponent(toTextParam));
-
       let hasValidLocations = false;
+      let needsPlaceNames = false;
 
       if (
         fromLat &&
@@ -77,10 +110,23 @@ function JourneyContent() {
         !isNaN(parseFloat(fromLat)) &&
         !isNaN(parseFloat(fromLng))
       ) {
+        const fromLatNum = parseFloat(fromLat);
+        const fromLngNum = parseFloat(fromLng);
+
         setFromLocation({
-          lat: parseFloat(fromLat),
-          lng: parseFloat(fromLng),
+          lat: fromLatNum,
+          lng: fromLngNum,
         });
+
+        if (fromTextParam) {
+          // If text is in URL, use it directly
+          setFromText(decodeURIComponent(fromTextParam));
+        } else {
+          // Set a placeholder until we get the real name
+          setFromText('Loading origin...');
+          needsPlaceNames = true;
+        }
+
         hasValidLocations = true;
       }
 
@@ -90,20 +136,52 @@ function JourneyContent() {
         !isNaN(parseFloat(toLat)) &&
         !isNaN(parseFloat(toLng))
       ) {
+        const toLatNum = parseFloat(toLat);
+        const toLngNum = parseFloat(toLng);
+
         setToLocation({
-          lat: parseFloat(toLat),
-          lng: parseFloat(toLng),
+          lat: toLatNum,
+          lng: toLngNum,
         });
+
+        if (toTextParam) {
+          // If text is in URL, use it directly
+          setToText(decodeURIComponent(toTextParam));
+        } else {
+          // Set a placeholder until we get the real name
+          setToText('Loading destination...');
+          needsPlaceNames = true;
+        }
+
         hasValidLocations = true;
       }
 
       if (hasValidLocations) {
         setShouldSearch(true);
+
+        // If we need to fetch place names, do so after a small delay
+        // to ensure Google Maps API is fully loaded
+        if (needsPlaceNames) {
+          setTimeout(() => {
+            fetchMissingPlaceNames(
+              fromLat ? parseFloat(fromLat) : undefined,
+              fromLng ? parseFloat(fromLng) : undefined,
+              toLat ? parseFloat(toLat) : undefined,
+              toLng ? parseFloat(toLng) : undefined
+            );
+          }, 1000);
+        }
       }
     }
 
     setIsInitialized(true);
-  }, [searchParams, currentUrlParams, setFromLocation, setToLocation]);
+  }, [
+    searchParams,
+    currentUrlParams,
+    setFromLocation,
+    setToLocation,
+    fetchMissingPlaceNames,
+  ]);
 
   useEffect(() => {
     if (shouldSearch && fromLocation && toLocation && isInitialized) {
@@ -159,7 +237,7 @@ function JourneyContent() {
           fromText={fromText || ''}
           toText={toText || ''}
           isResultsPage={true}
-          isLoading={isLoading}
+          isLoading={isLoading || isLoadingPlaceNames}
         />
 
         {isInitialized && (
