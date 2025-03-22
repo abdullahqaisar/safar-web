@@ -52,14 +52,13 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
       navigator
         .share({
           title: 'My Journey with Safar',
-          text: `Journey from X to Y taking ${formatDuration(
-            route.totalDuration
-          )} with ${route.totalStops} stops.`,
+          text: `Journey Y taking ${formatDuration(route.totalDuration)} with ${
+            route.totalStops
+          } stops.`,
           url: window.location.href,
         })
         .catch((error) => console.log('Sharing failed', error));
     } else {
-      // Fallback for browsers that don't support the Web Share API
       navigator.clipboard
         .writeText(window.location.href)
         .then(() => alert('Link copied to clipboard!'))
@@ -88,10 +87,11 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleShare}
-                leftIcon={<Share2 size={16} />}
-                data-variant="outline"
+                className="flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-[color:var(--color-accent)] text-[color:var(--color-accent)] hover:bg-gray-50 hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+                aria-label="Share journey"
               >
-                Share
+                <Share2 size={13} />
+                <span className="pl-2">Share Journey</span>
               </Button>
             </div>
           </div>

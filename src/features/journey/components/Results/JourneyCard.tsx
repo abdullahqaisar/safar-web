@@ -5,7 +5,6 @@ import {
   MapPin,
   ArrowLeftRight,
   ChevronRight,
-  Award,
   Footprints,
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
@@ -14,14 +13,9 @@ import { Button } from '@/components/common/Button';
 interface JourneyCardProps {
   route: Route;
   onSelect: () => void;
-  isRecommended?: boolean;
 }
 
-export function JourneyCard({
-  route,
-  onSelect,
-  isRecommended = false,
-}: JourneyCardProps) {
+export function JourneyCard({ route, onSelect }: JourneyCardProps) {
   // Get transit segments for line badges
   const transitSegments = route.segments.filter(
     (segment): segment is TransitSegment => segment.type === 'transit'
@@ -48,13 +42,6 @@ export function JourneyCard({
         route.totalStops
       } stops and ${route.transfers} transfers`}
     >
-      {isRecommended && (
-        <div className="bg-[rgba(var(--color-accent-rgb),0.1)] text-[var(--color-accent)] px-4 py-1.5 text-xs font-medium flex items-center justify-center gap-1 border-b border-[rgba(var(--color-accent-rgb),0.2)]">
-          <Award size={14} />
-          Best Route
-        </div>
-      )}
-
       <div className="p-4 sm:p-5">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">

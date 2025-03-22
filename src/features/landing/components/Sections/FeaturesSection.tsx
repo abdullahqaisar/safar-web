@@ -12,7 +12,6 @@ interface FeatureCardProps {
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
     <div className="transition-all duration-300 rounded-[var(--radius)] bg-white border border-gray-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 p-6 md:p-8 h-full flex flex-col">
-      {/* Restoring the lighter emerald color for icons */}
       <div className="w-16 h-16 flex items-center justify-center rounded-xl bg-[color:var(--color-accent)] text-white mb-6 shadow-md shadow-[color:var(--color-accent)]/50 border border-[color:var(--color-accent-dark)]">
         {icon}
       </div>

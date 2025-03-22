@@ -130,7 +130,10 @@ export function SearchSection({
           >
             <div className="mb-5">
               <h2 className="text-base sm:text-lg font-medium text-gray-800 flex items-center">
-                <Search size={18} className="mr-2 text-emerald-500" />
+                <Search
+                  size={18}
+                  className="mr-2 text-[color:var(--color-accent)]"
+                />
                 Find Routes
               </h2>
               <p className="text-sm text-gray-500 mt-1">
@@ -178,7 +181,7 @@ export function SearchSection({
                 variant="primary"
                 isLoading={isLoading || isSearching}
                 disabled={!isFormValid || isLoading || isSearching}
-                className="w-full justify-center bg-emerald-500 hover:bg-emerald-600"
+                className="w-full justify-center bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
                 leftIcon={<Search size={16} />}
                 type="submit"
               >
@@ -199,7 +202,7 @@ export function SearchSection({
   const buttonIsLoading =
     userInitiatedSearchRef.current && (isLoading || isSearching);
 
-  // Results page view with edit option
+  // Results page view with improved edit button
   return (
     <Card
       className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300"
@@ -209,14 +212,14 @@ export function SearchSection({
         <div className="absolute right-3 top-3 z-10">
           <Button
             size="sm"
-            variant="primary"
-            className="flex items-center gap-1.5 py-1.5 px-2.5 text-xs bg-emerald-500 text-white hover:bg-emerald-600"
+            variant="outline"
+            className="flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-[color:var(--color-accent)] text-[color:var(--color-accent)] hover:bg-gray-50 hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
             onClick={handleStartModifying}
             disabled={isLoading}
-            aria-label="Modify search"
+            aria-label="Edit journey"
           >
-            <Edit size={12} />
-            <span className="pl-2">Edit</span>
+            <Edit size={13} />
+            <span className="pl-2">Edit Journey</span>
           </Button>
         </div>
       )}
@@ -239,13 +242,16 @@ export function SearchSection({
             >
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-base sm:text-lg font-medium text-gray-800 flex items-center">
-                  <Search size={18} className="mr-2 text-emerald-500" />
-                  Modify Journey
+                  <Search
+                    size={18}
+                    className="mr-2 text-[color:var(--color-accent)]"
+                  />
+                  Edit Journey
                 </h2>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2"
                   onClick={() => setIsModifying(false)}
                   aria-label="Cancel"
                 >
@@ -289,13 +295,21 @@ export function SearchSection({
                 </motion.div>
               )}
 
-              <div className="mt-5 grid gap-3">
+              <div className="mt-5 flex gap-3">
+                <Button
+                  size="md"
+                  variant="ghost"
+                  className="px-4 justify-center"
+                  onClick={() => setIsModifying(false)}
+                >
+                  Cancel
+                </Button>
                 <Button
                   size="md"
                   variant="primary"
                   isLoading={buttonIsLoading}
                   disabled={!isFormValid || buttonIsLoading}
-                  className="justify-center bg-emerald-500 hover:bg-emerald-600 sm:order-2"
+                  className="flex-1 justify-center bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
                   leftIcon={<Search size={16} />}
                   type="submit"
                 >
@@ -312,39 +326,44 @@ export function SearchSection({
             exit={{ opacity: 0, y: -10 }}
             className="p-4 sm:p-5 group"
           >
-            <div className="mb-4 flex items-center">
+            <div className="mb-2 flex items-center">
               <h2 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
                 Journey Details
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 sm:gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 sm:gap-x-6 mt-3 mb-3 pr-20 sm:pr-0">
               {/* From location */}
-              <div className="flex items-center py-1">
+              <div className="flex items-center py-1.5">
                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mr-3">
                   <MapPin className="text-green-600 w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-500 mb-0.5">From</p>
-                  <p className="font-medium truncate text-base">
+                  <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">
+                    From
+                  </p>
+                  <p className="font-medium truncate text-gray-800 text-sm">
                     {fromText || 'Selected location'}
                   </p>
                 </div>
               </div>
 
-              <div className="sm:hidden flex justify-center text-gray-300">
-                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+              <div className="sm:hidden flex justify-center my-0.5 text-gray-300">
+                <div className="w-8 h-8 flex items-center justify-center">
                   <ArrowDown size={14} />
                 </div>
               </div>
 
-              <div className="flex items-center py-1">
+              {/* To location */}
+              <div className="flex items-center py-1.5">
                 <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mr-3">
                   <MapPin className="text-red-600 w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-500 mb-0.5">To</p>
-                  <p className="font-medium truncate text-base">
+                  <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">
+                    To
+                  </p>
+                  <p className="font-medium truncate text-gray-800 text-sm">
                     {toText || 'Selected location'}
                   </p>
                 </div>

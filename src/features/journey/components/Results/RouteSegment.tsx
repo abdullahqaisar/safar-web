@@ -32,7 +32,7 @@ export function RouteSegment({
   const getSegmentTypeStyles = () => {
     if (segment.type === 'transit') {
       return {
-        bgColor: 'bg-emerald-500 text-white',
+        bgColor: 'bg-[color:var(--color-accent)] text-white',
         icon: <Train className="w-5 h-5" />,
       };
     } else if (segment.type === 'walk') {
@@ -120,7 +120,7 @@ export function RouteSegment({
                   {duration && (
                     <>
                       <span className="mx-2"></span>
-                      <Clock className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                      <Clock className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
                       <span>{duration}</span>
                     </>
                   )}
@@ -134,7 +134,7 @@ export function RouteSegment({
                     {segment.stations && (
                       <div className="flex items-center">
                         <span className="text-sm text-gray-600 flex items-center">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
                           {segment.stations.length - 1} stops
                         </span>
                       </div>
@@ -145,7 +145,7 @@ export function RouteSegment({
                         className="flex items-center text-sm text-gray-600"
                         title="Duration"
                       >
-                        <Clock className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                        <Clock className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
                         {duration}
                       </div>
                     )}

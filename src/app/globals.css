@@ -518,6 +518,23 @@
   button[data-variant='outline']:active {
     @apply scale-[0.98] bg-[rgba(var(--color-accent-rgb),0.1)];
   }
+
+  /* Shared Action Button Styles for Journey section */
+  .journey-action-button {
+    @apply flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-[color:var(--color-accent)] text-[color:var(--color-accent)] hover:bg-gray-50 hover:shadow-sm transition-all duration-200;
+  }
+
+  .journey-action-button:hover {
+    @apply transform -translate-y-0.5;
+  }
+
+  .journey-action-button:active {
+    @apply transform translate-y-0;
+  }
+
+  .journey-action-button svg {
+    @apply flex-shrink-0;
+  }
 }
 
 .dropdown-portal {
@@ -557,6 +574,47 @@ body.search-section-editing .dropdown-portal {
 .places-dropdown-content,
 .places-dropdown-overlay {
   z-index: 100 !important;
+}
+
+/* Fix for search section editing z-index issues */
+body.search-section-editing {
+  overflow: visible !important;
+}
+
+body.search-section-editing .dropdown-portal {
+  z-index: 9999 !important;
+}
+
+/* Better visibility for location summary in search form */
+.route-summary-location {
+  position: relative;
+}
+
+.route-summary-location:hover .route-summary-location-edit {
+  opacity: 1;
+}
+
+.route-summary-location-edit {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Journey search form mobile optimizations */
+@media (max-width: 640px) {
+  .search-section-edit-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 5;
+  }
+
+  .journey-details-summary {
+    padding-right: 60px;
+  }
 }
 
 /* Animations */

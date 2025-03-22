@@ -48,7 +48,6 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
                     onSelect={() =>
                       setSelectedRouteId(route.id || `route-${index}`)
                     }
-                    isRecommended={index === 0}
                   />
                 </motion.div>
               ))}
