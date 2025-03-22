@@ -3,15 +3,7 @@ import React from 'react';
 export function StatsBarSection() {
   return (
     <div className="glass-effect py-4 md:py-6 px-4 border-t border-white/10 relative stats-bar-section">
-      <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="text-center">
-          <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
-            10K+
-          </p>
-          <p className="text-sm text-[color:var(--color-gray-600)]">
-            Daily Users
-          </p>
-        </div>
+      <div className="container mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
             50+
@@ -22,19 +14,25 @@ export function StatsBarSection() {
         </div>
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
-            98%
+            2
           </p>
           <p className="text-sm text-[color:var(--color-gray-600)]">
-            Accuracy Rate
+            Cities Mapped
           </p>
         </div>
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
-            4.9
+            15+
           </p>
           <p className="text-sm text-[color:var(--color-gray-600)]">
-            App Rating
+            Transit Routes
           </p>
+        </div>
+        <div className="text-center">
+          <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
+            95%
+          </p>
+          <p className="text-sm text-[color:var(--color-gray-600)]">Accuracy</p>
         </div>
       </div>
     </div>
