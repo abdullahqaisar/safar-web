@@ -112,7 +112,7 @@ export function SearchSection({
   if (isSearchMode) {
     return (
       <Card
-        className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300 shadow-sm hover:shadow-md"
+        className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300"
         style={{ overflow: 'visible' }}
       >
         <motion.div

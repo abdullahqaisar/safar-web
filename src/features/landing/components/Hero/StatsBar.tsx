@@ -3,7 +3,7 @@ import React from 'react';
 export function StatsBarSection() {
   return (
     <div className="glass-effect py-4 md:py-6 px-4 border-t border-white/10 relative stats-bar-section mb-0">
-      <div className="container mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
             50+
