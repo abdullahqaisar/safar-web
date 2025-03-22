@@ -41,13 +41,13 @@ export function HeroSearchForm() {
         'search-form-container relative',
         'bg-gradient-to-br from-[#012620]/90 via-[#012620]/90 to-[#023428]/90',
         'backdrop-blur-lg',
-        'border-white/10 shadow-xl mb-4 sm:mb-6 mt-1 sm:mt-2',
+        'border-white/10  mb-4 sm:mb-6 mt-1 sm:mt-2',
         'transition-all duration-300'
       )}
       allowOverflow={true}
     >
       <motion.div
-        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"
+        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[color:var(--color-accent)]/30 to-transparent"
         initial={{ scaleX: 0.5, opacity: 0.5 }}
         animate={{ scaleX: 1, opacity: 1 }}
         transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
@@ -64,7 +64,10 @@ export function HeroSearchForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <RouteIcon className="mr-2 sm:mr-3 text-emerald-400" size={20} />
+          <RouteIcon
+            className="mr-2 sm:mr-3 text-[color:var(--color-accent)]"
+            size={20}
+          />
           Find Your Route
         </motion.h2>
 
@@ -100,17 +103,20 @@ export function HeroSearchForm() {
           size="lg"
           fullWidth
           className={cn(
-            'mt-6 sm:mt-8 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/30',
+            'mt-6 sm:mt-8 shadow-lg shadow-[color:var(--color-accent)]/20 hover:shadow-[color:var(--color-accent)]/30',
             'transition-all duration-300',
             hasBothLocations
-              ? 'bg-emerald-600 hover:bg-emerald-700'
+              ? 'bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]'
               : 'bg-gray-600 hover:bg-gray-700'
           )}
           leftIcon={
             !hasBothLocations ? (
               <MapPin size={16} />
             ) : isNavigating || isLoading ? (
-              <Navigation size={16} className="animate-pulse" />
+              <Navigation
+                size={16}
+                className="animate-pulse text-[color:var(--color-accent)]"
+              />
             ) : (
               <Search size={16} />
             )
@@ -126,7 +132,7 @@ export function HeroSearchForm() {
 
       {isNavigating && (
         <motion.div
-          className="absolute bottom-0 left-0 h-1 bg-emerald-600"
+          className="absolute bottom-0 left-0 h-1 bg-[color:var(--color-accent)]"
           initial={{ width: '0%' }}
           animate={{ width: '100%' }}
           transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}

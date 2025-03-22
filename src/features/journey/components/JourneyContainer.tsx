@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { JourneyErrorFallback } from '@/components/common/errors/JourneyErrorFallback';
@@ -30,15 +30,43 @@ function JourneyContent() {
     searchRoutes,
   } = useJourney();
 
+  // Determine initial state from URL immediately to avoid flicker
+  const initialUrlParamsString = useMemo(
+    () => searchParams?.toString() || '',
+    []
+  );
+  const hasInitialSearchParams = useMemo(() => {
+    if (!searchParams) return false;
+
+    const fromLat = searchParams.get('fromLat');
+    const fromLng = searchParams.get('fromLng');
+    const toLat = searchParams.get('toLat');
+    const toLng = searchParams.get('toLng');
+
+    return Boolean(
+      fromLat &&
+        fromLng &&
+        toLat &&
+        toLng &&
+        !isNaN(parseFloat(fromLat)) &&
+        !isNaN(parseFloat(fromLng)) &&
+        !isNaN(parseFloat(toLat)) &&
+        !isNaN(parseFloat(toLng))
+    );
+  }, [initialUrlParamsString]);
+
+  // States
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isDeterminingMode, setIsDeterminingMode] = useState(true);
   const [currentUrlParams, setCurrentUrlParams] = useState('');
   const [shouldSearch, setShouldSearch] = useState(false);
   const [fromText, setFromText] = useState<string | null>(null);
   const [toText, setToText] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoadingPlaceNames, setIsLoadingPlaceNames] = useState(false);
-  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(!hasInitialSearchParams);
 
+  // Progress simulation for loading state
   const simulateLoadingProgress = useCallback(() => {
     setLoadingProgress(0);
     const interval = setInterval(() => {
@@ -51,7 +79,7 @@ function JourneyContent() {
     return interval;
   }, []);
 
-  // New function to fetch missing place names
+  // Place name fetching functionality
   const fetchMissingPlaceNames = useCallback(
     async (
       fromLat?: number,
@@ -65,6 +93,9 @@ function JourneyContent() {
 
       try {
         // Load place names in parallel
+        // Pass the isFromSharedUrl flag to determine if we should prefer user selections
+        // When from a shared URL, we'll still check user selections first (in case this user
+        // previously selected these points) but will fall back to reverse geocoding
         const [fromPlaceName, toPlaceName] = await Promise.all([
           getCachedLocationName(fromLat, fromLng, true),
           getCachedLocationName(toLat, toLng, true),
@@ -81,17 +112,22 @@ function JourneyContent() {
     []
   );
 
+  // Initialize component based on URL parameters
   useEffect(() => {
     if (!searchParams) {
       setIsInitialized(true);
       setIsSearchMode(true);
+      setIsDeterminingMode(false);
       return;
     }
 
     const paramsString = searchParams.toString();
+
+    // Handle empty search params case immediately
     if (paramsString === '') {
-      setIsSearchMode(true);
       setIsInitialized(true);
+      setIsSearchMode(true);
+      setIsDeterminingMode(false);
       return;
     }
 
@@ -127,6 +163,7 @@ function JourneyContent() {
       if (!hasValidFrom || !hasValidTo) {
         setIsSearchMode(true);
         setIsInitialized(true);
+        setIsDeterminingMode(false);
         return;
       }
 
@@ -179,7 +216,6 @@ function JourneyContent() {
         setShouldSearch(true);
 
         // If we need to fetch place names, do so after a small delay
-        // to ensure Google Maps API is fully loaded
         if (needsPlaceNames) {
           setTimeout(() => {
             fetchMissingPlaceNames(
@@ -194,6 +230,7 @@ function JourneyContent() {
     }
 
     setIsInitialized(true);
+    setIsDeterminingMode(false);
   }, [
     searchParams,
     currentUrlParams,
@@ -202,6 +239,7 @@ function JourneyContent() {
     fetchMissingPlaceNames,
   ]);
 
+  // Handle route searching
   useEffect(() => {
     if (shouldSearch && fromLocation && toLocation && isInitialized) {
       setShouldSearch(false);
@@ -229,6 +267,7 @@ function JourneyContent() {
     simulateLoadingProgress,
   ]);
 
+  // Handle errors
   useEffect(() => {
     if (error && error instanceof Error) {
       showError(
@@ -236,6 +275,31 @@ function JourneyContent() {
       );
     }
   }, [error]);
+
+  // Show loading state when determining mode to prevent flicker
+  if (isDeterminingMode) {
+    return (
+      <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
+        <div className="px-0 sm:px-2">
+          <div className="flex items-center mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
+              disabled
+              leftIcon={<ArrowLeft size={16} />}
+              data-variant="ghost"
+            >
+              Back
+            </Button>
+          </div>
+          <div className="animate-pulse">
+            <div className="h-[250px] bg-gray-200 rounded-xl mb-6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
@@ -247,6 +311,7 @@ function JourneyContent() {
             className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
             onClick={() => router.push('/')}
             leftIcon={<ArrowLeft size={16} />}
+            data-variant="ghost"
           >
             Back
           </Button>

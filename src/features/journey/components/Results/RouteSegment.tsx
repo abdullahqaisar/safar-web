@@ -32,7 +32,7 @@ export function RouteSegment({
   const getSegmentTypeStyles = () => {
     if (segment.type === 'transit') {
       return {
-        bgColor: 'bg-emerald-500 text-white',
+        bgColor: 'bg-[color:var(--color-accent)] text-white',
         icon: <Train className="w-5 h-5" />,
       };
     } else if (segment.type === 'walk') {
@@ -120,7 +120,7 @@ export function RouteSegment({
                   {duration && (
                     <>
                       <span className="mx-2"></span>
-                      <Clock className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                      <Clock className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
                       <span>{duration}</span>
                     </>
                   )}
@@ -134,7 +134,7 @@ export function RouteSegment({
                     {segment.stations && (
                       <div className="flex items-center">
                         <span className="text-sm text-gray-600 flex items-center">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
                           {segment.stations.length - 1} stops
                         </span>
                       </div>
@@ -145,7 +145,7 @@ export function RouteSegment({
                         className="flex items-center text-sm text-gray-600"
                         title="Duration"
                       >
-                        <Clock className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                        <Clock className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
                         {duration}
                       </div>
                     )}
@@ -153,7 +153,7 @@ export function RouteSegment({
 
                   {segment.stations && segment.stations.length > 1 && (
                     <button
-                      className="mt-1 inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700 rounded-md transition-colors"
+                      className="mt-1 inline-flex items-center text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-dark)] hover:bg-[rgba(var(--color-accent-rgb),0.05)] active:bg-[rgba(var(--color-accent-rgb),0.1)] py-1 px-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleExpand();

@@ -44,7 +44,7 @@ export function PopularDestinations() {
             className="p-3 border border-gray-100 rounded-lg flex items-center"
           >
             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mr-3">
-              <MapPin className="text-emerald-600 w-4 h-4" />
+              <MapPin className="text-[var(--color-accent)] w-4 h-4" />
             </div>
             <div>
               <p className="font-medium text-gray-800">{destination.name}</p>

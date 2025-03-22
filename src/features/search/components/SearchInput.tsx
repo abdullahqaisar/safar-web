@@ -201,7 +201,9 @@ export default function SearchInput({
       <div
         className={cn(
           'absolute left-4 top-3.5',
-          lightMode ? 'text-[color:var(--color-accent)]' : 'text-emerald-500'
+          lightMode
+            ? 'text-[color:var(--color-accent)]'
+            : 'text-[color:var(--color-accent-dark)]'
         )}
       >
         <Icon size={18} />

@@ -94,8 +94,10 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
               key={place_id}
               id={`${id}-item-${index}`}
               className={cn(
-                'cursor-pointer px-4 py-3 border-b border-gray-100 last:border-0',
-                highlightedIndex === index ? 'bg-gray-100' : 'hover:bg-gray-50'
+                'cursor-pointer px-4 py-3 border-b border-gray-100 last:border-0 transition-colors duration-150',
+                highlightedIndex === index
+                  ? 'bg-[rgba(var(--color-accent-rgb),0.05)]'
+                  : 'hover:bg-[rgba(var(--color-accent-rgb),0.02)]'
               )}
               onClick={() => onSelectItem(description)}
               onMouseEnter={() => onHighlightItem(index)}

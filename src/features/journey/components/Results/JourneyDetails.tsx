@@ -52,14 +52,13 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
       navigator
         .share({
           title: 'My Journey with Safar',
-          text: `Journey from X to Y taking ${formatDuration(
-            route.totalDuration
-          )} with ${route.totalStops} stops.`,
+          text: `Journey Y taking ${formatDuration(route.totalDuration)} with ${
+            route.totalStops
+          } stops.`,
           url: window.location.href,
         })
         .catch((error) => console.log('Sharing failed', error));
     } else {
-      // Fallback for browsers that don't support the Web Share API
       navigator.clipboard
         .writeText(window.location.href)
         .then(() => alert('Link copied to clipboard!'))
@@ -75,9 +74,10 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
           <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
             <Button
               variant="ghost"
-              className="text-gray-600 hover:text-gray-900 -ml-2"
+              className="-ml-2"
               onClick={onBack}
               leftIcon={<ArrowLeft size={18} />}
+              data-variant="ghost"
             >
               Back to routes
             </Button>
@@ -86,62 +86,67 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-gray-600 border-gray-200 hover:bg-gray-50"
                 onClick={handleShare}
-                leftIcon={<Share2 size={16} />}
+                className="flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-[color:var(--color-accent)] text-[color:var(--color-accent)] hover:bg-gray-50 hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+                aria-label="Share journey"
               >
-                Share
+                <Share2 size={13} />
+                <span className="pl-2">Share Journey</span>
               </Button>
             </div>
           </div>
 
           {/* Journey summary card */}
-          <div className="bg-emerald-50 rounded-xl border border-emerald-100 p-4 mb-6">
+          <div className="bg-[rgba(var(--color-accent-rgb),0.1)] rounded-xl border border-[rgba(var(--color-accent-rgb),0.2)] p-4 mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-[rgba(var(--color-accent-rgb),0.2)] text-[var(--color-accent)] flex items-center justify-center">
                   <Clock className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="text-2xl font-semibold text-gray-900">
                     {formatDuration(route.totalDuration)}
                   </div>
-                  <div className="text-sm text-emerald-700">
+                  <div className="text-sm text-[var(--color-accent)]">
                     Total journey time
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-6 sm:ml-4 sm:border-l sm:border-emerald-200 sm:pl-6">
+              <div className="flex flex-wrap gap-6 sm:ml-4 sm:border-l sm:border-[rgba(var(--color-accent-rgb),0.2)] sm:pl-6">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-emerald-600" />
+                  <MapPin className="w-5 h-5 text-[var(--color-accent)]" />
                   <div>
                     <div className="font-medium text-gray-900">
                       {route.totalStops} stops
                     </div>
-                    <div className="text-xs text-emerald-700">Total stops</div>
+                    <div className="text-xs text-[var(--color-accent)]">
+                      Total stops
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <ArrowLeftRight className="w-5 h-5 text-emerald-600" />
+                  <ArrowLeftRight className="w-5 h-5 text-[var(--color-accent)]" />
                   <div>
                     <div className="font-medium text-gray-900">
                       {route.transfers} transfer
                       {route.transfers !== 1 ? 's' : ''}
                     </div>
-                    <div className="text-xs text-emerald-700">Line changes</div>
+                    <div className="text-xs text-[var(--color-accent)]">
+                      Line changes
+                    </div>
                   </div>
                 </div>
 
                 {totalWalkingDistance > 0 && (
                   <div className="flex items-center gap-2">
-                    <Footprints className="w-5 h-5 text-emerald-600" />
+                    <Footprints className="w-5 h-5 text-[var(--color-accent)]" />
                     <div>
                       <div className="font-medium text-gray-900">
                         {formatDistance(totalWalkingDistance)}
                       </div>
-                      <div className="text-xs text-emerald-700">
+                      <div className="text-xs text-[var(--color-accent)]">
                         Walking distance
                       </div>
                     </div>

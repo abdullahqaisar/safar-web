@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home, Map, HelpCircle } from 'lucide-react';
 
 const navigationLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/routes', label: 'Routes' },
-  { href: '/maps', label: 'Maps' },
-  { href: '/contribute', label: 'Contribute' },
-  { href: '/help', label: 'Help' },
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/journey', label: 'Find Routes', icon: Map },
+  { href: '/help', label: 'Help', icon: HelpCircle },
 ];
 
 export function Navbar() {
@@ -17,7 +15,7 @@ export function Navbar() {
 
   return (
     <nav className="bg-[color:var(--color-primary)] sticky top-0 z-50 backdrop-blur-md">
-      <div className="container mx-auto px-4 py-3">
+      <div className="max-w-[1200px] mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="text-white">
             <Link href="/" className="flex items-center gap-2">
@@ -50,8 +48,9 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-white/80 hover:text-white transition-colors py-1 text-sm font-medium border-b-2 border-transparent hover:border-[color:var(--accent-light)]"
+                className="text-white/80 hover:text-white transition-colors py-1 text-sm font-medium border-b-2 border-transparent hover:border-[color:var(--accent-light)] flex items-center gap-2"
               >
+                <link.icon size={16} />
                 {link.label}
               </Link>
             ))}
@@ -74,9 +73,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="block py-2 text-white/80 hover:text-white"
+                className="block py-2 text-white/80 hover:text-white flex items-center gap-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
+                <link.icon size={16} />
                 {link.label}
               </Link>
             ))}

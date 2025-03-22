@@ -22,24 +22,26 @@ export function HeroSection() {
     <section className="relative">
       <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)]/5 to-transparent opacity-70"></div>
 
-      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative py-12 sm:py-16 md:py-20 lg:py-28 overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12">
-            <SectionBadge className="mb-4 sm:mb-5 md:mb-6">
+      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative py-18 sm:py-24 md:py-28 lg:py-36 overflow-hidden">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-10 sm:mb-12 md:mb-14 lg:mb-16">
+            <SectionBadge className="mb-5 sm:mb-6 md:mb-8">
               Public Transportation Made Easy
             </SectionBadge>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-700 mb-3 sm:mb-4 md:mb-5 lg:mb-6">
-              Your Journey, <span className="text-emerald-600">Simplified</span>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl font-bold text-gray-700 mb-5 sm:mb-6 md:mb-8">
+              Find Your{' '}
+              <span className="text-[color:var(--color-accent)]">Safar</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto mb-4 sm:mb-6">
-              Find the fastest metro routes optimized for your journey and enjoy
-              a stress-free commute with our smart navigation system.
+            <p className="text-base sm:text-lg md:text-xl text-[color:var(--color-gray-600)] max-w-2xl mx-auto mb-6 sm:mb-8 md:mb-10">
+              Navigate Islamabad&apos;s public transportation with ease. Find
+              the fastest metro routes optimized for your journey and enjoy a
+              stress-free commute.
             </p>
           </div>
 
-          <div className="max-w-[1000px] mx-auto relative search-form-container px-0 sm:px-2 mt-6 sm:mt-8 md:mt-10 mb-8 sm:mb-10">
+          <div className="max-w-[1000px] mx-auto relative search-form-container px-0 sm:px-2 mt-8 sm:mt-10 md:mt-12 mb-10 sm:mb-12 md:mb-16">
             <Suspense fallback={<SearchParamsFallback />}>
               <HeroSearchForm />
             </Suspense>

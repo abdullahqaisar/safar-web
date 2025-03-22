@@ -64,8 +64,8 @@ export function RouteResultsView({
           className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 text-center"
         >
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4">
-              <RouteIcon className="text-amber-500" size={24} />
+            <div className="w-16 h-16 bg-[rgba(var(--color-warning-rgb),0.1)] rounded-full flex items-center justify-center mb-4">
+              <RouteIcon className="text-[var(--color-warning)]" size={24} />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               No Routes Found
@@ -78,6 +78,7 @@ export function RouteResultsView({
               variant="secondary"
               size="sm"
               leftIcon={<Search size={16} />}
+              data-variant="secondary"
             >
               Try Different Locations
             </Button>
@@ -92,11 +93,11 @@ export function RouteResultsView({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white p-8 rounded-2xl shadow-lg border border-red-100 text-center"
+          className="bg-white p-8 rounded-2xl shadow-lg border border-[rgba(var(--color-error-rgb),0.2)] text-center"
         >
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="text-red-500" size={24} />
+            <div className="w-16 h-16 bg-[rgba(var(--color-error-rgb),0.1)] rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="text-[var(--color-error)]" size={24} />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
               Error Finding Routes
@@ -106,13 +107,6 @@ export function RouteResultsView({
                 ? error.message
                 : "We couldn't find routes for your selected locations. No public transit station was found nearby or the service is temporarily unavailable."}
             </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<Search size={16} />}
-            >
-              Try Different Locations
-            </Button>
           </div>
         </motion.div>
       )}
