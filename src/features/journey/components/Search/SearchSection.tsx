@@ -45,6 +45,13 @@ export function SearchSection({
     redirectPath: pathname,
   });
 
+  // Update form values when props change
+  useEffect(() => {
+    if (fromText !== undefined) setFromValue(fromText);
+    if (toText !== undefined) setToValue(toText);
+  }, [fromText, toText, setFromValue, setToValue]);
+
+  // Handle loading state changes
   useEffect(() => {
     if (
       userInitiatedSearchRef.current &&
@@ -63,17 +70,14 @@ export function SearchSection({
     prevLoadingRef.current = isLoading;
   }, [isLoading, isModifying, setIsNavigating]);
 
-  useEffect(() => {
-    if (fromText !== undefined) setFromValue(fromText);
-    if (toText !== undefined) setToValue(toText);
-  }, [fromText, toText, setFromValue, setToValue]);
-
+  // Form submission handler
   const handleSearchSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     userInitiatedSearchRef.current = true;
     submitSearch(e);
   };
 
+  // Handle overflow for form elements
   useEffect(() => {
     if (isModifying) {
       const setOverflowVisible = (element: HTMLElement | null) => {
@@ -91,11 +95,13 @@ export function SearchSection({
     }
   }, [isModifying]);
 
+  // Handle edit mode
   const handleStartModifying = () => {
     setIsModifying(true);
     document.body.classList.add('search-section-editing');
   };
 
+  // Clean up body class
   useEffect(() => {
     if (!isModifying) {
       document.body.classList.remove('search-section-editing');
@@ -185,6 +191,7 @@ export function SearchSection({
     );
   }
 
+  // Don't render anything if not in results page mode
   if (!isResultsPage) {
     return null;
   }
@@ -192,6 +199,7 @@ export function SearchSection({
   const buttonIsLoading =
     userInitiatedSearchRef.current && (isLoading || isSearching);
 
+  // Results page view with edit option
   return (
     <Card
       className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300"
