@@ -8,14 +8,22 @@ interface StepProps {
 
 function Step({ number, title, description }: StepProps) {
   return (
-    <div className="relative text-center group">
-      <div className="w-16 h-16 bg-gradient-to-br from-[color:var(--color-accent-dark)] to-[color:var(--color-accent)] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-[color:var(--color-accent)]/20 z-10 relative border border-white/20 transition-transform duration-300 group-hover:scale-110">
+    <div className="relative text-center group px-4 py-6 sm:px-6 sm:py-8 rounded-xl transition-colors duration-300">
+      <div
+        className="w-16 h-16 bg-[color:var(--color-accent)] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 
+     hover:shadow-lg shadow-[color:var(--color-accent)]/15 
+      z-10 relative border-2 border-white 
+      transition-all duration-300 
+      group-hover:scale-110 group-hover:bg-[color:var(--color-accent-dark)]"
+      >
         {number}
       </div>
-      <h3 className="text-xl font-semibold mb-3 text-gray-800 group-hover:text-[color:var(--color-accent-dark)] transition-colors duration-200">
+      <h3 className="text-xl font-semibold mb-4 text-gray-800 group-hover:text-[color:var(--color-accent)] transition-colors duration-200">
         {title}
       </h3>
-      <p className="text-gray-600 max-w-xs mx-auto">{description}</p>
+      <p className="text-gray-600 max-w-xs mx-auto leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
@@ -49,33 +57,33 @@ export function HowItWorksSection() {
   ];
 
   return (
-    <section className="relative py-16 sm:py-20 lg:py-24" id="how-it-works">
-      <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)]/5 to-transparent opacity-70"></div>
+    <section className="relative" id="how-it-works">
+      <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)] to-transparent opacity-70"></div>
 
-      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#F8FBF9] relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-12 sm:mb-16 lg:mb-20">
-            <SectionBadge className="mb-4 sm:mb-5" icon={false}>
+      <div className="bg-[color:var(--color-bg-cream)] relative overflow-hidden py-16 sm:py-20 lg:py-24 ">
+        <div className="container mx-auto relative z-10">
+          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 sm:mb-20 lg:mb-24">
+            <SectionBadge className="mb-6 sm:mb-8" icon={false}>
               Simple Process
             </SectionBadge>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 sm:mb-5">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-6 sm:mb-8">
               How{' '}
               <span className="text-[color:var(--color-accent)]">Safar</span>{' '}
               Works
             </h2>
 
-            <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto leading-relaxed">
               Using Safar is simple and intuitive. Follow these steps to get to
               your destination quickly and efficiently.
             </p>
           </div>
 
-          <div className="relative max-w-6xl mx-auto">
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Connecting line between steps */}
-            <div className="hidden md:block absolute top-8 left-0 right-0 h-1 bg-gradient-to-r from-[color:var(--color-accent)]/10 via-[color:var(--color-accent)]/30 to-[color:var(--color-accent)]/10 z-0 rounded-full"></div>
+            <div className="hidden md:block absolute top-16 left-[5%] right-[5%] h-[1px] bg-[color:var(--color-accent)] opacity-15 z-0"></div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 lg:gap-8">
               {steps.map((step) => (
                 <Step
                   key={step.number}

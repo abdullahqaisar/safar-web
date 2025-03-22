@@ -42,6 +42,7 @@
   --color-bg-light: #ffffff;
   --color-bg-light-hover: #f9f9f9;
   --color-bg-muted: #f3f4f6;
+  --color-bg-cream: #fef6ec;
 
   /* Gray scale */
   --color-gray-50: #f9fafb;
@@ -92,6 +93,25 @@
   --border: hsl(214.3 31.8% 91.4%);
   --input: hsl(214.3 31.8% 91.4%);
   --ring: hsl(222.2 84% 4.9%);
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--color-primary-rgb), 0.4);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--color-primary-rgb), 0.6);
+  }
 }
 
 /* Base styles */
@@ -233,11 +253,6 @@
   /* Additional Safar-specific styles */
   .clip-path-slant {
     clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
-  }
-
-  .backdrop-blur-input {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
   }
 
   /* Hover lift effect from Safar */

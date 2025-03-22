@@ -107,14 +107,6 @@ export function RouteResultsView({
                 ? error.message
                 : "We couldn't find routes for your selected locations. No public transit station was found nearby or the service is temporarily unavailable."}
             </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<Search size={16} />}
-              data-variant="secondary"
-            >
-              Try Different Locations
-            </Button>
           </div>
         </motion.div>
       )}

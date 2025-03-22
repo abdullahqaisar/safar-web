@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 
 import { Navbar } from '@/components/layouts/Navbar';
 import { Footer } from '@/components/layouts/Footer';
@@ -7,8 +6,6 @@ import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { JourneyProvider } from '@/features/journey/context/JourneyContext';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title:
@@ -35,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans">
         <QueryProvider>
           <JourneyProvider>
             <Navbar />
