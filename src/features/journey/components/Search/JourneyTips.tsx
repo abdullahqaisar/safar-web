@@ -15,7 +15,7 @@ export function JourneyTips() {
       <div className="space-y-4">
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <Search className="w-5 h-5 text-emerald-500 mr-3" />
+            <Search className="w-5 h-5 text-[var(--color-accent)] mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Be Specific</h3>
@@ -28,7 +28,7 @@ export function JourneyTips() {
 
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <Clock className="w-5 h-5 text-emerald-500 mr-3" />
+            <Clock className="w-5 h-5 text-[var(--color-accent)] mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Plan Ahead</h3>
@@ -41,7 +41,7 @@ export function JourneyTips() {
 
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <MapPin className="w-5 h-5 text-emerald-500 mr-3" />
+            <MapPin className="w-5 h-5 text-[var(--color-accent)] mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Use Nearby Stations</h3>
@@ -54,7 +54,7 @@ export function JourneyTips() {
 
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <Zap className="w-5 h-5 text-emerald-500 mr-3" />
+            <Zap className="w-5 h-5 text-[var(--color-accent)] mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Compare Options</h3>

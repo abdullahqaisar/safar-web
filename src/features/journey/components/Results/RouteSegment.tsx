@@ -153,7 +153,7 @@ export function RouteSegment({
 
                   {segment.stations && segment.stations.length > 1 && (
                     <button
-                      className="mt-1 inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700 rounded-md transition-colors"
+                      className="mt-1 inline-flex items-center text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-dark)] hover:bg-[rgba(var(--color-accent-rgb),0.05)] active:bg-[rgba(var(--color-accent-rgb),0.1)] py-1 px-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleExpand();

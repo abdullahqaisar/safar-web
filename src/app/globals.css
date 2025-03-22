@@ -29,12 +29,14 @@
   --color-light-white: #f9fafb;
 
   --color-primary: #004036;
+  --color-primary-rgb: 0, 64, 54;
   --color-primary-dark: #00332b;
   --color-primary-light: #005346;
 
   --color-accent: #00a67e;
-  --color-accent-dark: #008e34;
-  --color-accent-light: #20c25b;
+  --color-accent-rgb: 0, 166, 126;
+  --color-accent-dark: #007658;
+  --color-accent-light: #5fc7a7;
 
   /* Background shades */
   --color-bg-light: #ffffff;
@@ -55,21 +57,14 @@
 
   /* Feedback colors */
   --color-success: #10b981;
+  --color-success-rgb: 16, 185, 129;
   --color-warning: #f59e0b;
+  --color-warning-rgb: 245, 158, 11;
   --color-error: #ef4444;
+  --color-error-rgb: 239, 68, 68;
   --color-info: #3b82f6;
+  --color-info-rgb: 59, 130, 246;
 
-  /* Connector colors */
-  --color-blue-500: #3b82f6;
-  --color-red-500: #ef4444;
-  --color-green-500: #10b981;
-  --color-yellow-500: #f59e0b;
-  --color-purple-500: #8b5cf6;
-  --color-pink-500: #ec4899;
-  --color-indigo-500: #6366f1;
-  --color-orange-500: #f97316;
-
-  /* UI Theme variables - Updated to match Safar theme */
   --background: #ffffff;
   --foreground: hsl(222.2 84% 4.9%);
 
@@ -99,37 +94,6 @@
   --ring: hsl(222.2 84% 4.9%);
 }
 
-/* Dark mode theme variables - Updated to match Safar dark theme */
-.dark {
-  --background: hsl(164 47% 13%);
-  --foreground: hsl(210 40% 98%);
-
-  --card: hsl(164 47% 10%);
-  --card-foreground: hsl(210 40% 98%);
-
-  --popover: hsl(164 47% 13%);
-  --popover-foreground: hsl(210 40% 98%);
-
-  --primary: hsl(153 100% 33%);
-  --primary-foreground: #ffffff;
-
-  --secondary: hsl(36 100% 96%);
-  --secondary-foreground: hsl(222.2 47.4% 11.2%);
-
-  --muted: hsl(164 47% 18%);
-  --muted-foreground: hsl(215 20.2% 75.1%);
-
-  --accent: hsl(164 47% 18%);
-  --accent-foreground: hsl(210 40% 98%);
-
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(210 40% 98%);
-
-  --border: hsl(164 47% 18%);
-  --input: hsl(164 47% 18%);
-  --ring: hsl(212.7 26.8% 83.9%);
-}
-
 /* Base styles */
 @layer base {
   body {
@@ -140,24 +104,10 @@
 
 /* Component styles */
 @layer components {
-  /* App Layout */
   .app-container {
     @apply bg-white min-h-screen;
   }
 
-  /* Hero Component - Updated with Safar styling */
-  .hero-section {
-    background: linear-gradient(
-      120deg,
-      var(--background) 0%,
-      var(--background) 100%
-    );
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  /* Hero spacing improvements */
   .hero-content-wrapper {
     @apply flex flex-col items-center justify-center;
     padding-block: clamp(3rem, 8vh, 7rem);
@@ -238,11 +188,6 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  .dark .glass-effect {
-    background: rgba(0, 64, 54, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
   @keyframes fade-in {
     0% {
       opacity: 0;
@@ -270,8 +215,8 @@
   }
 
   .route-card.selected-route {
-    @apply border-emerald-200 shadow-md;
-    box-shadow: 0 4px 12px rgba(0, 166, 62, 0.08);
+    @apply border-[rgba(var(--color-accent-rgb),0.3)] shadow-md;
+    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.08);
   }
 
   .route-header {
@@ -302,8 +247,8 @@
 
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 166, 62, 0.1),
-      0 8px 10px -6px rgba(0, 166, 62, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(var(--color-accent-rgb), 0.1),
+      0 8px 10px -6px rgba(var(--color-accent-rgb), 0.1);
   }
 
   .route-time {
@@ -336,49 +281,6 @@
   .route-icon {
     @apply w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 z-10 shadow-sm;
     position: relative;
-  }
-
-  /* Connector styles */
-  .connector-container {
-    position: absolute;
-    left: 1.125rem;
-    top: 2.25rem;
-    bottom: -12px;
-    width: 2px;
-    transform: translateX(-50%);
-    z-index: 0;
-    display: flex;
-    flex-direction: column;
-    height: calc(100% + 12px);
-  }
-
-  .connector-line {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    z-index: 0;
-  }
-
-  .connector-segment {
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    height: 100%;
-  }
-
-  .route-card:hover .connector-line {
-    width: 3px;
-    margin-left: -0.5px;
-  }
-
-  .connector-line.walk-segment {
-    border-left: 2px dashed;
-    background-color: transparent !important;
-    height: calc(100%);
-  }
-
-  .connector-line[class*='bg-'] {
-    border-color: inherit;
   }
 
   /* Transfer styles */
@@ -419,19 +321,9 @@
   }
 
   .sort-btn.active {
-    @apply bg-emerald-50 border-emerald-100;
-    color: #012620;
-  }
-
-  /* Fare info */
-  .fare-info {
-    @apply mt-8 p-4 rounded-lg flex items-center gap-3 transition-all;
-    background: linear-gradient(to right, #f0f7f5, #e6f2ef);
-    border-left: 3px solid #012620;
-  }
-
-  .fare-amount {
-    @apply font-bold text-base;
+    background-color: rgba(var(--color-accent-rgb), 0.1);
+    border-color: rgba(var(--color-accent-rgb), 0.2);
+    color: var(--color-primary-dark);
   }
 
   /* Places dropdown */
@@ -450,11 +342,12 @@
   }
 
   .places-dropdown-item:hover {
-    @apply bg-green-50;
+    background-color: rgba(var(--color-accent-rgb), 0.05);
   }
 
   .places-dropdown-item i {
-    @apply text-green-700 flex-shrink-0;
+    color: var(--color-accent-dark);
+    @apply flex-shrink-0;
   }
 
   .places-dropdown-overlay {
@@ -511,51 +404,104 @@
       width: 100%;
     }
 
-    /* Reduce padding inside the search form on mobile */
     .search-form {
       @apply px-2 sm:px-4;
     }
   }
-}
 
-/* Utility Classes */
-@layer utilities {
-  /* Connector colors */
-  .connector-line.bg-blue-500 {
-    border-color: var(--color-blue-500);
-    background-color: var(--color-blue-500);
+  /* Button Hover Effects - Standardized for consistency */
+  .btn,
+  button {
+    @apply transition-all duration-200;
   }
-  .connector-line.bg-red-500 {
-    border-color: var(--color-red-500);
-    background-color: var(--color-red-500);
+
+  /* Secondary Button Hover Effects */
+  .btn-secondary {
+    @apply transition-colors duration-200;
   }
-  .connector-line.bg-green-500 {
-    border-color: var(--color-green-500);
-    background-color: var(--color-green-500);
+
+  .btn-secondary:hover {
+    background-color: rgba(var(--color-accent-rgb), 0.1);
   }
-  .connector-line.bg-yellow-500 {
-    border-color: var(--color-yellow-500);
-    background-color: var(--color-yellow-500);
+
+  /* Ghost Button Hover Effects */
+  .btn-ghost:hover {
+    background-color: rgba(var(--color-accent-rgb), 0.05);
   }
-  .connector-line.bg-purple-500 {
-    border-color: var(--color-purple-500);
-    background-color: var(--color-purple-500);
+
+  /* Focus Styles for Accessibility */
+  button:focus-visible,
+  .btn:focus-visible {
+    @apply outline-none ring-2 ring-[var(--color-accent)] ring-offset-2;
   }
-  .connector-line.bg-pink-500 {
-    border-color: var(--color-pink-500);
-    background-color: var(--color-pink-500);
+
+  button,
+  .btn {
+    @apply transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2;
   }
-  .connector-line.bg-indigo-500 {
-    border-color: var(--color-indigo-500);
-    background-color: var(--color-indigo-500);
+
+  /* Primary Button Style */
+  .btn-primary,
+  button[data-variant='primary'] {
+    @apply bg-[var(--color-accent)] text-white;
   }
-  .connector-line.bg-orange-500 {
-    border-color: var(--color-orange-500);
-    background-color: var(--color-orange-500);
+
+  .btn-primary:hover,
+  button[data-variant='primary']:hover {
+    @apply bg-[var(--color-accent-dark)];
   }
-  .connector-line.bg-gray-500 {
-    border-color: var(--color-gray-500);
-    background-color: var(--color-gray-500);
+
+  .btn-primary:active,
+  button[data-variant='primary']:active {
+    @apply scale-[0.98] bg-[var(--color-accent-dark)];
+  }
+
+  /* Secondary Button Style */
+  .btn-secondary,
+  button[data-variant='secondary'] {
+    @apply bg-white text-gray-700 border border-gray-200;
+  }
+
+  .btn-secondary:hover,
+  button[data-variant='secondary']:hover {
+    @apply bg-[rgba(var(--color-accent-rgb),0.05)] border-[rgba(var(--color-accent-rgb),0.2)];
+  }
+
+  .btn-secondary:active,
+  button[data-variant='secondary']:active {
+    @apply scale-[0.98] bg-[rgba(var(--color-accent-rgb),0.1)];
+  }
+
+  /* Ghost Button Style */
+  .btn-ghost,
+  button[data-variant='ghost'] {
+    @apply text-gray-600 bg-transparent;
+  }
+
+  .btn-ghost:hover,
+  button[data-variant='ghost']:hover {
+    @apply text-gray-900 bg-[rgba(var(--color-accent-rgb),0.05)];
+  }
+
+  .btn-ghost:active,
+  button[data-variant='ghost']:active {
+    @apply scale-[0.98] bg-[rgba(var(--color-accent-rgb),0.1)];
+  }
+
+  /* Outline Button Style */
+  .btn-outline,
+  button[data-variant='outline'] {
+    @apply bg-white border border-gray-200 text-gray-600;
+  }
+
+  .btn-outline:hover,
+  button[data-variant='outline']:hover {
+    @apply border-[rgba(var(--color-accent-rgb),0.3)] bg-[rgba(var(--color-accent-rgb),0.05)];
+  }
+
+  .btn-outline:active,
+  button[data-variant='outline']:active {
+    @apply scale-[0.98] bg-[rgba(var(--color-accent-rgb),0.1)];
   }
 }
 
@@ -580,11 +526,6 @@ body.search-section-editing .dropdown-portal {
   position: fixed !important;
   z-index: 9999 !important;
   pointer-events: auto !important;
-}
-
-.hero-section-wrapper {
-  position: relative;
-  isolation: isolate;
 }
 
 .stats-bar-section {
@@ -721,8 +662,8 @@ body.search-section-editing .dropdown-portal {
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 166, 126, 0.1),
-    0 8px 10px -6px rgba(0, 166, 126, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(var(--color-accent-rgb), 0.1),
+    0 8px 10px -6px rgba(var(--color-accent-rgb), 0.1);
 }
 
 /* Media Queries */
@@ -747,11 +688,6 @@ body.search-section-editing .dropdown-portal {
 
   .results-header > div:last-child {
     @apply mt-3;
-  }
-
-  .hero-section {
-    padding-bottom: 0.5rem;
-    padding-block: clamp(2rem, 6vh, 3rem);
   }
 
   .search-form-container {
@@ -781,10 +717,6 @@ body.search-section-editing .dropdown-portal {
 }
 
 @media (max-width: 360px) {
-  .hero-section {
-    padding-bottom: 0.25rem;
-  }
-
   .search-form-container {
     margin-top: 0.25rem;
     margin-bottom: 0.75rem;
@@ -819,10 +751,6 @@ body.search-section-editing .dropdown-portal {
 }
 
 @media (min-width: 361px) and (max-width: 480px) {
-  .hero-section {
-    padding-bottom: 0.375rem;
-  }
-
   .search-form-container {
     margin-top: 0.375rem;
     margin-bottom: 1rem;
@@ -835,20 +763,12 @@ body.search-section-editing .dropdown-portal {
 }
 
 @media (min-width: 481px) and (max-width: 640px) {
-  .hero-section {
-    padding-bottom: 0.5rem;
-  }
-
   .search-form-container {
     margin-top: 0.5rem;
   }
 }
 
 @media (min-width: 641px) and (max-width: 768px) {
-  .hero-section {
-    padding-bottom: 0.75rem;
-  }
-
   .search-form-container {
     margin-top: 0.75rem;
   }

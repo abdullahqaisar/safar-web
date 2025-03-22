@@ -288,6 +288,7 @@ function JourneyContent() {
               className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
               disabled
               leftIcon={<ArrowLeft size={16} />}
+              data-variant="ghost"
             >
               Back
             </Button>
@@ -310,6 +311,7 @@ function JourneyContent() {
             className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
             onClick={() => router.push('/')}
             leftIcon={<ArrowLeft size={16} />}
+            data-variant="ghost"
           >
             Back
           </Button>

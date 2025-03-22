@@ -34,7 +34,7 @@ export function JourneyCard({
 
   return (
     <div
-      className="bg-white border border-gray-200 hover:border-emerald-300/40 hover:shadow-md transition-all rounded-xl overflow-hidden hover-lift focus-within:ring-2 focus-within:ring-emerald-400 focus-within:ring-offset-2"
+      className="bg-white border border-gray-200 hover:border-[rgba(var(--color-accent-rgb),0.4)] hover:shadow-md transition-all rounded-xl overflow-hidden hover-lift focus-within:ring-2 focus-within:ring-[var(--color-accent)] focus-within:ring-offset-2"
       role="button"
       tabIndex={0}
       onClick={onSelect}
@@ -49,7 +49,7 @@ export function JourneyCard({
       } stops and ${route.transfers} transfers`}
     >
       {isRecommended && (
-        <div className="bg-emerald-50 text-emerald-700 px-4 py-1.5 text-xs font-medium flex items-center justify-center gap-1 border-b border-emerald-100">
+        <div className="bg-[rgba(var(--color-accent-rgb),0.1)] text-[var(--color-accent)] px-4 py-1.5 text-xs font-medium flex items-center justify-center gap-1 border-b border-[rgba(var(--color-accent-rgb),0.2)]">
           <Award size={14} />
           Best Route
         </div>
@@ -58,7 +58,7 @@ export function JourneyCard({
       <div className="p-4 sm:p-5">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-[rgba(var(--color-accent-rgb),0.1)] text-[var(--color-accent)]">
               <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
@@ -72,13 +72,13 @@ export function JourneyCard({
 
         <div className="grid grid-cols-2 gap-y-3 py-3 border-t border-b border-gray-100 mb-4">
           <div className="flex items-center">
-            <MapPin className="w-4 h-4 text-emerald-500 mr-1.5" />
+            <MapPin className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
             <span className="text-xs sm:text-sm text-gray-700">
               {route.totalStops || 0} stops
             </span>
           </div>
           <div className="flex items-center">
-            <ArrowLeftRight className="w-4 h-4 text-emerald-500 mr-1.5" />
+            <ArrowLeftRight className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
             <span className="text-xs sm:text-sm text-gray-700">
               {route.transfers || 0} transfer{route.transfers !== 1 ? 's' : ''}
             </span>
@@ -86,7 +86,7 @@ export function JourneyCard({
 
           {totalWalkingTime > 0 && (
             <div className="flex items-center col-span-2">
-              <Footprints className="w-4 h-4 text-emerald-500 mr-1.5" />
+              <Footprints className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
               <span className="text-xs sm:text-sm text-gray-700">
                 {formatDuration(totalWalkingTime)} walking
               </span>
@@ -139,11 +139,12 @@ export function JourneyCard({
         )}
 
         <Button
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-md flex items-center justify-center gap-2 group"
+          className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] active:scale-[0.98] text-white rounded-md flex items-center justify-center gap-2 group"
           onClick={(e) => {
             e.stopPropagation();
             onSelect();
           }}
+          data-variant="primary"
         >
           View Journey Details
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
