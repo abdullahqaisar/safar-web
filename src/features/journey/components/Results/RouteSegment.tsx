@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils/formatters';
 
 interface RouteSegmentProps {
   segment: SegmentType;
@@ -20,6 +21,9 @@ interface RouteSegmentProps {
   position: 'first' | 'middle' | 'last';
   isExpanded?: boolean;
   onToggleExpand: () => void;
+  isTransfer?: boolean;
+  segmentIndex: number;
+  isLastTransitSegment?: boolean; // New prop to identify last transit segment
 }
 
 export function RouteSegment({
@@ -28,22 +32,25 @@ export function RouteSegment({
   position,
   isExpanded = false,
   onToggleExpand,
+  isTransfer = false,
+  segmentIndex,
+  isLastTransitSegment = false, // Default to false
 }: RouteSegmentProps) {
   const getSegmentTypeStyles = () => {
     if (segment.type === 'transit') {
       return {
         bgColor: 'bg-[color:var(--color-accent)] text-white',
-        icon: <Train className="w-5 h-5" />,
+        icon: <Train className="w-5 h-5" aria-hidden="true" />,
       };
     } else if (segment.type === 'walk') {
       return {
         bgColor: 'bg-gray-200 text-gray-700',
-        icon: <Footprints className="w-5 h-5" />,
+        icon: <Footprints className="w-5 h-5" aria-hidden="true" />,
       };
     } else {
       return {
         bgColor: 'bg-gray-200 text-gray-700',
-        icon: <Info className="w-5 h-5" />,
+        icon: <Info className="w-5 h-5" aria-hidden="true" />,
       };
     }
   };
@@ -51,7 +58,6 @@ export function RouteSegment({
   const { bgColor, icon } = getSegmentTypeStyles();
   const duration = segment.duration ? formatDuration(segment.duration) : '';
 
-  // Determine line color for transit segments
   const getLineColor = () => {
     if (segment.type !== 'transit') return '';
 
@@ -59,25 +65,39 @@ export function RouteSegment({
     const lineName = transitSegment.line?.name || '';
 
     if (lineName.toLowerCase().includes('green')) {
-      return 'bg-green-100 text-green-800';
+      return 'bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] border border-[rgba(var(--color-accent-rgb),0.2)]';
     } else if (lineName.toLowerCase().includes('blue')) {
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-blue-50 text-blue-700 border border-blue-100';
     } else if (lineName.toLowerCase().includes('red')) {
-      return 'bg-red-100 text-red-800';
+      return 'bg-red-50 text-red-700 border border-red-100';
     } else if (lineName.toLowerCase().includes('orange')) {
-      return 'bg-orange-100 text-orange-800';
+      return 'bg-orange-50 text-orange-700 border border-orange-100';
+    } else if (lineName.toLowerCase().includes('feeder')) {
+      return 'bg-[rgba(var(--color-primary-rgb),0.1)] text-[color:var(--color-primary)] border border-[rgba(var(--color-primary-rgb),0.2)]';
     }
-    return 'bg-gray-100 text-gray-800';
+    return 'bg-gray-100 text-gray-700 border border-gray-200';
   };
 
-  // Get description based on segment type
+  // Get description based on segment type and position
   const getDescription = () => {
     if (segment.type === 'transit') {
       const transitSegment = segment as TransitSegment;
-      return `Take ${transitSegment.line?.name || 'transit'}`;
+      const lineName = transitSegment.line?.name || 'transit';
+      const originStation = transitSegment.stations?.[0]?.name || '';
+
+      if (isTransfer) {
+        return `Transfer to ${lineName}${
+          originStation ? ` at ${originStation}` : ''
+        }`;
+      } else if (segmentIndex === 0) {
+        return `Board ${lineName}${
+          originStation ? ` at ${originStation}` : ''
+        }`;
+      } else {
+        return `Take ${lineName}${originStation ? ` at ${originStation}` : ''}`;
+      }
     } else if (segment.type === 'walk') {
       const walkSegment = segment as WalkSegment;
-      // Get destination station name
       const destinationStation =
         walkSegment.stations[walkSegment.stations.length - 1];
       return `Walk to ${destinationStation?.name || 'next stop'}`;
@@ -90,7 +110,10 @@ export function RouteSegment({
       <div className="flex">
         <div className="mr-4 relative">
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${bgColor}`}
+            className={cn(
+              `w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${bgColor}`
+            )}
+            aria-hidden="true"
           >
             {icon}
           </div>
@@ -98,14 +121,20 @@ export function RouteSegment({
             <div
               className="absolute top-10 left-5 bottom-0 w-0.5 bg-gray-200"
               style={{ height: 'calc(100% + 2rem)' }}
+              aria-hidden="true"
             ></div>
           )}
         </div>
         <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
+            <div className="flex-1 min-w-0 pr-2">
               <div className="flex items-center">
-                <p className="font-medium text-base text-gray-900">
+                <p
+                  className={cn(
+                    'font-medium text-base text-gray-900',
+                    isTransfer && 'text-[color:var(--color-accent-dark)]'
+                  )}
+                >
                   {getDescription()}
                 </p>
               </div>
@@ -119,8 +148,13 @@ export function RouteSegment({
                   </span>
                   {duration && (
                     <>
-                      <span className="mx-2"></span>
-                      <Clock className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
+                      <span className="mx-2 text-gray-300" aria-hidden="true">
+                        •
+                      </span>
+                      <Clock
+                        className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]"
+                        aria-hidden="true"
+                      />
                       <span>{duration}</span>
                     </>
                   )}
@@ -134,7 +168,10 @@ export function RouteSegment({
                     {segment.stations && (
                       <div className="flex items-center">
                         <span className="text-sm text-gray-600 flex items-center">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
+                          <MapPin
+                            className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]"
+                            aria-hidden="true"
+                          />
                           {segment.stations.length - 1} stops
                         </span>
                       </div>
@@ -145,7 +182,16 @@ export function RouteSegment({
                         className="flex items-center text-sm text-gray-600"
                         title="Duration"
                       >
-                        <Clock className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]" />
+                        <span
+                          className="mx-1 text-gray-300 hidden sm:inline"
+                          aria-hidden="true"
+                        >
+                          •
+                        </span>
+                        <Clock
+                          className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]"
+                          aria-hidden="true"
+                        />
                         {duration}
                       </div>
                     )}
@@ -153,7 +199,7 @@ export function RouteSegment({
 
                   {segment.stations && segment.stations.length > 1 && (
                     <button
-                      className="mt-1 inline-flex items-center text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-dark)] hover:bg-[rgba(var(--color-accent-rgb),0.05)] active:bg-[rgba(var(--color-accent-rgb),0.1)] py-1 px-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                      className="mt-2 inline-flex items-center text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-dark)] hover:bg-[rgba(var(--color-accent-rgb),0.05)] active:bg-[rgba(var(--color-accent-rgb),0.1)] py-1 px-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleExpand();
@@ -166,6 +212,7 @@ export function RouteSegment({
                         className={`w-3.5 h-3.5 ml-1 transition-transform ${
                           isExpanded ? 'rotate-180' : ''
                         }`}
+                        aria-hidden="true"
                       />
                     </button>
                   )}
@@ -173,11 +220,14 @@ export function RouteSegment({
               )}
             </div>
             {segment.type === 'transit' && (
-              <span
-                className={`ml-2 px-2.5 py-0.5 text-xs rounded-full ${getLineColor()}`}
-              >
-                {(segment as TransitSegment).line?.name || ''}
-              </span>
+              <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
+                <span
+                  className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full max-w-[140px] truncate ${getLineColor()}`}
+                  title={(segment as TransitSegment).line?.name || ''}
+                >
+                  {(segment as TransitSegment).line?.name || ''}
+                </span>
+              </div>
             )}
           </div>
 
@@ -192,43 +242,83 @@ export function RouteSegment({
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
-                <div className="mt-3 pl-3 border-l-2 border-gray-200 space-y-2">
-                  {segment.stations.map((station, idx) => (
-                    <div key={idx} className="flex items-center py-1.5">
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          idx === 0
-                            ? 'bg-green-500'
-                            : idx === segment.stations.length - 1
-                            ? 'bg-red-500'
-                            : 'bg-gray-400'
-                        } mr-2.5 flex-shrink-0`}
-                      ></div>
-                      <div className="flex items-center flex-wrap gap-1.5">
-                        <span
-                          className={`text-sm ${
-                            idx === 0
-                              ? 'text-green-600 font-medium'
-                              : idx === segment.stations.length - 1
-                              ? 'text-red-600 font-medium'
-                              : 'text-gray-600'
-                          }`}
-                        >
-                          {station.name}
-                        </span>
-                        {idx === 0 && (
-                          <span className="px-1.5 py-0.5 bg-green-50 text-green-700 text-[10px] rounded-md font-medium border border-green-100">
-                            Board
+                <div className="mt-3 ml-1 pl-3 border-l-2 border-[rgba(var(--color-accent-rgb),0.15)] space-y-1">
+                  {segment.stations.map((station, idx) => {
+                    const isOrigin = idx === 0;
+                    const isDestination = idx === segment.stations.length - 1;
+
+                    // Determine station label based on position and context
+                    const stationLabel = isOrigin
+                      ? 'Origin'
+                      : isDestination
+                      ? isLast
+                        ? 'Destination'
+                        : 'Transfer point'
+                      : 'Stop';
+
+                    // Determine what text to show for destination badges
+                    const getDestinationLabel = () => {
+                      if (isLastTransitSegment && isDestination) {
+                        return 'Exit'; // Always show "Exit" for last station of last transit segment
+                      } else if (isLast) {
+                        return 'Arrive'; // For the last station in the very last segment
+                      } else {
+                        return 'Transfer'; // For transfer points
+                      }
+                    };
+
+                    return (
+                      <div key={idx} className="flex items-center py-1.5">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            isOrigin
+                              ? 'bg-[color:var(--color-accent)]'
+                              : isDestination
+                              ? 'bg-[color:var(--color-primary)]'
+                              : 'bg-gray-300'
+                          } mr-2.5 flex-shrink-0`}
+                          aria-hidden="true"
+                        ></div>
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <span
+                            className={`text-sm ${
+                              isOrigin
+                                ? 'text-[color:var(--color-accent)] font-medium'
+                                : isDestination
+                                ? 'text-[color:var(--color-primary)] font-medium'
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {station.name}
                           </span>
-                        )}
-                        {idx === segment.stations.length - 1 && (
-                          <span className="px-1.5 py-0.5 bg-red-50 text-red-700 text-[10px] rounded-md font-medium border border-red-100">
-                            Exit
-                          </span>
-                        )}
+                          {isOrigin && (
+                            <span
+                              className="px-1.5 py-0.5 bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] text-[10px] rounded-md font-medium border border-[rgba(var(--color-accent-rgb),0.2)]"
+                              aria-label={
+                                isTransfer ? 'Transfer point' : 'Board here'
+                              }
+                            >
+                              {stationLabel}
+                            </span>
+                          )}
+                          {isDestination && (
+                            <span
+                              className="px-1.5 py-0.5 bg-[rgba(var(--color-primary-rgb),0.1)] text-[color:var(--color-primary)] text-[10px] rounded-md font-medium border border-[rgba(var(--color-primary-rgb),0.2)]"
+                              aria-label={
+                                isLastTransitSegment
+                                  ? 'Exit here'
+                                  : isLast
+                                  ? 'Arrive here'
+                                  : 'Transfer here'
+                              }
+                            >
+                              {getDestinationLabel()}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
             )}
