@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Menu, X, Home, Map, HelpCircle } from 'lucide-react';
+import { cn } from '@/lib/utils/formatters';
 
 const navigationLinks = [
   { href: '/', label: 'Home', icon: Home },
@@ -12,6 +14,20 @@ const navigationLinks = [
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close mobile menu when pathname changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Check if the current path matches the nav item's path
+  const isActivePath = (path: string) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(path);
+  };
 
   return (
     <nav className="bg-[color:var(--color-primary)] sticky top-0 z-50 backdrop-blur-md">
@@ -48,7 +64,13 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-white/80 hover:text-white transition-colors py-1 text-sm font-medium border-b-2 border-transparent hover:border-[color:var(--accent-light)] flex items-center gap-2"
+                className={cn(
+                  'text-sm font-medium py-1 border-b-2 flex items-center gap-2 transition-colors',
+                  isActivePath(link.href)
+                    ? 'text-white border-[color:var(--color-accent)]'
+                    : 'text-white/80 hover:text-white border-transparent hover:border-[color:var(--color-accent-light)]'
+                )}
+                aria-current={isActivePath(link.href) ? 'page' : undefined}
               >
                 <link.icon size={16} />
                 {link.label}
@@ -61,6 +83,7 @@ export function Navbar() {
             className="md:hidden text-white focus:outline-none"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
+            aria-expanded={isMobileMenuOpen}
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -73,8 +96,13 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="block py-2 text-white/80 hover:text-white flex items-center gap-2"
-                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn(
+                  'block py-2 flex items-center gap-2',
+                  isActivePath(link.href)
+                    ? 'text-white font-medium'
+                    : 'text-white/80 hover:text-white'
+                )}
+                aria-current={isActivePath(link.href) ? 'page' : undefined}
               >
                 <link.icon size={16} />
                 {link.label}
