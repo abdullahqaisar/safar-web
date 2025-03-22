@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Route, WalkSegment } from '@/types/route';
+import { useState, useEffect } from 'react';
+import { Route, WalkSegment, TransitSegment } from '@/types/route';
 import {
   ArrowLeft,
   Clock,
@@ -21,6 +21,52 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
   const [expandedStations, setExpandedStations] = useState<
     Record<string, boolean>
   >({});
+
+  // Track previous transit line to detect transfers
+  const [transferSegments, setTransferSegments] = useState<
+    Record<number, boolean>
+  >({});
+
+  // Find the index of the last transit segment
+  const [lastTransitSegmentIndex, setLastTransitSegmentIndex] = useState<
+    number | null
+  >(null);
+
+  useEffect(() => {
+    // Detect which segments are transfers (change of transit line)
+    const transfers: Record<number, boolean> = {};
+    let previousTransitLine: string | null = null;
+
+    route.segments.forEach((segment, index) => {
+      if (segment.type === 'transit') {
+        const transitSegment = segment as TransitSegment;
+        const currentLine = transitSegment.line?.name || '';
+
+        // If we have a previous transit line and it's different from current, mark as transfer
+        if (
+          previousTransitLine !== null &&
+          previousTransitLine !== currentLine
+        ) {
+          transfers[index] = true;
+        }
+
+        previousTransitLine = currentLine;
+      } else {
+        // If this is a walk segment after a transit segment,
+        // we're potentially preparing for a transfer, but don't reset the line
+      }
+    });
+
+    setTransferSegments(transfers);
+
+    // Find the last transit segment in the route
+    for (let i = route.segments.length - 1; i >= 0; i--) {
+      if (route.segments[i].type === 'transit') {
+        setLastTransitSegmentIndex(i);
+        break;
+      }
+    }
+  }, [route.segments]);
 
   const toggleStationsList = (segmentIndex: number) => {
     setExpandedStations((prev) => ({
@@ -157,7 +203,7 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
           </div>
 
           <div className="space-y-4">
-            <div className=" overflow-hidden">
+            <div className="overflow-hidden">
               {route.segments.map((segment, index) => (
                 <div key={index}>
                   <RouteSegment
@@ -175,6 +221,9 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
                       false
                     }
                     onToggleExpand={() => toggleStationsList(index)}
+                    isTransfer={transferSegments[index] || false}
+                    segmentIndex={index}
+                    isLastTransitSegment={index === lastTransitSegmentIndex}
                   />
                 </div>
               ))}

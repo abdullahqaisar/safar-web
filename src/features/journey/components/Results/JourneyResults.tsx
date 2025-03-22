@@ -3,8 +3,6 @@ import { Route } from '@/types/route';
 import { JourneyCard } from './JourneyCard';
 import { JourneyDetails } from './JourneyDetails';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
-
 interface JourneyResultsProps {
   routes: Route[];
 }
@@ -69,15 +67,6 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="mb-6">
-              <button
-                onClick={() => setSelectedRouteId(null)}
-                className="flex items-center text-[color:var(--color-accent)] hover:text-[color:var(--color-accent-dark)] transition-colors font-medium"
-              >
-                <ArrowLeft size={16} className="mr-1" />
-                Back to routes
-              </button>
-            </div>
             <JourneyDetails
               route={selectedRoute}
               onBack={() => setSelectedRouteId(null)}
