@@ -4,7 +4,10 @@ import { Container } from '@/components/common/Container';
 import { Loader2, CheckCircle, Mail, MessageSquare } from 'lucide-react';
 import { SectionBadge } from '@/components/common/SectionBadge';
 import { FormEvent, useState, useEffect } from 'react';
-import { initEmailJS, sendContactEmail } from '@/services/emailService';
+import {
+  initEmailJS,
+  sendContactEmail,
+} from '@/features/help/services/emailService';
 
 export function ContactSection() {
   const [formData, setFormData] = useState({

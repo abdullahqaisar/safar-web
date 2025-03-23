@@ -2,7 +2,10 @@
 
 import { useState, FormEvent, useEffect } from 'react';
 import { Loader2, CheckCircle, Mail, MessageSquare } from 'lucide-react';
-import { initEmailJS, sendContactEmail } from '@/services/emailService';
+import {
+  initEmailJS,
+  sendContactEmail,
+} from '@/features/help/services/emailService';
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
