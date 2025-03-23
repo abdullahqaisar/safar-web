@@ -22,6 +22,7 @@ import {
   areSimilarPaths,
   penalizeCommonEdges,
 } from '@/server/core/shared/graph';
+import { MetroLine } from '@/types/metro';
 
 export async function findRoutes(
   origin: Coordinates,
@@ -459,6 +460,26 @@ async function convertPathToSegments(
     return nodeId.includes('_') ? nodeId.split('_')[1] : null;
   }
 
+  // Helper function to find all stations between two stations on a metro line
+  function findStationsBetween(
+    line: MetroLine,
+    sourceId: string,
+    targetId: string
+  ): Station[] {
+    const stations = line.stations;
+    const sourceIndex = stations.findIndex((s) => s.id === sourceId);
+    const targetIndex = stations.findIndex((s) => s.id === targetId);
+
+    if (sourceIndex === -1 || targetIndex === -1) return [];
+
+    // Handle both directions (forward and backward)
+    if (sourceIndex < targetIndex) {
+      return stations.slice(sourceIndex, targetIndex + 1);
+    } else {
+      return stations.slice(targetIndex, sourceIndex + 1).reverse();
+    }
+  }
+
   for (let i = 0; i < edges.length; i++) {
     const edge = edges[i];
     if (!graph.hasNode(edge.source) || !graph.hasNode(edge.target)) continue;
@@ -500,6 +521,7 @@ async function convertPathToSegments(
 
     if (edge.type === 'transit') {
       if (currentTransitLine !== lineId) {
+        // Process previous transit segment if it exists
         if (currentTransitLine !== null && currentTransitStations.length > 1) {
           const line = getLineById(currentTransitLine);
           if (line) {
@@ -510,12 +532,41 @@ async function convertPathToSegments(
           }
         }
 
+        // Start a new transit segment
         currentTransitLine = lineId;
         currentTransitStations = [sourceStation];
       }
 
-      if (!currentTransitStations.some((s) => s.id === targetStation.id)) {
-        currentTransitStations.push(targetStation);
+      // Add intermediate stations if we're continuing on the same line
+      if (currentTransitLine) {
+        const line = getLineById(currentTransitLine);
+        if (line) {
+          // Get all stations between source and target on this line
+          const intermediateStations = findStationsBetween(
+            line,
+            sourceStation.id,
+            targetStation.id
+          );
+
+          // Skip first station if we already have stations in our current segment
+          // to avoid duplicates
+          const stationsToAdd =
+            currentTransitStations.length > 0
+              ? intermediateStations.slice(1)
+              : intermediateStations;
+
+          // Add all stations that aren't already in our list
+          for (const station of stationsToAdd) {
+            if (!currentTransitStations.some((s) => s.id === station.id)) {
+              currentTransitStations.push(station);
+            }
+          }
+        } else {
+          // If we can't find the line, fall back to just adding the target
+          if (!currentTransitStations.some((s) => s.id === targetStation.id)) {
+            currentTransitStations.push(targetStation);
+          }
+        }
       }
     } else if (
       edge.type === 'walking' ||

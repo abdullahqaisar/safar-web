@@ -5,7 +5,6 @@ import {
   calculateTransitTime,
   calculateWalkingTime,
 } from '@/server/core/shared/maps';
-import { calculateHaversineDistance } from '@/server/core/shared/distance';
 import { STOP_WAIT_TIME_SECONDS } from '@/lib/constants/config';
 import { metroLines } from '@/lib/constants/metro-data';
 
@@ -179,23 +178,4 @@ export function consolidateWalkingSegments(
  */
 export function getLineById(lineId: string): MetroLine | undefined {
   return metroLines.find((line) => line.id === lineId);
-}
-
-/**
- * Calculate transit segment metrics (distance, stops)
- */
-export function calculateTransitMetrics(segment: TransitSegment): {
-  distance: number;
-  stops: number;
-} {
-  let distance = 0;
-  const stops = segment.stations.length - 1;
-
-  for (let i = 0; i < segment.stations.length - 1; i++) {
-    const from = segment.stations[i].coordinates;
-    const to = segment.stations[i + 1].coordinates;
-    distance += calculateHaversineDistance(from, to);
-  }
-
-  return { distance, stops };
 }

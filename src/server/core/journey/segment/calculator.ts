@@ -5,11 +5,8 @@ import {
   WalkSegment,
 } from '@/types/route';
 
-import {
-  completeSegmentInfo,
-  calculateTransitMetrics,
-  consolidateWalkingSegments,
-} from './builder';
+import { completeSegmentInfo, consolidateWalkingSegments } from './builder';
+import { calculateHaversineDistance } from '../../shared/distance';
 
 /**
  * Builds a complete route from segments with calculated metrics
@@ -184,4 +181,21 @@ export function calculateRouteMetrics(segments: RouteSegment[]): {
   }
 
   return { totalDistance, totalStops, totalDuration };
+}
+
+export function calculateTransitMetrics(segment: TransitSegment): {
+  distance: number;
+  stops: number;
+} {
+  let distance = 0;
+  const stops = segment.stations.length - 1;
+
+  // Calculate the distance by summing distances between consecutive stations
+  for (let i = 0; i < segment.stations.length - 1; i++) {
+    const from = segment.stations[i].coordinates;
+    const to = segment.stations[i + 1].coordinates;
+    distance += calculateHaversineDistance(from, to);
+  }
+
+  return { distance, stops };
 }
