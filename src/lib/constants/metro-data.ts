@@ -77,6 +77,7 @@ const stationData: Record<string, Station> = {
     name: 'Faizabad',
     coordinates: { lat: 33.66128301347426, lng: 73.08280889714392 },
   },
+
   shamsabad: {
     id: 'shamsabad',
     name: 'Shamsabad',
@@ -215,7 +216,7 @@ const stationData: Record<string, Station> = {
   sohan: {
     id: 'sohan',
     name: 'Sohan',
-    coordinates: { lat: 33.65010625365016, lng: 73.09838026200707 },
+    coordinates: { lat: 33.65941693252013, lng: 73.09050661907662 },
   },
   iqbalTown: {
     id: 'iqbalTown',
@@ -323,7 +324,6 @@ export const metroLines: MetroLine[] = [
       stationData.g7g8,
       stationData.h8Shakarparia,
       stationData.i8ParadeGround,
-      stationData.faizabad,
       stationData.sohan,
       stationData.iqbalTown,
       stationData.kuriRoad,
@@ -336,6 +336,30 @@ export const metroLines: MetroLine[] = [
   },
 ];
 
+/**
+ * Walking shortcuts between stations for transfers
+ * This defines stations where users can reasonably walk between to transfer lines
+ * instead of taking transit connections
+ */
+export const walkingShortcuts: Array<{
+  from: string;
+  to: string;
+  priority: number; // Higher number means higher priority (0-10, 10 being highest)
+}> = [
+  {
+    from: 'sohan',
+    to: 'faizabad',
+    priority: 8, // High priority
+  },
+  // Add more walking shortcuts between stations as needed
+  // Example:
+  // {
+  //   from: 'stationA',
+  //   to: 'stationB',
+  //   priority: 7
+  // }
+];
+
 // Well-known interchange stations
 export const interchanges: Record<string, MetroLineColor[]> = {
   PIMS: ['red', 'green', 'blue'],
@@ -343,5 +367,5 @@ export const interchanges: Record<string, MetroLineColor[]> = {
   'Parade Ground': ['red', 'blue'],
   'Kashmir Highway': ['red', 'orange'],
   'Faiz Ahmad Faiz': ['orange', 'red'],
-  Faizabad: ['red', 'blue'],
+  // Faizabad: ['red', 'blue'],
 };

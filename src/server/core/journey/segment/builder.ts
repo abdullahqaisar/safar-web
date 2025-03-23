@@ -15,7 +15,10 @@ export async function createWalkingSegment(
   from: Station,
   to: Station,
   fromCoords: Coordinates,
-  toCoords: Coordinates
+  toCoords: Coordinates,
+  isShortcut = false,
+  isExplicitShortcut = false,
+  priority = 0
 ): Promise<WalkSegment | null> {
   // Skip if coordinates are the same
   if (fromCoords.lat === toCoords.lat && fromCoords.lng === toCoords.lng) {
@@ -39,6 +42,9 @@ export async function createWalkingSegment(
       duration: walkResult.duration,
       walkingTime: walkResult.duration,
       walkingDistance: walkResult.distance,
+      isShortcut,
+      isExplicitShortcut,
+      priority: isExplicitShortcut ? priority : undefined,
     };
   } catch (error) {
     console.error('Error calculating walking segment:', error);
@@ -75,7 +81,7 @@ export async function createTransitSegment(
       line: {
         id: line.id,
         name: line.name,
-        color: line.color,
+        color: line.color || '',
       },
       stations,
       duration: transitTime + stopWaitTime,
@@ -178,4 +184,114 @@ export function consolidateWalkingSegments(
  */
 export function getLineById(lineId: string): MetroLine | undefined {
   return metroLines.find((line) => line.id === lineId);
+}
+
+/**
+ * Finds optimal sequence of stations between start and end on a specific line
+ * Handles circular lines by computing both possible paths and choosing the shorter one
+ */
+export async function findOptimalStationSequence(
+  line: MetroLine,
+  startStation: Station,
+  endStation: Station,
+  visitedStations?: Station[]
+): Promise<Station[]> {
+  // Exit early for simple case
+  if (startStation.id === endStation.id) {
+    return [startStation];
+  }
+
+  // Find all stations on the line
+  const lineStations = line.stations;
+
+  // Exit early if line has only one station
+  if (lineStations.length <= 1) {
+    return visitedStations || [startStation, endStation];
+  }
+
+  const startIndex = lineStations.findIndex((s) => s.id === startStation.id);
+  const endIndex = lineStations.findIndex((s) => s.id === endStation.id);
+
+  // If either station isn't on this line, return the visited stations
+  if (startIndex === -1 || endIndex === -1) {
+    return visitedStations || [startStation, endStation];
+  }
+
+  // If we have visited stations, verify they're in a valid order and return them
+  if (visitedStations && visitedStations.length > 1) {
+    const visitedIds = new Set(visitedStations.map((s) => s.id));
+
+    // Check if our visited stations form a valid connected path on this line
+    if (isValidPathOnLine(lineStations, visitedIds)) {
+      return visitedStations;
+    }
+  }
+
+  // For regular lines, just get the stations in the correct sequence
+  return findStationsBetween(lineStations, startIndex, endIndex);
+}
+
+/**
+ * Find stations between startIndex and endIndex in the lineStations array
+ */
+function findStationsBetween(
+  lineStations: Station[],
+  startIndex: number,
+  endIndex: number
+): Station[] {
+  if (startIndex === endIndex) return [lineStations[startIndex]];
+
+  const stations: Station[] = [];
+
+  if (startIndex < endIndex) {
+    // Forward direction
+    for (let i = startIndex; i <= endIndex; i++) {
+      stations.push(lineStations[i]);
+    }
+  } else {
+    // Backward direction
+    for (let i = startIndex; i >= endIndex; i--) {
+      stations.push(lineStations[i]);
+    }
+  }
+
+  return stations;
+}
+
+/**
+ * Verify if a set of station IDs forms a valid path on a line
+ */
+function isValidPathOnLine(
+  lineStations: Station[],
+  stationIds: Set<string>
+): boolean {
+  if (stationIds.size <= 1) return true;
+
+  // Create a map of station indexes for quick lookup
+  const stationIndexMap = new Map<string, number>();
+  lineStations.forEach((station, index) => {
+    stationIndexMap.set(station.id, index);
+  });
+
+  // Check if all stations are on this line
+  const stationIndices: number[] = [];
+  for (const id of stationIds) {
+    const index = stationIndexMap.get(id);
+    if (index === undefined) return false;
+    stationIndices.push(index);
+  }
+
+  // Sort indices
+  stationIndices.sort((a, b) => a - b);
+
+  // Check if they form a continuous sequence or a wrap-around sequence
+  for (let i = 1; i < stationIndices.length; i++) {
+    const diff = stationIndices[i] - stationIndices[i - 1];
+    // Not adjacent on the line
+    if (diff > 1 && diff !== lineStations.length - 1) {
+      return false;
+    }
+  }
+
+  return true;
 }

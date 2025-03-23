@@ -117,14 +117,34 @@ function processShortMediumDistanceRoutes(
   return diverseRoutes;
 }
 
+// Add a helper function to identify routes with walking shortcuts
+function identifyRoutesWithWalkingShortcuts(routes: Route[]): Route[] {
+  return routes.filter((route) => {
+    // Check if the route has any walking segments between stations (not origin/destination)
+    return route.segments.some(
+      (segment) => segment.type === 'walk' && segment.isShortcut === true
+    );
+  });
+}
+
 function filterRoutesByQuality(routes: Route[]): Route[] {
   if (routes.length === 0) {
     return [];
   }
 
+  // Get benchmark routes
   const fastestRoute = findFastestRoute(routes);
   const minTransfersRoute = findMinTransfersRoute(routes);
 
+  // Find routes with walking shortcuts that might save transfers
+  const walkingShortcutRoutes = identifyRoutesWithWalkingShortcuts(routes);
+
+  // Sort shortcut routes by duration to find the most efficient ones
+  const efficientShortcutRoutes = walkingShortcutRoutes
+    .filter((route) => route.totalDuration <= fastestRoute.totalDuration * 1.3)
+    .sort((a, b) => a.totalDuration - b.totalDuration);
+
+  // Get comfort scores
   const comfortScores = routes.map((route) => ({
     route,
     comfort: calculateComfortScore(route),
@@ -135,11 +155,24 @@ function filterRoutesByQuality(routes: Route[]): Route[] {
     comfortScores[0]
   ).route;
 
+  // Apply duration filters with more generous threshold for routes with walking shortcuts
   const durationThreshold = fastestRoute.totalDuration * DURATION_MULTIPLIER;
-  let filtered = routes.filter(
-    (route) => route.totalDuration <= durationThreshold
-  );
+  let filtered = routes.filter((route) => {
+    const hasWalkingShortcut = walkingShortcutRoutes.includes(route);
 
+    // Allow longer duration for routes with walking shortcuts
+    // More generous allowance based on how many transfers are saved
+    const transferDiff = Math.max(
+      0,
+      countTransfers(minTransfersRoute) - countTransfers(route)
+    );
+    const shortcutBonus = hasWalkingShortcut ? 1.1 + transferDiff * 0.1 : 1.0;
+
+    const routeThreshold = durationThreshold * shortcutBonus;
+    return route.totalDuration <= routeThreshold;
+  });
+
+  // Apply transfers filter with consideration for walking shortcuts
   const minTransfers = countTransfers(minTransfersRoute);
   const transfersThreshold = Math.min(
     MAX_TRANSFERS,
@@ -150,18 +183,24 @@ function filterRoutesByQuality(routes: Route[]): Route[] {
     (route) => countTransfers(route) <= transfersThreshold
   );
 
+  // Special handling for walking vs. transit
   filtered = handleWalkingTransitFiltering(filtered);
 
+  // Ensure we haven't filtered out all routes
   if (filtered.length === 0) {
     return getFallbackRoutes(routes, fastestRoute);
   }
 
-  return ensurePriorityRoutes(
-    filtered,
+  // Ensure we include priority routes
+  const priorityRoutes = [
     fastestRoute,
     minTransfersRoute,
-    mostComfortableRoute
-  );
+    mostComfortableRoute,
+    // Add best walking shortcut route to priorities if it exists
+    ...(efficientShortcutRoutes.length > 0 ? [efficientShortcutRoutes[0]] : []),
+  ];
+
+  return ensurePriorityRoutes(filtered, ...priorityRoutes);
 }
 
 function rankRoutes(routes: Route[]): Route[] {

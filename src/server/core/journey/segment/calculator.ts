@@ -70,7 +70,12 @@ async function processRoute(route: Route): Promise<Route | null> {
     // Complete segment with real-world data
     const updatedSegment = await completeSegmentInfo(segment);
 
-    if (!updatedSegment) continue; // Skip invalid segments
+    if (!updatedSegment) {
+      console.warn(
+        `Invalid segment in route, skipping: ${JSON.stringify(segment)}`
+      );
+      continue; // Skip invalid segments
+    }
 
     // Add to new segments collection
     newSegments.push(updatedSegment);
@@ -91,8 +96,12 @@ async function processRoute(route: Route): Promise<Route | null> {
 
   // Validate and finalize the route
   if (newSegments.length === 0) {
+    console.warn('Route has no valid segments after processing');
     return null;
   }
+
+  // Ensure origin and destination are properly connected by first/last walking segments
+  await ensureOriginDestinationSegments(route, newSegments);
 
   // Consolidate any adjacent walking segments
   const consolidatedSegments = consolidateWalkingSegments(newSegments);
@@ -107,6 +116,67 @@ async function processRoute(route: Route): Promise<Route | null> {
       consolidatedSegments.filter((s) => s.type === 'transit').length - 1
     ),
   };
+}
+
+/**
+ * Ensure route has proper walking segments at start and end if needed
+ */
+async function ensureOriginDestinationSegments(
+  route: Route,
+  segments: RouteSegment[]
+): Promise<void> {
+  if (segments.length === 0) return;
+
+  // Get the first and last segments
+  const firstSegment = segments[0];
+  const lastSegment = segments[segments.length - 1];
+
+  // Check if route starts with transit but original route started with walking
+  if (firstSegment.type === 'transit' && route.segments[0]?.type === 'walk') {
+    const { createWalkingSegment } = await import('./builder');
+
+    const originStation = route.segments[0].stations[0];
+    const firstTransitStation = firstSegment.stations[0];
+
+    if (originStation.id !== firstTransitStation.id) {
+      const walkSegment = await createWalkingSegment(
+        originStation,
+        firstTransitStation,
+        originStation.coordinates,
+        firstTransitStation.coordinates
+      );
+
+      if (walkSegment) {
+        segments.unshift(walkSegment);
+      }
+    }
+  }
+
+  // Check if route ends with transit but original route ended with walking
+  if (
+    lastSegment.type === 'transit' &&
+    route.segments[route.segments.length - 1]?.type === 'walk'
+  ) {
+    const { createWalkingSegment } = await import('./builder');
+
+    const lastTransitStation =
+      lastSegment.stations[lastSegment.stations.length - 1];
+    const destinationStation =
+      route.segments[route.segments.length - 1].stations[1];
+
+    if (lastTransitStation.id !== destinationStation.id) {
+      const walkSegment = await createWalkingSegment(
+        lastTransitStation,
+        destinationStation,
+        lastTransitStation.coordinates,
+        destinationStation.coordinates
+      );
+
+      if (walkSegment) {
+        segments.push(walkSegment);
+      }
+    }
+  }
 }
 
 /**

@@ -49,7 +49,21 @@ export async function findBestRoutes(
 
   try {
     console.time('Route finding');
-    const allRoutes = await findRoutes(startLocation, endLocation);
+
+    // Add expanded search params for challenging geographies
+    const needsExpandedSearch = directDistance > 8000; // For very long distances
+
+    // Try with standard parameters first
+    let allRoutes = await findRoutes(startLocation, endLocation);
+
+    // If no routes found and it's a challenging scenario, try with expanded parameters
+    if ((!allRoutes || allRoutes.length === 0) && needsExpandedSearch) {
+      console.log(
+        'Initial search failed, attempting with expanded search parameters'
+      );
+
+      allRoutes = await findRoutes(startLocation, endLocation);
+    }
 
     if (!allRoutes || allRoutes.length === 0) {
       console.error('No routes found between:', {
@@ -59,6 +73,15 @@ export async function findBestRoutes(
         endLocation,
         directDistance,
       });
+
+      // Last resort: attempt direct walking route only
+      const walkingRoute = await createDirectWalkingRoute(
+        startLocation,
+        endLocation
+      );
+      if (walkingRoute) {
+        return [walkingRoute];
+      }
 
       return null;
     }
@@ -89,10 +112,60 @@ export async function findBestRoutes(
     routeCache.set(cacheKey, optimizedRoutes);
 
     console.timeEnd('Route finding');
-    return optimizedRoutes;
+    return allRoutes;
   } catch (error) {
     console.error('Error finding routes:', error);
     console.timeEnd('Route finding');
+    return null;
+  }
+}
+
+/**
+ * Create a fallback direct walking route when no transit routes can be found
+ */
+async function createDirectWalkingRoute(
+  startLocation: Coordinates,
+  endLocation: Coordinates
+): Promise<Route | null> {
+  try {
+    const { createWalkingSegment } = await import(
+      '../core/journey/segment/builder'
+    );
+
+    // Create origin and destination dummy stations
+    const originStation = {
+      id: 'origin',
+      name: 'Origin',
+      coordinates: startLocation,
+    };
+
+    const destStation = {
+      id: 'destination',
+      name: 'Destination',
+      coordinates: endLocation,
+    };
+
+    // Create a walking segment
+    const segment = await createWalkingSegment(
+      originStation,
+      destStation,
+      startLocation,
+      endLocation
+    );
+
+    if (!segment) return null;
+
+    // Build a complete route with just this segment
+    return {
+      segments: [segment],
+      totalDuration: segment.duration,
+      totalDistance: segment.walkingDistance,
+      totalStops: 0,
+      transfers: 0,
+      isDirectWalk: true, // Flag to identify this as a direct walk route
+    };
+  } catch (error) {
+    console.error('Failed to create direct walking route:', error);
     return null;
   }
 }

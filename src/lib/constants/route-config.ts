@@ -62,3 +62,23 @@ export const WALKING_SEGMENT_PENALTIES = {
   VERY_LONG: 2000,
   EXTREME: 2500,
 };
+
+// Maximum number of paths to attempt to find during routing
+export const MAX_PATHS_TO_FIND = 5;
+
+/**
+ * Walking shortcut distance thresholds (in meters)
+ */
+export const WALKING_SHORTCUTS = {
+  /**
+   * The maximum distance for walking shortcuts between stations
+   * Any explicitly defined shortcuts will use this threshold
+   */
+  MAX_DISTANCE: 800,
+
+  /**
+   * The threshold above which a walking segment is considered "long"
+   * Used for scoring and penalties in route selection
+   */
+  LONG_THRESHOLD: 500,
+};

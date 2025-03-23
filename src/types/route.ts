@@ -1,47 +1,42 @@
-import { MetroLine } from './metro';
-import { Station } from './station';
+import { Station } from '@/types/station';
 
-/**
- * Base interface for route segments
- */
-export interface RouteSegment {
-  type: 'transit' | 'walk';
-  stations: Station[];
-  duration: number; // in seconds
-}
-
-/**
- * Transit segment representing travel on a metro line
- */
-export interface TransitSegment extends RouteSegment {
-  type: 'transit';
-  line: Partial<Omit<MetroLine, 'station'>>;
-  stopWaitTime?: number;
-  boardingTime?: number;
-}
-
-/**
- * Walking segment representing travel on foot
- */
-export interface WalkSegment extends RouteSegment {
-  type: 'walk';
-  walkingTime: number;
-  walkingDistance: number;
-}
-
-/**
- * Complete route composed of multiple segments
- */
 export interface Route {
   id?: string;
   segments: RouteSegment[];
+  totalDuration: number;
+  totalDistance: number;
   totalStops: number;
-  totalDistance: number; // in meters
-  totalDuration: number; // in seconds
   transfers: number;
-  fare?: number;
   isDirectWalk?: boolean;
   isShortWalk?: boolean;
   isMediumWalk?: boolean;
   isLongWalk?: boolean;
+  directDistance?: number;
+}
+
+export type RouteSegment = TransitSegment | WalkSegment;
+
+export interface BaseSegment {
+  type: 'transit' | 'walk';
+  duration: number;
+  stations: Station[];
+}
+
+export interface TransitSegment extends BaseSegment {
+  type: 'transit';
+  line: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  stopWaitTime: number;
+}
+
+export interface WalkSegment extends BaseSegment {
+  type: 'walk';
+  walkingTime: number;
+  walkingDistance: number;
+  isShortcut?: boolean;
+  isExplicitShortcut?: boolean;
+  priority?: number;
 }
