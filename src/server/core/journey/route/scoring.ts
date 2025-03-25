@@ -108,7 +108,8 @@ function calculateWalkingScore(route: Route): number {
   let totalWalkingDistance = 0;
   let shortcutWalkingDistance = 0;
   let explicitShortcutWalkingDistance = 0;
-  let longWalkingDistance = 0; // Specifically track long walks
+  let longWalkingDistance = 0;
+  let accessWalkingDistance = 0; // Track access walks separately
 
   // Use consistent threshold from config
   const LONG_WALK_THRESHOLD = WALKING_SHORTCUTS.LONG_THRESHOLD;
@@ -117,6 +118,12 @@ function calculateWalkingScore(route: Route): number {
     if (segment.type === 'walk') {
       const walkSegment = segment as WalkSegment;
       totalWalkingDistance += walkSegment.walkingDistance;
+
+      // Handle access walks (first/last segments) differently
+      if (walkSegment.isAccessWalk) {
+        accessWalkingDistance += walkSegment.walkingDistance;
+        continue; // Skip further processing of access walks
+      }
 
       // Track different types of walking segments
       if (walkSegment.isShortcut) {
@@ -133,15 +140,19 @@ function calculateWalkingScore(route: Route): number {
     }
   }
 
+  // Remove access walks from total for scoring purposes
+  const scoringWalkingDistance = totalWalkingDistance - accessWalkingDistance;
+
   // Adjust effective walking distance with varying weights:
-  // - Explicit shortcuts get a 60% discount (up from 50%)
-  // - Dynamic shortcuts get a 30% discount (unchanged)
+  // - Explicit shortcuts get a 60% discount
+  // - Dynamic shortcuts get a 30% discount
   // - Long walking segments get a 20% penalty to discourage them
+  // - Access walks are excluded from penalties/bonuses
   const effectiveWalkingDistance =
-    totalWalkingDistance -
-    explicitShortcutWalkingDistance * 0.6 - // Increased discount for explicit shortcuts
+    scoringWalkingDistance -
+    explicitShortcutWalkingDistance * 0.6 -
     (shortcutWalkingDistance - explicitShortcutWalkingDistance) * 0.3 +
-    longWalkingDistance * 0.2; // Additional penalty for long non-shortcut walks
+    longWalkingDistance * 0.2;
 
   const { EXCELLENT, GOOD, ACCEPTABLE, FAIR, POOR } = WALKING_SCORE_THRESHOLDS;
 

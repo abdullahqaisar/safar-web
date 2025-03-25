@@ -1279,3 +1279,39 @@ export const walkingShortcuts: Array<{
     priority: 8,
   },
 ];
+
+/**
+ * Major interchange stations in the network
+ * These are stations where multiple lines meet, enabling transfers
+ */
+export const interchangeStations: Array<{
+  stationId: string;
+  name: string;
+  lines: string[]; // IDs of the lines that meet at this station
+  priority: number; // Higher number means higher priority (0-10, 10 being highest)
+}> = [
+  {
+    stationId: 'faizAhmadFaiz',
+    name: 'Faiz Ahmad Faiz',
+    lines: ['red', 'orange'],
+    priority: 10, // Highest priority - major transfer point
+  },
+  {
+    stationId: 'pims_gate',
+    name: 'PIMS Gate',
+    lines: ['green', 'blue'],
+    priority: 9,
+  },
+  {
+    stationId: 'faizabad',
+    name: 'Faizabad',
+    lines: ['red', 'fr_1', 'fr_9', 'fr_14'],
+    priority: 8,
+  },
+  {
+    stationId: 'sohan',
+    name: 'Sohan',
+    lines: ['blue', 'fr_1', 'fr_9', 'fr_14'],
+    priority: 7,
+  },
+];

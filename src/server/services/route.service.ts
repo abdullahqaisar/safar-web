@@ -56,6 +56,104 @@ export async function findBestRoutes(
     // Try with standard parameters first
     let allRoutes = await findRoutes(startLocation, endLocation);
 
+    console.log(
+      `Found ${allRoutes.length} potential routes, checking for diversity...`
+    );
+
+    // Analyze transit line diversity
+    if (allRoutes.length > 1) {
+      const lineSets = allRoutes.map((route) => {
+        const lines = new Set<string>();
+        for (const segment of route.segments) {
+          if (
+            segment.type === 'transit' &&
+            'line' in segment &&
+            segment.line?.id
+          ) {
+            lines.add(segment.line.id);
+          }
+        }
+        return lines;
+      });
+
+      // Check for routes with different transit lines
+      const hasLineDiversity = lineSets.some((lines, i) => {
+        for (let j = 0; j < i; j++) {
+          // Check if there's at least one different line
+          const otherLines = lineSets[j];
+          let hasDifferentLine = false;
+
+          for (const line of lines) {
+            if (!otherLines.has(line)) {
+              hasDifferentLine = true;
+              break;
+            }
+          }
+
+          if (hasDifferentLine) return true;
+        }
+        return false;
+      });
+
+      if (!hasLineDiversity) {
+        console.log(
+          'Routes lack transit line diversity, will attempt to find more diverse routes'
+        );
+
+        // Try a second time with more aggressive diversity parameters
+        const secondAttemptRoutes = await findRoutes(
+          startLocation,
+          endLocation
+        );
+
+        // If we got new routes, add them to our collection
+        if (secondAttemptRoutes.length > 0) {
+          console.log(
+            `Found ${secondAttemptRoutes.length} additional routes in second attempt`
+          );
+
+          // Combine routes, avoiding duplicates
+          const routeIds = new Set(allRoutes.map((r) => r.id));
+          for (const route of secondAttemptRoutes) {
+            if (!routeIds.has(route.id)) {
+              allRoutes.push(route);
+            }
+          }
+        }
+      }
+    }
+
+    // If routes are still limited, check if we need to specifically search for major line combinations
+    if (allRoutes.length < 3) {
+      // Look for routes that might be using mainly feeder routes
+      const usesMajorLines = allRoutes.filter((route) =>
+        route.segments.some(
+          (segment) =>
+            segment.type === 'transit' &&
+            'line' in segment &&
+            ['red', 'orange', 'blue', 'green'].includes(segment.line?.id || '')
+        )
+      );
+
+      if (usesMajorLines.length < 2) {
+        console.log(
+          'Not enough routes using major lines, will attempt another search'
+        );
+        // Try another search focusing on major lines
+        const majorLineRoutes = await findRoutes(startLocation, endLocation);
+
+        // Add any new routes
+        if (majorLineRoutes.length > 0) {
+          const routeIds = new Set(allRoutes.map((r) => r.id));
+          for (const route of majorLineRoutes) {
+            if (!routeIds.has(route.id)) {
+              allRoutes.push(route);
+            }
+          }
+        }
+      }
+    }
+
     // If no routes found and it's a challenging scenario, try with expanded parameters
     if ((!allRoutes || allRoutes.length === 0) && needsExpandedSearch) {
       console.log(
@@ -112,7 +210,7 @@ export async function findBestRoutes(
     routeCache.set(cacheKey, optimizedRoutes);
 
     console.timeEnd('Route finding');
-    return allRoutes;
+    return optimizedRoutes;
   } catch (error) {
     console.error('Error finding routes:', error);
     console.timeEnd('Route finding');

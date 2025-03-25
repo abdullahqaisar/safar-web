@@ -363,45 +363,124 @@ export function extractEdgesFromPath(
   return edges;
 }
 
-export function areSimilarPaths(path1: string[], path2: string[]): boolean {
-  const transitNodes1 = new Set(
-    path1.filter(
-      (node) =>
-        !node.includes('_') && node !== 'origin' && node !== 'destination'
-    )
-  );
+/**
+ * Apply penalties to edges that are common in multiple paths
+ * Use exponential penalties to strongly discourage reuse
+ */
+export function penalizeCommonEdges(
+  graph: Graph,
+  edgeKeys: Array<string> | Array<{ key: string; count: number }>
+): void {
+  for (const edgeInfo of edgeKeys) {
+    // Handle both simple string keys and {key, count} objects
+    const key = typeof edgeInfo === 'string' ? edgeInfo : edgeInfo.key;
+    const count = typeof edgeInfo === 'string' ? 2 : edgeInfo.count;
 
-  const transitNodes2 = new Set(
-    path2.filter(
-      (node) =>
-        !node.includes('_') && node !== 'origin' && node !== 'destination'
-    )
-  );
+    const [source, target] = key.split('->');
 
-  const intersection = new Set(
-    [...transitNodes1].filter((node) => transitNodes2.has(node))
-  );
-  const union = new Set([...transitNodes1, ...transitNodes2]);
+    if (graph.hasEdge(source, target)) {
+      const edgeKey = graph.edge(source, target);
+      const edgeData = graph.getEdgeAttributes(edgeKey);
 
-  if (union.size === 0) return false;
+      // Apply exponential penalty based on how many paths use this edge
+      const penaltyFactor = Math.pow(5, count - 1); // 5x, 25x, 125x, etc.
 
-  return intersection.size / union.size > 0.7;
+      // Preserve original edge type in attributes
+      graph.setEdgeAttribute(
+        edgeKey,
+        'duration',
+        edgeData.duration * penaltyFactor
+      );
+
+      // Tag this edge as penalized for debugging
+      graph.setEdgeAttribute(edgeKey, 'penalized', true);
+      graph.setEdgeAttribute(edgeKey, 'penaltyFactor', penaltyFactor);
+    }
+  }
 }
 
-export function penalizeCommonEdges(
-  graph: Graph<NodeData, EdgeData>,
-  commonEdges: string[]
-): void {
-  graph.forEachEdge(
-    (edge: string, attributes: EdgeData, source: string, target: string) => {
-      if (attributes.type === 'transit' && attributes.lineId) {
-        const key = `${source}-${target}-${attributes.lineId}`;
-        if (commonEdges.includes(key)) {
-          graph.setEdgeAttribute(edge, 'duration', attributes.duration * 2);
-        }
+/**
+ * Check if two paths are similar based on their node sequences
+ * Enhanced to consider stations and transit lines, not just graph topology
+ */
+export function areSimilarPaths(
+  pathA: Array<string>,
+  pathB: Array<string>,
+  threshold: number = 0.8
+): boolean {
+  // Trivial case - exact same sequence
+  if (
+    pathA.length === pathB.length &&
+    pathA.every((node, i) => node === pathB[i])
+  ) {
+    return true;
+  }
+
+  // Extract station IDs and line IDs from path nodes
+  const extractStationsAndLines = (
+    path: string[]
+  ): { stations: Set<string>; lines: Set<string> } => {
+    const stations = new Set<string>();
+    const lines = new Set<string>();
+
+    for (const node of path) {
+      // Skip origin/destination nodes
+      if (node === 'origin' || node === 'destination') continue;
+
+      // Extract station and potentially line info
+      if (node.includes('_')) {
+        // Virtual node with format stationId_lineId
+        const [stationId, lineId] = node.split('_');
+        if (stationId) stations.add(stationId);
+        if (lineId) lines.add(lineId);
+      } else {
+        // Regular station node
+        stations.add(node);
       }
     }
-  );
+
+    return { stations, lines };
+  };
+
+  const pathAInfo = extractStationsAndLines(pathA);
+  const pathBInfo = extractStationsAndLines(pathB);
+
+  // Calculate station overlap
+  const stationIntersection = new Set<string>();
+  for (const station of pathAInfo.stations) {
+    if (pathBInfo.stations.has(station)) {
+      stationIntersection.add(station);
+    }
+  }
+
+  // Calculate line overlap
+  const lineIntersection = new Set<string>();
+  for (const line of pathAInfo.lines) {
+    if (pathBInfo.lines.has(line)) {
+      lineIntersection.add(line);
+    }
+  }
+
+  // Calculate similarity scores
+  const stationSimilarity =
+    pathAInfo.stations.size > 0 && pathBInfo.stations.size > 0
+      ? stationIntersection.size /
+        Math.min(pathAInfo.stations.size, pathBInfo.stations.size)
+      : 0;
+
+  const lineSimilarity =
+    pathAInfo.lines.size > 0 && pathBInfo.lines.size > 0
+      ? lineIntersection.size /
+        Math.min(pathAInfo.lines.size, pathBInfo.lines.size)
+      : 0;
+
+  // Weight line similarity more heavily to encourage transit line diversity
+  const overallSimilarity =
+    pathAInfo.lines.size > 0 && pathBInfo.lines.size > 0
+      ? 0.3 * stationSimilarity + 0.7 * lineSimilarity
+      : stationSimilarity;
+
+  return overallSimilarity >= threshold;
 }
 
 /**

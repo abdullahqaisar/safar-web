@@ -3,32 +3,48 @@ import Graph from 'graphology';
 import { v4 as uuidv4 } from 'uuid';
 
 import { calculateDistanceSync } from '@/server/core/shared/distance';
-import { EdgeData, NodeData, getTransitGraph } from './graph';
-import { Coordinates, Station } from '@/types/station';
-import { Route, RouteSegment } from '@/types/route';
-import { buildRoute, calculateRouteTimes } from '../segment/calculator';
+import {
+  EdgeData,
+  NodeData,
+  getTransitGraph,
+  connectAccessPoints,
+} from './graph';
+import { Coordinates } from '@/types/station';
+import { Route } from '@/types/route';
 import {
   MAX_ROUTES_TO_GENERATE,
   MAX_WALKING_DISTANCE,
   MAX_ORIGIN_WALKING_DISTANCE,
   MAX_DESTINATION_WALKING_DISTANCE,
 } from '@/lib/constants/config';
-import { DISTANCE_THRESHOLDS } from '@/lib/constants/route-config';
-import { metroLines } from '@/lib/constants/metro-data';
-import { createWalkingSegment } from '../segment/builder';
+import { PATH_STRATEGIES } from './path-strategies';
 import {
-  getEdgeCounts,
   extractEdgesFromPath,
   areSimilarPaths,
-  penalizeCommonEdges,
-} from '@/server/core/shared/graph';
+} from '@/server/core/shared/graph-utils';
+import {
+  createDirectWalkingRoute,
+  calculateStationDistances,
+  determineWalkingThresholds,
+  filterRoutesByLineUniqueness,
+} from '@/server/core/shared/route-utils';
+import {
+  buildRoute,
+  calculateRouteMetrics,
+  calculateRouteTimes,
+} from '../segment/calculator';
+import {
+  generateAggressiveAlternativePaths,
+  forceLineDiversityPaths,
+  findMajorLineCombinationPaths,
+} from './path-diversity';
+import { convertPathToSegments } from './segment-converter';
 
 export async function findRoutes(
   origin: Coordinates,
   destination: Coordinates
 ): Promise<Route[]> {
   const routes: Route[] = [];
-
   const directDistance = calculateDistanceSync(origin, destination);
 
   if (directDistance <= MAX_WALKING_DISTANCE) {
@@ -49,7 +65,6 @@ export async function findRoutes(
     }
   } catch (error) {
     console.error('Error finding transit routes:', error);
-
     if (routes.length === 0) {
       throw error;
     }
@@ -58,96 +73,224 @@ export async function findRoutes(
   return routes;
 }
 
-/**
- * Create a direct walking route between two points
- */
-async function createDirectWalkingRoute(
-  origin: Coordinates,
-  destination: Coordinates
-): Promise<Route | null> {
-  const walkSegment = await createWalkingSegment(
-    { id: 'origin', name: 'Origin', coordinates: origin },
-    { id: 'destination', name: 'Destination', coordinates: destination },
-    origin,
-    destination
-  );
-
-  if (!walkSegment) return null;
-
-  const route = await buildRoute([walkSegment], 0, walkSegment.walkingDistance);
-  const { VERY_SHORT, MEDIUM_MIN, MEDIUM_MAX } = DISTANCE_THRESHOLDS;
-
-  return {
-    ...route,
-    id: `walk-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    isDirectWalk: true,
-    isShortWalk: walkSegment.walkingDistance < VERY_SHORT,
-    isMediumWalk:
-      walkSegment.walkingDistance >= MEDIUM_MIN &&
-      walkSegment.walkingDistance <= MEDIUM_MAX,
-    isLongWalk: walkSegment.walkingDistance > MEDIUM_MAX,
-  };
-}
-
 async function findTransitRoutes(
   origin: Coordinates,
   destination: Coordinates
 ): Promise<Route[]> {
   const directDistance = calculateDistanceSync(origin, destination);
-
   const stationDistances = await calculateStationDistances(origin, destination);
 
   const walkingThresholds = determineWalkingThresholds(
     stationDistances,
-    directDistance
+    directDistance,
+    MAX_ORIGIN_WALKING_DISTANCE,
+    MAX_DESTINATION_WALKING_DISTANCE
   );
 
-  console.log(
-    `Walking thresholds calculated: origin=${walkingThresholds.origin}m, destination=${walkingThresholds.destination}m`
-  );
-
-  const { graph, originId, destinationId } = getTransitGraph(
+  // Phase 1: Get transit-only graph (without origin/destination)
+  const {
+    graph: transitGraph,
+    nearestOriginStations,
+    nearestDestStations,
+  } = getTransitGraph(
     origin,
     destination,
     walkingThresholds.origin,
-    walkingThresholds.destination
+    walkingThresholds.destination,
+    false // exclude access points
   );
 
-  // Validate graph connectivity
-  const originConnections = graph.outNeighbors(originId).length;
-  const destConnections = graph.outNeighbors(destinationId).length;
+  // If we don't have nearby stations, use legacy approach
+  if (!nearestOriginStations?.length || !nearestDestStations?.length) {
+    console.log('No nearby stations found, using legacy approach');
+    const legacyGraph = getTransitGraph(
+      origin,
+      destination,
+      walkingThresholds.origin * 1.5,
+      walkingThresholds.destination * 1.5
+    );
+    return findLegacyRoutes(
+      legacyGraph.graph,
+      legacyGraph.originId,
+      legacyGraph.destinationId,
+      directDistance
+    );
+  }
 
-  if (originConnections === 0 || destConnections === 0) {
-    console.warn(
-      `Connectivity issue: origin has ${originConnections} connections, destination has ${destConnections} connections`
+  // Find transit-only paths between nearby stations
+  const transitPaths = findTransitOnlyPaths(
+    transitGraph,
+    nearestOriginStations,
+    nearestDestStations
+  );
+
+  if (transitPaths.length === 0) {
+    console.log('No transit paths found, using legacy approach');
+    const legacyGraph = getTransitGraph(
+      origin,
+      destination,
+      walkingThresholds.origin,
+      walkingThresholds.destination
+    );
+    return findLegacyRoutes(
+      legacyGraph.graph,
+      legacyGraph.originId,
+      legacyGraph.destinationId,
+      directDistance
+    );
+  }
+
+  // Phase 2: Connect origin/destination to transit paths
+  const routes: Route[] = [];
+
+  for (const path of transitPaths) {
+    // Connect origin/destination to this transit path
+    const {
+      graph: accessGraph,
+      originId,
+      destinationId,
+    } = connectAccessPoints(
+      transitGraph,
+      origin,
+      destination,
+      path.path,
+      walkingThresholds.origin,
+      walkingThresholds.destination
     );
 
-    // Try again with expanded thresholds
-    if (originConnections === 0 || destConnections === 0) {
-      const expandedGraph = getTransitGraph(
-        origin,
-        destination,
-        walkingThresholds.origin * 1.5,
-        walkingThresholds.destination * 1.5
-      );
-      return findPathsAndCreateRoutes(
-        expandedGraph.graph,
+    // Find complete path including access points
+    try {
+      const completePath = dijkstra.bidirectional(
+        accessGraph,
         originId,
         destinationId,
-        directDistance
+        (_edge: string, attributes: EdgeData) => attributes.duration
       );
+
+      if (completePath && completePath.length > 0) {
+        const edges = extractEdgesFromPath(accessGraph, completePath);
+        if (edges.length > 0) {
+          // Convert to route
+          const segments = await convertPathToSegments(
+            completePath,
+            edges,
+            accessGraph
+          );
+          if (segments.length > 0) {
+            const metrics = calculateRouteMetrics(segments);
+            if (metrics.totalDuration > 0) {
+              const route = await buildRoute(
+                segments,
+                metrics.totalStops,
+                metrics.totalDistance
+              );
+              route.id = uuidv4();
+              routes.push(route);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error finding complete path:', error);
     }
   }
 
-  return findPathsAndCreateRoutes(
-    graph,
-    originId,
-    destinationId,
-    directDistance
-  );
+  // If we couldn't create any routes, fall back to legacy approach
+  if (routes.length === 0) {
+    console.log('No routes created, using legacy approach');
+    const legacyGraph = getTransitGraph(
+      origin,
+      destination,
+      walkingThresholds.origin,
+      walkingThresholds.destination
+    );
+    return findLegacyRoutes(
+      legacyGraph.graph,
+      legacyGraph.originId,
+      legacyGraph.destinationId,
+      directDistance
+    );
+  }
+
+  // Process routes and add direct distance
+  const routesWithTimes = await calculateRouteTimes(routes);
+  return routesWithTimes.map((route) => ({
+    ...route,
+    id: `transit-${uuidv4()}`,
+    directDistance,
+  }));
 }
 
-async function findPathsAndCreateRoutes(
+/**
+ * Find transit-only paths between nearby stations of origin and destination
+ */
+function findTransitOnlyPaths(
+  graph: Graph<NodeData, EdgeData>,
+  originStations: { id: string; distance: number }[],
+  destStations: { id: string; distance: number }[]
+): {
+  path: string[];
+  edges: Array<EdgeData & { source: string; target: string }>;
+}[] {
+  const paths: {
+    path: string[];
+    edges: Array<EdgeData & { source: string; target: string }>;
+  }[] = [];
+
+  // Try paths between each pair of nearby stations
+  for (const originStation of originStations) {
+    for (const destStation of destStations) {
+      if (originStation.id === destStation.id) continue;
+
+      try {
+        // Find path using various strategies
+        for (const strategy of PATH_STRATEGIES) {
+          const path = dijkstra.bidirectional(
+            graph,
+            originStation.id,
+            destStation.id,
+            strategy.weight
+          );
+
+          if (path && path.length > 0) {
+            const edges = extractEdgesFromPath(graph, path);
+
+            if (edges.length > 0) {
+              const isSignificantlyDifferent = !paths.some((existingPath) =>
+                areSimilarPaths(path, existingPath.path, 0.7)
+              );
+
+              if (isSignificantlyDifferent) {
+                paths.push({ path, edges });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Continue to next pair if this one fails
+      }
+    }
+  }
+
+  // Apply diversity strategies to generate more paths
+  for (const origin of originStations.slice(0, 2)) {
+    for (const dest of destStations.slice(0, 2)) {
+      try {
+        generateAggressiveAlternativePaths(graph, origin.id, dest.id, paths);
+        forceLineDiversityPaths(graph, origin.id, dest.id, paths);
+      } catch (error) {
+        // Continue if strategies fail
+      }
+    }
+  }
+
+  return paths.length <= 3 ? paths : paths.slice(0, MAX_ROUTES_TO_GENERATE);
+}
+
+/**
+ * Legacy approach for finding routes (preserved for backward compatibility)
+ */
+async function findLegacyRoutes(
   graph: Graph<NodeData, EdgeData>,
   originId: string,
   destinationId: string,
@@ -160,12 +303,6 @@ async function findPathsAndCreateRoutes(
     return [];
   }
 
-  // Log path statistics
-  console.log(
-    `Found ${paths.length} possible paths between origin and destination`
-  );
-
-  // Validate paths - ensure they include origin and destination
   const validPaths = paths.filter(
     (path) =>
       path.path.includes(originId) &&
@@ -173,165 +310,14 @@ async function findPathsAndCreateRoutes(
       path.edges.length > 0
   );
 
-  if (validPaths.length < paths.length) {
-    console.warn(
-      `Filtered out ${paths.length - validPaths.length} invalid paths`
-    );
-  }
-
   const routes = await pathsToRoutes(validPaths, graph);
-
-  // Log some details about routes
-  console.log(`Generated ${routes.length} routes from paths`);
-
-  if (routes.length === 0 && validPaths.length > 0) {
-    console.warn('Failed to convert any paths to routes');
-  }
-
   const routesWithTimes = await calculateRouteTimes(routes);
 
   return routesWithTimes.map((route) => ({
     ...route,
-    id: `transit-${Date.now()}-${Math.random().toString(36).slice(2, 15)}`,
+    id: `transit-${uuidv4()}`,
     directDistance,
   }));
-}
-
-async function calculateStationDistances(
-  origin: Coordinates,
-  destination: Coordinates
-): Promise<{
-  originDistances: { stationId: string; distance: number }[];
-  destinationDistances: { stationId: string; distance: number }[];
-  minOriginDistance: number;
-  minDestDistance: number;
-  closestOriginStation: string;
-  closestDestStation: string;
-}> {
-  const originDistances: { stationId: string; distance: number }[] = [];
-  const destinationDistances: { stationId: string; distance: number }[] = [];
-
-  let minOriginDistance = Infinity;
-  let minDestDistance = Infinity;
-  let closestOriginStation = '';
-  let closestDestStation = '';
-
-  const stationIds = new Set<string>();
-  for (const line of metroLines) {
-    for (const station of line.stations) {
-      stationIds.add(station.id);
-    }
-  }
-
-  for (const stationId of stationIds) {
-    let stationCoords: Coordinates | null = null;
-    for (const line of metroLines) {
-      const station = line.stations.find((s) => s.id === stationId);
-      if (station) {
-        stationCoords = station.coordinates;
-        break;
-      }
-    }
-
-    if (stationCoords) {
-      const originDistance = calculateDistanceSync(origin, stationCoords);
-      const destDistance = calculateDistanceSync(destination, stationCoords);
-
-      originDistances.push({ stationId, distance: originDistance });
-      destinationDistances.push({ stationId, distance: destDistance });
-
-      if (originDistance < minOriginDistance) {
-        minOriginDistance = originDistance;
-        closestOriginStation = stationId;
-      }
-
-      if (destDistance < minDestDistance) {
-        minDestDistance = destDistance;
-        closestDestStation = stationId;
-      }
-    }
-  }
-
-  originDistances.sort((a, b) => a.distance - b.distance);
-  destinationDistances.sort((a, b) => a.distance - b.distance);
-
-  return {
-    originDistances,
-    destinationDistances,
-    minOriginDistance,
-    minDestDistance,
-    closestOriginStation,
-    closestDestStation,
-  };
-}
-
-function determineWalkingThresholds(
-  stationDistances: {
-    originDistances: { stationId: string; distance: number }[];
-    destinationDistances: { stationId: string; distance: number }[];
-    minOriginDistance: number;
-    minDestDistance: number;
-    closestOriginStation: string;
-    closestDestStation: string;
-  },
-  directDistance: number
-): { origin: number; destination: number } {
-  let originThreshold = MAX_ORIGIN_WALKING_DISTANCE;
-  let destinationThreshold = MAX_DESTINATION_WALKING_DISTANCE;
-
-  const {
-    originDistances,
-    destinationDistances,
-    minOriginDistance,
-    minDestDistance,
-  } = stationDistances;
-
-  const baseThreshold = Math.max(
-    directDistance * 0.33,
-
-    Math.max(minOriginDistance, minDestDistance) * 1.5,
-
-    // But never less than 1km to ensure connectivity in sparse areas
-    1000
-  );
-
-  const originDensity =
-    originDistances.length >= 3
-      ? originDistances[2].distance
-      : minOriginDistance * 2;
-
-  const destDensity =
-    destinationDistances.length >= 3
-      ? destinationDistances[2].distance
-      : minDestDistance * 2;
-
-  originThreshold = Math.max(
-    baseThreshold,
-    Math.min(originDensity * 1.2, 3000)
-  );
-
-  destinationThreshold = Math.max(
-    baseThreshold,
-    Math.min(destDensity * 1.2, 3000)
-  );
-
-  const symmetricThreshold = Math.max(originThreshold, destinationThreshold);
-
-  const isLongJourney = directDistance > 5000;
-  if (isLongJourney) {
-    return {
-      origin: Math.min(symmetricThreshold * 1.2, MAX_ORIGIN_WALKING_DISTANCE),
-      destination: Math.min(
-        symmetricThreshold * 1.2,
-        MAX_DESTINATION_WALKING_DISTANCE
-      ),
-    };
-  }
-
-  return {
-    origin: symmetricThreshold,
-    destination: symmetricThreshold,
-  };
 }
 
 function findMultiplePaths(
@@ -342,40 +328,34 @@ function findMultiplePaths(
   path: string[];
   edges: Array<EdgeData & { source: string; target: string }>;
 }[] {
+  // Legacy implementation (simplified)
   const paths: {
     path: string[];
     edges: Array<EdgeData & { source: string; target: string }>;
   }[] = [];
 
   if (!graph.hasNode(originId) || !graph.hasNode(destinationId)) {
-    console.error('Origin or destination node not found in graph');
     return [];
   }
-  const strategies = [
-    // Default strategy - balanced consideration of all factors
-    { weight: (_edge: string, attributes: EdgeData) => attributes.duration },
 
-    // Minimize transfers (heavily penalize transfer edges)
-    {
-      weight: (_edge: string, attributes: EdgeData) =>
-        attributes.duration * (attributes.type === 'transfer' ? 5 : 1),
-    },
+  try {
+    // Find initial path
+    const initialResult = dijkstra.bidirectional(
+      graph,
+      originId,
+      destinationId,
+      (_edge: string, attributes: EdgeData) => attributes.duration
+    );
 
-    // Prefer transit over walking (penalize walking edges)
-    {
-      weight: (_edge: string, attributes: EdgeData) =>
-        attributes.duration * (attributes.type === 'walking' ? 2 : 1),
-    },
+    if (initialResult && initialResult.length > 0) {
+      const edges = extractEdgesFromPath(graph, initialResult);
+      if (edges.length > 0) {
+        paths.push({ path: initialResult, edges });
+      }
+    }
 
-    // Direct walking path when possible
-    {
-      weight: (_edge: string, attributes: EdgeData) =>
-        attributes.duration * (attributes.type === 'walking' ? 0.8 : 1.5),
-    },
-  ];
-
-  for (const strategy of strategies) {
-    try {
+    // Apply different strategies for diversity
+    for (const strategy of PATH_STRATEGIES) {
       const result = dijkstra.bidirectional(
         graph,
         originId,
@@ -384,90 +364,25 @@ function findMultiplePaths(
       );
 
       if (result && result.length > 0) {
-        const edges: Array<EdgeData & { source: string; target: string }> = [];
-        for (let i = 0; i < result.length - 1; i++) {
-          const edgeKey = graph.edge(result[i], result[i + 1]);
-          if (edgeKey) {
-            const edgeData = graph.getEdgeAttributes(edgeKey);
-            edges.push({
-              source: result[i],
-              target: result[i + 1],
-              ...edgeData,
-            });
-          }
-        }
-
-        if (edges.length > 0) {
+        const edges = extractEdgesFromPath(graph, result);
+        if (
+          edges.length > 0 &&
+          !paths.some((p) => areSimilarPaths(result, p.path, 0.7))
+        ) {
           paths.push({ path: result, edges });
         }
       }
-    } catch (error) {
-      console.error('Error finding path with strategy:', error);
     }
-  }
 
-  generateAlternativePaths(graph, originId, destinationId, paths);
-
-  return paths.slice(0, MAX_ROUTES_TO_GENERATE);
-}
-
-function generateAlternativePaths(
-  graph: Graph<NodeData, EdgeData>,
-  originId: string,
-  destinationId: string,
-  existingPaths: {
-    path: string[];
-    edges: Array<EdgeData & { source: string; target: string }>;
-  }[]
-): void {
-  if (existingPaths.length === 0) return;
-
-  const graphCopy = graph.copy();
-  const edgeCounts = getEdgeCounts(existingPaths);
-  const commonEdges = Array.from(edgeCounts.entries())
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .filter(([_key, count]) => count > 1)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .map(([key, _count]) => key);
-
-  if (commonEdges.length === 0) return;
-
-  penalizeCommonEdges(graphCopy, commonEdges);
-  findAlternativePath(graphCopy, originId, destinationId, existingPaths);
-}
-
-function findAlternativePath(
-  graph: Graph<NodeData, EdgeData>,
-  originId: string,
-  destinationId: string,
-  existingPaths: {
-    path: string[];
-    edges: Array<EdgeData & { source: string; target: string }>;
-  }[]
-): void {
-  try {
-    const result = dijkstra.bidirectional(
-      graph,
-      originId,
-      destinationId,
-      (_edge: string, attributes: EdgeData) => attributes.duration
-    );
-
-    if (!result || result.length === 0) return;
-
-    const edges = extractEdgesFromPath(graph, result);
-    if (edges.length === 0) return;
-
-    const isUnique = !existingPaths.some((existingPath) =>
-      areSimilarPaths(result, existingPath.path)
-    );
-
-    if (isUnique) {
-      existingPaths.push({ path: result, edges });
-    }
+    // Generate additional alternatives
+    generateAggressiveAlternativePaths(graph, originId, destinationId, paths);
+    forceLineDiversityPaths(graph, originId, destinationId, paths);
+    findMajorLineCombinationPaths(graph, originId, destinationId, paths);
   } catch (error) {
-    console.error('Error finding alternative path:', error);
+    console.error('Error finding paths:', error);
   }
+
+  return paths.length <= 3 ? paths : paths.slice(0, MAX_ROUTES_TO_GENERATE);
 }
 
 async function pathsToRoutes(
@@ -477,7 +392,6 @@ async function pathsToRoutes(
   }[],
   graph: Graph<NodeData, EdgeData>
 ): Promise<Route[]> {
-  const { calculateRouteMetrics } = await import('../segment/calculator');
   const routes: Route[] = [];
 
   for (const { path, edges } of paths) {
@@ -486,7 +400,6 @@ async function pathsToRoutes(
       if (segments.length === 0) continue;
 
       const metrics = calculateRouteMetrics(segments);
-
       if (metrics.totalDuration > 0) {
         const route = await buildRoute(
           segments,
@@ -501,254 +414,5 @@ async function pathsToRoutes(
     }
   }
 
-  return routes;
-}
-
-async function convertPathToSegments(
-  path: string[],
-  edges: Array<EdgeData & { source: string; target: string }>,
-  graph: Graph<NodeData, EdgeData>
-): Promise<RouteSegment[]> {
-  const segments: RouteSegment[] = [];
-
-  const {
-    createTransitSegment,
-    createWalkingSegment,
-    getLineById,
-    consolidateWalkingSegments,
-    findOptimalStationSequence,
-  } = await import('../segment/builder');
-
-  let currentTransitLine: string | null = null;
-  let currentTransitStations: Station[] = [];
-
-  // Improved function to extract line ID without string manipulation assumptions
-  function extractLineId(nodeId: string): string | null {
-    // First check if it's a virtual node with line information
-    if (graph.hasNode(nodeId)) {
-      const attrs = graph.getNodeAttributes(nodeId);
-      if (attrs.lineId) return attrs.lineId;
-      if (attrs.virtual && nodeId.includes('_')) {
-        return nodeId.split('_')[1]; // Fallback to string parsing
-      }
-    }
-    return null;
-  }
-
-  // More robust transfer detection function
-  function isTransferBetweenLines(
-    sourceId: string,
-    targetId: string
-  ): boolean | undefined {
-    if (!graph.hasNode(sourceId) || !graph.hasNode(targetId)) return false;
-
-    const sourceAttrs = graph.getNodeAttributes(sourceId);
-    const targetAttrs = graph.getNodeAttributes(targetId);
-
-    // Both are virtual nodes (line-specific stations)
-    const isVirtualTransfer = sourceAttrs.virtual && targetAttrs.virtual;
-
-    // Represents the same physical station
-    const isSameStation = sourceAttrs.station.id === targetAttrs.station.id;
-
-    // Different lines
-    const sourceLine = sourceAttrs.lineId || extractLineId(sourceId);
-    const targetLine = targetAttrs.lineId || extractLineId(targetId);
-    const isDifferentLine = sourceLine !== targetLine;
-
-    return isVirtualTransfer && isSameStation && isDifferentLine;
-  }
-
-  // Process each edge in the path
-  for (let i = 0; i < edges.length; i++) {
-    const edge = edges[i];
-    if (!graph.hasNode(edge.source) || !graph.hasNode(edge.target)) continue;
-
-    const sourceNodeData = graph.getNodeAttributes(edge.source);
-    const targetNodeData = graph.getNodeAttributes(edge.target);
-
-    if (!sourceNodeData || !targetNodeData) continue;
-
-    const sourceStation = sourceNodeData.station;
-    const targetStation = targetNodeData.station;
-    if (!sourceStation || !targetStation) continue;
-
-    // Improved transfer detection
-    const isIntraStationTransfer = isTransferBetweenLines(
-      edge.source,
-      edge.target
-    );
-
-    const sourceLineId = extractLineId(edge.source);
-    const targetLineId = extractLineId(edge.target);
-    const lineId = edge.lineId || sourceLineId || targetLineId;
-
-    // Special handling for origin/destination walking segments
-    const isOrigin = edge.source === 'origin';
-    const isDestination = edge.target === 'destination';
-
-    // Check for direct walking from origin or to destination
-    if (
-      (isOrigin || isDestination) &&
-      (edge.type === 'walking' || edge.type === 'transfer')
-    ) {
-      // Ensure we flush any transit segment before a destination walk
-      if (
-        isDestination &&
-        currentTransitLine !== null &&
-        currentTransitStations.length > 1
-      ) {
-        const line = getLineById(currentTransitLine);
-        if (line) {
-          const stationSequence = await findOptimalStationSequence(
-            line,
-            currentTransitStations[0],
-            currentTransitStations[currentTransitStations.length - 1],
-            currentTransitStations
-          );
-
-          const transitSegment = await createTransitSegment(
-            line,
-            stationSequence
-          );
-          if (transitSegment) segments.push(transitSegment);
-        }
-        currentTransitLine = null;
-        currentTransitStations = [];
-      }
-
-      // Create the walking segment
-      const walkSegment = await createWalkingSegment(
-        sourceStation,
-        targetStation,
-        sourceStation.coordinates,
-        targetStation.coordinates
-      );
-
-      if (walkSegment) segments.push(walkSegment);
-      continue;
-    }
-
-    if (isIntraStationTransfer) {
-      if (currentTransitLine !== null && currentTransitStations.length > 1) {
-        const line = getLineById(currentTransitLine);
-        if (line) {
-          // Use optimal station sequence instead of assuming order
-          const stationSequence = await findOptimalStationSequence(
-            line,
-            currentTransitStations[0],
-            currentTransitStations[currentTransitStations.length - 1],
-            currentTransitStations
-          );
-
-          const transitSegment = await createTransitSegment(
-            line,
-            stationSequence
-          );
-          if (transitSegment) segments.push(transitSegment);
-        }
-
-        currentTransitLine = null;
-        currentTransitStations = [];
-      }
-      continue;
-    }
-
-    if (edge.type === 'transit') {
-      if (currentTransitLine !== lineId) {
-        if (currentTransitLine !== null && currentTransitStations.length > 1) {
-          const line = getLineById(currentTransitLine);
-          if (line) {
-            // Use optimal station sequence instead of assuming order
-            const stationSequence = await findOptimalStationSequence(
-              line,
-              currentTransitStations[0],
-              currentTransitStations[currentTransitStations.length - 1],
-              currentTransitStations
-            );
-
-            const transitSegment = await createTransitSegment(
-              line,
-              stationSequence
-            );
-            if (transitSegment) segments.push(transitSegment);
-          }
-        }
-
-        currentTransitLine = lineId;
-        currentTransitStations = [sourceStation];
-      }
-
-      if (!currentTransitStations.some((s) => s.id === targetStation.id)) {
-        currentTransitStations.push(targetStation);
-      }
-    } else if (
-      edge.type === 'walking' ||
-      (edge.type === 'transfer' && sourceStation.id !== targetStation.id)
-    ) {
-      if (currentTransitLine !== null && currentTransitStations.length > 1) {
-        const line = getLineById(currentTransitLine);
-        if (line) {
-          // Use optimal station sequence
-          const stationSequence = await findOptimalStationSequence(
-            line,
-            currentTransitStations[0],
-            currentTransitStations[currentTransitStations.length - 1],
-            currentTransitStations
-          );
-
-          const transitSegment = await createTransitSegment(
-            line,
-            stationSequence
-          );
-          if (transitSegment) segments.push(transitSegment);
-        }
-
-        currentTransitLine = null;
-        currentTransitStations = [];
-      }
-
-      // Check if this is a walking shortcut (between stations, not origin/destination)
-      const isWalkingShortcut =
-        edge.isShortcut === true &&
-        sourceStation.id !== 'origin' &&
-        targetStation.id !== 'destination';
-
-      // Also check for explicit shortcuts with priority
-      const isExplicitShortcut = edge.isExplicitShortcut === true;
-      const shortcutPriority = edge.priority || 0;
-
-      const walkSegment = await createWalkingSegment(
-        sourceStation,
-        targetStation,
-        sourceStation.coordinates,
-        targetStation.coordinates,
-        isWalkingShortcut,
-        isExplicitShortcut,
-        shortcutPriority
-      );
-
-      if (walkSegment) segments.push(walkSegment);
-    }
-  }
-
-  if (currentTransitLine !== null && currentTransitStations.length > 1) {
-    const line = getLineById(currentTransitLine);
-    if (line) {
-      // Use optimal station sequence for the final segment too
-      const stationSequence = await findOptimalStationSequence(
-        line,
-        currentTransitStations[0],
-        currentTransitStations[currentTransitStations.length - 1],
-        currentTransitStations
-      );
-
-      const transitSegment = await createTransitSegment(line, stationSequence);
-      if (transitSegment) segments.push(transitSegment);
-    }
-  }
-
-  return consolidateWalkingSegments(
-    segments.filter((segment) => segment.duration > 0)
-  );
+  return filterRoutesByLineUniqueness(routes);
 }

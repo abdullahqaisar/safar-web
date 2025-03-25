@@ -39,4 +39,5 @@ export interface WalkSegment extends BaseSegment {
   isShortcut?: boolean;
   isExplicitShortcut?: boolean;
   priority?: number;
+  isAccessWalk?: boolean; // New property to identify initial/final walks
 }

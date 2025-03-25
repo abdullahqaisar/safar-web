@@ -18,7 +18,8 @@ export async function createWalkingSegment(
   toCoords: Coordinates,
   isShortcut = false,
   isExplicitShortcut = false,
-  priority = 0
+  priority = 0,
+  isAccessWalk = false
 ): Promise<WalkSegment | null> {
   // Skip if coordinates are the same
   if (fromCoords.lat === toCoords.lat && fromCoords.lng === toCoords.lng) {
@@ -45,6 +46,7 @@ export async function createWalkingSegment(
       isShortcut,
       isExplicitShortcut,
       priority: isExplicitShortcut ? priority : undefined,
+      isAccessWalk,
     };
   } catch (error) {
     console.error('Error calculating walking segment:', error);

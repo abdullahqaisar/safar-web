@@ -67,6 +67,14 @@ async function processRoute(route: Route): Promise<Route | null> {
   for (let i = 0; i < route.segments.length; i++) {
     const segment = { ...route.segments[i] };
 
+    // Tag first and last walking segments as access walks
+    if (
+      segment.type === 'walk' &&
+      (i === 0 || i === route.segments.length - 1)
+    ) {
+      segment.isAccessWalk = true;
+    }
+
     // Complete segment with real-world data
     const updatedSegment = await completeSegmentInfo(segment);
 
@@ -74,7 +82,7 @@ async function processRoute(route: Route): Promise<Route | null> {
       console.warn(
         `Invalid segment in route, skipping: ${JSON.stringify(segment)}`
       );
-      continue; // Skip invalid segments
+      continue;
     }
 
     // Add to new segments collection
@@ -100,7 +108,7 @@ async function processRoute(route: Route): Promise<Route | null> {
     return null;
   }
 
-  // Ensure origin and destination are properly connected by first/last walking segments
+  // Ensure origin and destination are properly connected
   await ensureOriginDestinationSegments(route, newSegments);
 
   // Consolidate any adjacent walking segments
