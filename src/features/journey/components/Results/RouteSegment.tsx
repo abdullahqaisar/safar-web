@@ -64,6 +64,7 @@ export function RouteSegment({
     const transitSegment = segment as TransitSegment;
     const lineName = transitSegment.line?.name || '';
 
+    console.log(lineName.toLowerCase().includes('fr-'));
     if (lineName.toLowerCase().includes('green')) {
       return 'bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] border border-[rgba(var(--color-accent-rgb),0.2)]';
     } else if (lineName.toLowerCase().includes('blue')) {
@@ -72,8 +73,11 @@ export function RouteSegment({
       return 'bg-red-50 text-red-700 border border-red-100';
     } else if (lineName.toLowerCase().includes('orange')) {
       return 'bg-orange-50 text-orange-700 border border-orange-100';
-    } else if (lineName.toLowerCase().includes('feeder')) {
-      return 'bg-[rgba(var(--color-primary-rgb),0.1)] text-[color:var(--color-primary)] border border-[rgba(var(--color-primary-rgb),0.2)]';
+    } else if (
+      lineName.toLowerCase().includes('fr-') ||
+      lineName.toLowerCase().includes('fr_')
+    ) {
+      return 'bg-teal-50 text-teal-700 border border-teal-100';
     }
     return 'bg-gray-100 text-gray-700 border border-gray-200';
   };
