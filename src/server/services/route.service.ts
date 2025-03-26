@@ -5,8 +5,13 @@ import { MAX_ROUTES_TO_RETURN } from '@/lib/constants/config';
 import { findRoutes } from '@/server/core/journey/route/finder';
 import { DISTANCE_THRESHOLDS } from '@/lib/constants/route-config';
 import { routeCache } from '@/server/core/shared/cache';
-import { filterAndRankRoutes } from '../core/journey/route/optimization';
-import { stationService } from './station.service';
+import { filterAndRankRoutes } from '../core/journey/optimization/optimization';
+import { stationManager } from '../core/journey/station/station';
+import { createDirectWalkingRoute } from '../core/shared/route-utils';
+import {
+  extractLineIdsFromRoute,
+  usesPrimaryLines,
+} from '../core/shared/line-utils';
 
 /**
  * Main entry point for route planning - finds the best routes between two stations
@@ -18,8 +23,8 @@ export async function findBestRoutes(
   toLocation: Coordinates
 ): Promise<Route[] | null> {
   // Validate stations
-  const fromStation = stationService.findStationById(fromStationId);
-  const toStation = stationService.findStationById(toStationId);
+  const fromStation = stationManager.findStationById(fromStationId);
+  const toStation = stationManager.findStationById(toStationId);
 
   if (!fromStation || !toStation) {
     console.error(
@@ -62,38 +67,8 @@ export async function findBestRoutes(
 
     // Analyze transit line diversity
     if (allRoutes.length > 1) {
-      const lineSets = allRoutes.map((route) => {
-        const lines = new Set<string>();
-        for (const segment of route.segments) {
-          if (
-            segment.type === 'transit' &&
-            'line' in segment &&
-            segment.line?.id
-          ) {
-            lines.add(segment.line.id);
-          }
-        }
-        return lines;
-      });
-
-      // Check for routes with different transit lines
-      const hasLineDiversity = lineSets.some((lines, i) => {
-        for (let j = 0; j < i; j++) {
-          // Check if there's at least one different line
-          const otherLines = lineSets[j];
-          let hasDifferentLine = false;
-
-          for (const line of lines) {
-            if (!otherLines.has(line)) {
-              hasDifferentLine = true;
-              break;
-            }
-          }
-
-          if (hasDifferentLine) return true;
-        }
-        return false;
-      });
+      // Get unique line sets for each route
+      const hasLineDiversity = checkLineDiversity(allRoutes);
 
       if (!hasLineDiversity) {
         console.log(
@@ -123,21 +98,12 @@ export async function findBestRoutes(
       }
     }
 
-    // If routes are still limited, check if we need to specifically search for major line combinations
     if (allRoutes.length < 3) {
-      // Look for routes that might be using mainly feeder routes
-      const usesMajorLines = allRoutes.filter((route) =>
-        route.segments.some(
-          (segment) =>
-            segment.type === 'transit' &&
-            'line' in segment &&
-            ['red', 'orange', 'blue', 'green'].includes(segment.line?.id || '')
-        )
-      );
+      const routesUsingMainLines = allRoutes.filter(usesPrimaryLines);
 
-      if (usesMajorLines.length < 2) {
+      if (routesUsingMainLines.length < 2) {
         console.log(
-          'Not enough routes using major lines, will attempt another search'
+          'Not enough routes using primary lines, will attempt another search'
         );
         // Try another search focusing on major lines
         const majorLineRoutes = await findRoutes(startLocation, endLocation);
@@ -219,51 +185,28 @@ export async function findBestRoutes(
 }
 
 /**
- * Create a fallback direct walking route when no transit routes can be found
+ * Check if there's sufficient line diversity among routes
  */
-async function createDirectWalkingRoute(
-  startLocation: Coordinates,
-  endLocation: Coordinates
-): Promise<Route | null> {
-  try {
-    const { createWalkingSegment } = await import(
-      '../core/journey/segment/builder'
-    );
+function checkLineDiversity(routes: Route[]): boolean {
+  // Extract line sets for each route
+  const lineSets = routes.map((route) => extractLineIdsFromRoute(route));
 
-    // Create origin and destination dummy stations
-    const originStation = {
-      id: 'origin',
-      name: 'Origin',
-      coordinates: startLocation,
-    };
+  // Check for routes with different transit lines
+  for (let i = 0; i < lineSets.length; i++) {
+    for (let j = 0; j < i; j++) {
+      let hasDifferentLine = false;
 
-    const destStation = {
-      id: 'destination',
-      name: 'Destination',
-      coordinates: endLocation,
-    };
+      // Check if the sets have at least one different line
+      for (const line of lineSets[i]) {
+        if (!lineSets[j].has(line)) {
+          hasDifferentLine = true;
+          break;
+        }
+      }
 
-    // Create a walking segment
-    const segment = await createWalkingSegment(
-      originStation,
-      destStation,
-      startLocation,
-      endLocation
-    );
-
-    if (!segment) return null;
-
-    // Build a complete route with just this segment
-    return {
-      segments: [segment],
-      totalDuration: segment.duration,
-      totalDistance: segment.walkingDistance,
-      totalStops: 0,
-      transfers: 0,
-      isDirectWalk: true, // Flag to identify this as a direct walk route
-    };
-  } catch (error) {
-    console.error('Failed to create direct walking route:', error);
-    return null;
+      if (hasDifferentLine) return true;
+    }
   }
+
+  return false;
 }

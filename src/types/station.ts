@@ -31,3 +31,9 @@ export interface RouteSegment {
   transfers: Transfer[];
   distance: number;
 }
+
+export interface Interchange {
+  stationId: string;
+  lines: string[];
+  transferImportance: number;
+}

@@ -1,7 +1,41 @@
 import Graph from 'graphology';
 import { RouteSegment } from '@/types/route';
 import { Station } from '@/types/station';
-import { EdgeData, NodeData } from './graph';
+import { EdgeData, NodeData } from '../route/graph';
+
+// Extract helper functions outside of main function for clarity
+function extractLineId(
+  nodeId: string,
+  graph: Graph<NodeData, EdgeData>
+): string | null {
+  if (graph.hasNode(nodeId)) {
+    const attrs = graph.getNodeAttributes(nodeId);
+    if (attrs.lineId) return attrs.lineId;
+    if (attrs.virtual && nodeId.includes('_')) {
+      return nodeId.split('_')[1];
+    }
+  }
+  return null;
+}
+
+function isTransferBetweenLines(
+  sourceId: string,
+  targetId: string,
+  graph: Graph<NodeData, EdgeData>
+): boolean | undefined {
+  if (!graph.hasNode(sourceId) || !graph.hasNode(targetId)) return false;
+
+  const sourceAttrs = graph.getNodeAttributes(sourceId);
+  const targetAttrs = graph.getNodeAttributes(targetId);
+
+  const isVirtualTransfer = sourceAttrs.virtual && targetAttrs.virtual;
+  const isSameStation = sourceAttrs.station.id === targetAttrs.station.id;
+  const sourceLine = sourceAttrs.lineId || extractLineId(sourceId, graph);
+  const targetLine = targetAttrs.lineId || extractLineId(targetId, graph);
+  const isDifferentLine = sourceLine !== targetLine;
+
+  return isVirtualTransfer && isSameStation && isDifferentLine;
+}
 
 export async function convertPathToSegments(
   path: string[],
@@ -9,47 +43,18 @@ export async function convertPathToSegments(
   graph: Graph<NodeData, EdgeData>
 ): Promise<RouteSegment[]> {
   const segments: RouteSegment[] = [];
-
   const {
     createTransitSegment,
     createWalkingSegment,
     getLineById,
     consolidateWalkingSegments,
     findOptimalStationSequence,
-  } = await import('../segment/builder');
+  } = await import('./builder');
 
   let currentTransitLine: string | null = null;
   let currentTransitStations: Station[] = [];
 
-  function extractLineId(nodeId: string): string | null {
-    if (graph.hasNode(nodeId)) {
-      const attrs = graph.getNodeAttributes(nodeId);
-      if (attrs.lineId) return attrs.lineId;
-      if (attrs.virtual && nodeId.includes('_')) {
-        return nodeId.split('_')[1];
-      }
-    }
-    return null;
-  }
-
-  function isTransferBetweenLines(
-    sourceId: string,
-    targetId: string
-  ): boolean | undefined {
-    if (!graph.hasNode(sourceId) || !graph.hasNode(targetId)) return false;
-
-    const sourceAttrs = graph.getNodeAttributes(sourceId);
-    const targetAttrs = graph.getNodeAttributes(targetId);
-
-    const isVirtualTransfer = sourceAttrs.virtual && targetAttrs.virtual;
-    const isSameStation = sourceAttrs.station.id === targetAttrs.station.id;
-    const sourceLine = sourceAttrs.lineId || extractLineId(sourceId);
-    const targetLine = targetAttrs.lineId || extractLineId(targetId);
-    const isDifferentLine = sourceLine !== targetLine;
-
-    return isVirtualTransfer && isSameStation && isDifferentLine;
-  }
-
+  // Function to finalize current transit segment
   async function finalizeCurrentTransit(): Promise<void> {
     if (currentTransitLine !== null && currentTransitStations.length > 1) {
       const line = getLineById(currentTransitLine);
@@ -72,6 +77,7 @@ export async function convertPathToSegments(
     }
   }
 
+  // Process each edge to create segments
   for (let i = 0; i < edges.length; i++) {
     const edge = edges[i];
     if (!graph.hasNode(edge.source) || !graph.hasNode(edge.target)) continue;
@@ -87,16 +93,18 @@ export async function convertPathToSegments(
 
     const isIntraStationTransfer = isTransferBetweenLines(
       edge.source,
-      edge.target
+      edge.target,
+      graph
     );
 
-    const sourceLineId = extractLineId(edge.source);
-    const targetLineId = extractLineId(edge.target);
+    const sourceLineId = extractLineId(edge.source, graph);
+    const targetLineId = extractLineId(edge.target, graph);
     const lineId = edge.lineId || sourceLineId || targetLineId;
 
     const isOrigin = edge.source === 'origin';
     const isDestination = edge.target === 'destination';
 
+    // Handle origin/destination walking
     if (
       (isOrigin || isDestination) &&
       (edge.type === 'walking' || edge.type === 'transfer')
@@ -116,11 +124,13 @@ export async function convertPathToSegments(
       continue;
     }
 
+    // Handle transfers within a station
     if (isIntraStationTransfer) {
       await finalizeCurrentTransit();
       continue;
     }
 
+    // Handle transit segments
     if (edge.type === 'transit') {
       if (currentTransitLine !== lineId) {
         await finalizeCurrentTransit();
@@ -131,7 +141,9 @@ export async function convertPathToSegments(
       if (!currentTransitStations.some((s) => s.id === targetStation.id)) {
         currentTransitStations.push(targetStation);
       }
-    } else if (
+    }
+    // Handle walking segments between stations
+    else if (
       edge.type === 'walking' ||
       (edge.type === 'transfer' && sourceStation.id !== targetStation.id)
     ) {

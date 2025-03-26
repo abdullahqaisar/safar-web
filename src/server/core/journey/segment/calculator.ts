@@ -60,8 +60,6 @@ export async function calculateRouteTimes(routes: Route[]): Promise<Route[]> {
  */
 async function processRoute(route: Route): Promise<Route | null> {
   const newSegments: RouteSegment[] = [];
-  let totalStops = 0;
-  let totalDistance = 0;
 
   // Process each segment
   for (let i = 0; i < route.segments.length; i++) {
@@ -88,16 +86,6 @@ async function processRoute(route: Route): Promise<Route | null> {
     // Add to new segments collection
     newSegments.push(updatedSegment);
 
-    // Update route metrics
-    if (segment.type === 'transit') {
-      const transitSegment = updatedSegment as TransitSegment;
-      const { distance, stops } = calculateTransitMetrics(transitSegment);
-      totalStops += stops;
-      totalDistance += distance;
-    } else if (segment.type === 'walk') {
-      totalDistance += (updatedSegment as WalkSegment).walkingDistance;
-    }
-
     // Handle transfers between transit segments if needed
     await handleTransferIfNeeded(i, route, newSegments);
   }
@@ -114,11 +102,14 @@ async function processRoute(route: Route): Promise<Route | null> {
   // Consolidate any adjacent walking segments
   const consolidatedSegments = consolidateWalkingSegments(newSegments);
 
+  // Use the shared metrics calculation function
+  const metrics = calculateRouteMetrics(consolidatedSegments);
+
   return {
     segments: consolidatedSegments,
-    totalStops,
-    totalDistance,
-    totalDuration: consolidatedSegments.reduce((sum, s) => sum + s.duration, 0),
+    totalStops: metrics.totalStops,
+    totalDistance: metrics.totalDistance,
+    totalDuration: metrics.totalDuration,
     transfers: Math.max(
       0,
       consolidatedSegments.filter((s) => s.type === 'transit').length - 1

@@ -6,20 +6,27 @@ import {
   MAX_ORIGIN_WALKING_DISTANCE,
   MAX_DESTINATION_WALKING_DISTANCE,
 } from '@/lib/constants/config';
-import { TRANSFER_TIME } from '@/lib/constants/route-config';
-import { metroLines, walkingShortcuts } from '@/lib/constants/metro-data';
+import {
+  TRANSFER_TIME,
+  CRITICAL_TRANSFERS,
+  LINE_PRIORITY,
+  INTERCHANGE_CONFIG,
+} from '@/lib/constants/route-config';
+import {
+  metroLines,
+  walkingShortcuts,
+  MAJOR_INTERCHANGES,
+} from '@/lib/constants/metro-data';
 import { graphCache } from '../../shared/cache';
 import {
-  calculateWalkingDuration,
-  calculateWalkingPenalty,
-} from '@/server/core/shared/graph-utils';
-import { optimizeInterchangePaths } from '../station/interchanges';
-import {
+  addDirectWalking,
   addStationsAndVirtualNodes,
   addTransitEdges,
-  addDirectWalking,
   addWalkingShortcuts,
-} from '@/server/core/shared/graph';
+  calculateWalkingDuration,
+} from '@/server/core/shared/graph-utils';
+import { optimizeInterchangePaths } from '../station/interchanges';
+import { stationManager } from '../station/station';
 
 export type EdgeType = 'transit' | 'walking' | 'transfer';
 
@@ -36,6 +43,8 @@ export interface EdgeData {
   priority?: number;
   isAccessWalk?: boolean;
   isMajorInterchange?: boolean;
+  isCriticalTransfer?: boolean;
+  transferImportance?: number;
 }
 
 export interface NodeData {
@@ -79,8 +88,16 @@ export function getTransitGraph(
   // For transit-only mode, return graph without access points
   if (!includeAccessPoints) {
     // Find nearest stations to origin and destination without adding them to graph
-    const nearestOriginStations = findNearestStations(graph, origin, 5);
-    const nearestDestStations = findNearestStations(graph, destination, 5);
+    const nearestOriginStations = stationManager.findNearestStationsToGraph(
+      origin,
+      graph,
+      10
+    );
+    const nearestDestStations = stationManager.findNearestStationsToGraph(
+      destination,
+      graph,
+      10
+    );
 
     return {
       graph,
@@ -129,19 +146,23 @@ export function getTransitGraph(
   }
 
   // Connect to nearby stations using traditional approach for backwards compatibility
-  const stations = findNearestStations(graph, origin, 5);
+  const stations = stationManager.findNearestStationsToGraph(origin, graph, 5);
   for (const { id, distance } of stations) {
     if (distance <= maxOriginWalking) {
       const station = graph.getNodeAttributes(id).station;
-      addLegacyWalkingEdge(graph, originId, id, origin, station.coordinates);
+      addWalkingEdge(graph, originId, id, origin, station.coordinates);
     }
   }
 
-  const destStations = findNearestStations(graph, destination, 5);
+  const destStations = stationManager.findNearestStationsToGraph(
+    destination,
+    graph,
+    5
+  );
   for (const { id, distance } of destStations) {
     if (distance <= maxDestWalking) {
       const station = graph.getNodeAttributes(id).station;
-      addLegacyWalkingEdge(
+      addWalkingEdge(
         graph,
         destinationId,
         id,
@@ -157,33 +178,20 @@ export function getTransitGraph(
   return { graph, originId, destinationId };
 }
 
-/**
- * Find nearest stations to a location
- */
-function findNearestStations(
-  graph: Graph<NodeData, EdgeData>,
-  location: Coordinates,
-  limit: number = 5
-): { id: string; distance: number }[] {
-  const stations = Array.from(graph.nodes())
-    .filter(
-      (id) => !id.includes('_') && id !== 'origin' && id !== 'destination'
-    )
-    .map((id) => {
-      const station = graph.getNodeAttributes(id).station;
-      const distance = calculateDistanceSync(location, station.coordinates);
-      return { id, distance, station };
-    })
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, limit);
+// Constants for edge weights
+const SHORT_WALKING_DISTANCE = 300; // meters
+const SHORT_WALK_COST_MULTIPLIER = 0.9;
+const NORMAL_WALK_COST_MULTIPLIER = 1.0;
 
-  return stations.map((s) => ({ id: s.id, distance: s.distance }));
-}
+// Enhanced transfer multipliers
+const PRIMARY_LINE_TRANSFER_MULTIPLIER = 0.4; // More aggressive (was 0.6)
+const STANDARD_TRANSFER_MULTIPLIER = 0.8; // More aggressive (was 0.9)
+const CRITICAL_TRANSFER_MULTIPLIER = 0.2; // New: For critical transfers
 
 /**
- * Add a legacy walking edge with penalties (for backwards compatibility only)
+ * Add a walking edge
  */
-function addLegacyWalkingEdge(
+function addWalkingEdge(
   graph: Graph<NodeData, EdgeData>,
   fromId: string,
   toId: string,
@@ -192,19 +200,23 @@ function addLegacyWalkingEdge(
 ): void {
   const distance = calculateDistanceSync(fromCoords, toCoords);
   const duration = calculateWalkingDuration(distance);
+  const costMultiplier =
+    distance < SHORT_WALKING_DISTANCE
+      ? SHORT_WALK_COST_MULTIPLIER
+      : NORMAL_WALK_COST_MULTIPLIER;
 
   graph.addEdge(fromId, toId, {
     type: 'walking',
     duration,
     distance,
-    costMultiplier: 1.0,
+    costMultiplier,
   });
 
   graph.addEdge(toId, fromId, {
     type: 'walking',
     duration,
     distance,
-    costMultiplier: 1.0,
+    costMultiplier,
   });
 }
 
@@ -247,7 +259,7 @@ export function connectAccessPoints(
   const connectedDestNodes = new Set<string>();
 
   // Connect origin to transit nodes at the beginning of transit paths
-  const transitStartNodes = transitPathNodes.slice(0, 2);
+  const transitStartNodes = transitPathNodes.slice(0, 3);
   for (const nodeId of transitStartNodes) {
     if (
       nodeId === originId ||
@@ -264,12 +276,16 @@ export function connectAccessPoints(
 
     if (distance <= maxOriginWalking) {
       const duration = calculateWalkingDuration(distance);
+      const costMultiplier =
+        distance < SHORT_WALKING_DISTANCE
+          ? SHORT_WALK_COST_MULTIPLIER
+          : NORMAL_WALK_COST_MULTIPLIER;
 
       graph.addEdge(originId, nodeId, {
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -277,7 +293,7 @@ export function connectAccessPoints(
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -286,7 +302,7 @@ export function connectAccessPoints(
   }
 
   // Connect destination to transit nodes at the end of transit paths
-  const transitEndNodes = transitPathNodes.slice(-2);
+  const transitEndNodes = transitPathNodes.slice(-3);
   for (const nodeId of transitEndNodes) {
     if (
       nodeId === originId ||
@@ -303,12 +319,16 @@ export function connectAccessPoints(
 
     if (distance <= maxDestWalking) {
       const duration = calculateWalkingDuration(distance);
+      const costMultiplier =
+        distance < SHORT_WALKING_DISTANCE
+          ? SHORT_WALK_COST_MULTIPLIER
+          : NORMAL_WALK_COST_MULTIPLIER;
 
       graph.addEdge(destinationId, nodeId, {
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -316,7 +336,7 @@ export function connectAccessPoints(
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -325,18 +345,26 @@ export function connectAccessPoints(
   }
 
   // Also connect to nearest stations
-  const originStations = findNearestStations(graph, origin, 3);
+  const originStations = stationManager.findNearestStationsToGraph(
+    origin,
+    graph,
+    5
+  );
   for (const { id, distance } of originStations) {
     if (connectedOriginNodes.has(id)) continue; // Skip if already connected
 
     if (distance <= maxOriginWalking) {
       const duration = calculateWalkingDuration(distance);
+      const costMultiplier =
+        distance < SHORT_WALKING_DISTANCE
+          ? SHORT_WALK_COST_MULTIPLIER
+          : NORMAL_WALK_COST_MULTIPLIER;
 
       graph.addEdge(originId, id, {
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -344,7 +372,7 @@ export function connectAccessPoints(
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -353,18 +381,26 @@ export function connectAccessPoints(
   }
 
   // Connect to nearest destination stations
-  const destStations = findNearestStations(graph, destination, 3);
+  const destStations = stationManager.findNearestStationsToGraph(
+    destination,
+    graph,
+    5
+  );
   for (const { id, distance } of destStations) {
     if (connectedDestNodes.has(id)) continue; // Skip if already connected
 
     if (distance <= maxDestWalking) {
       const duration = calculateWalkingDuration(distance);
+      const costMultiplier =
+        distance < SHORT_WALKING_DISTANCE
+          ? SHORT_WALK_COST_MULTIPLIER
+          : NORMAL_WALK_COST_MULTIPLIER;
 
       graph.addEdge(destinationId, id, {
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -372,7 +408,7 @@ export function connectAccessPoints(
         type: 'walking',
         duration: duration,
         distance: distance,
-        costMultiplier: 1.0,
+        costMultiplier,
         isAccessWalk: true,
       });
 
@@ -389,6 +425,7 @@ export function connectAccessPoints(
 export function buildTransitGraph(
   metroLines: MetroLine[]
 ): Graph<NodeData, EdgeData> {
+  console.log('Building transit graph...');
   const graph = new Graph<NodeData, EdgeData>();
   const stationsAdded = new Set<string>();
   const virtualNodesCreated = new Map<string, string[]>();
@@ -407,8 +444,8 @@ export function buildTransitGraph(
   // Add transit edges between stations
   addTransitEdges(graph, metroLines);
 
-  // Add transfer edges between virtual nodes
-  addTransferEdges(
+  // Add transfer edges between virtual nodes with enhanced weighting
+  addEnhancedTransferEdges(
     graph,
     virtualNodesCreated,
     TRANSFER_TIME.BASE,
@@ -417,6 +454,12 @@ export function buildTransitGraph(
 
   // Add walking shortcuts between nearby stations
   addWalkingShortcuts(graph, walkingShortcuts);
+
+  // Apply interchange optimization
+  optimizeInterchangePaths(graph);
+
+  // Debug critical transfer points
+  logCriticalTransferInfo(graph);
 
   return graph;
 }
@@ -427,8 +470,6 @@ export function buildTransitGraph(
 function buildConnectedStationsMap(
   metroLines: MetroLine[]
 ): Map<string, Set<string>> {
-  // Implementation remains the same
-  // ...existing code...
   const connectedStations = new Map<string, Set<string>>();
 
   // Group stations by name
@@ -461,7 +502,7 @@ function buildConnectedStationsMap(
           station2.coordinates
         );
 
-        const MAX_TRANSFER_DISTANCE = 150;
+        const MAX_TRANSFER_DISTANCE = 200;
         if (distance <= MAX_TRANSFER_DISTANCE) {
           connectedStations.get(station1.id)?.add(station2.id);
 
@@ -478,24 +519,44 @@ function buildConnectedStationsMap(
 }
 
 /**
- * Add transfer edges between virtual nodes
+ * Enhanced transfer edge creation with better handling of critical transfers
  */
-function addTransferEdges(
+function addEnhancedTransferEdges(
   graph: Graph<NodeData, EdgeData>,
   virtualNodesCreated: Map<string, string[]>,
-  transferTime: number,
+  baseTransferTime: number,
   connectedStations: Map<string, Set<string>>
 ): void {
-  // Implementation remains the same but simplified
-  // ...existing code...
-  // Create a map of major interchange stations
-  const majorInterchanges = new Map<string, string[]>([
-    ['faizAhmadFaiz', ['red', 'orange']],
-    ['pims_gate', ['green', 'blue']],
-  ]);
+  // Create a map for quick lookup of interchange details
+  const interchangeMap = new Map<
+    string,
+    {
+      lines: string[];
+      transferImportance: number;
+    }
+  >();
+
+  for (const interchange of MAJOR_INTERCHANGES) {
+    interchangeMap.set(interchange.stationId, {
+      lines: interchange.lines,
+      transferImportance: interchange.transferImportance,
+    });
+  }
+
+  // Create lookup for special transfer pairs
+  const specialTransferMap = new Map<string, number>();
+
+  for (const transfer of INTERCHANGE_CONFIG.specialTransfers) {
+    // Create keys for both directions of the transfer
+    const key1 = `${transfer.stationId}-${transfer.linePair[0]}-${transfer.linePair[1]}`;
+    const key2 = `${transfer.stationId}-${transfer.linePair[1]}-${transfer.linePair[0]}`;
+
+    specialTransferMap.set(key1, transfer.multiplier);
+    specialTransferMap.set(key2, transfer.multiplier);
+  }
 
   // Connect virtual nodes at the same station
-  for (const [, virtualNodes] of virtualNodesCreated.entries()) {
+  for (const [stationId, virtualNodes] of virtualNodesCreated.entries()) {
     for (let i = 0; i < virtualNodes.length; i++) {
       for (let j = i + 1; j < virtualNodes.length; j++) {
         const source = virtualNodes[i];
@@ -503,34 +564,225 @@ function addTransferEdges(
 
         if (source === target || graph.hasEdge(source, target)) continue;
 
+        // Extract line IDs for transfer analysis
+        const sourceLineId = source.split('_')[1];
+        const targetLineId = target.split('_')[1];
+
+        // Create line combo strings for lookups
+        const lineCombo = `${sourceLineId}-${targetLineId}`;
+        const reversedLineCombo = `${targetLineId}-${sourceLineId}`;
+
+        // Check if this is a critical transfer between major lines
+        const isCriticalTransfer =
+          CRITICAL_TRANSFERS[lineCombo] !== undefined ||
+          CRITICAL_TRANSFERS[reversedLineCombo] !== undefined;
+
+        // Check if this is a special transfer at this station
+        const specialTransferKey = `${stationId}-${sourceLineId}-${targetLineId}`;
+        const isSpecialTransfer = specialTransferMap.has(specialTransferKey);
+
         // Check if this is a major interchange
-        const sourceAttrs = graph.getNodeAttributes(source);
-        const baseStationId = sourceAttrs.station.id;
-        const isMajorInterchange = majorInterchanges.has(baseStationId);
+        const interchange = interchangeMap.get(stationId);
+        const isMajorInterchange = !!interchange;
+        const transferImportance = interchange?.transferImportance || 0;
 
-        // Reduce transfer time for major interchanges
-        const adjustedTime = isMajorInterchange
-          ? Math.floor(transferTime * 0.7)
-          : transferTime;
+        // Calculate adjusted transfer time based on importance
+        let adjustedTime = baseTransferTime;
+        let costMultiplier = STANDARD_TRANSFER_MULTIPLIER;
 
-        // Add bidirectional transfer edges
-        graph.addEdge(source, target, {
+        // Apply special transfer multiplier if applicable
+        if (isSpecialTransfer) {
+          const specialMultiplier =
+            specialTransferMap.get(specialTransferKey) || 0.5;
+          adjustedTime = Math.floor(baseTransferTime * specialMultiplier);
+          costMultiplier = specialMultiplier;
+        }
+        // Apply critical transfer multiplier if applicable
+        else if (isCriticalTransfer) {
+          // Get the specific multiplier for this line combo or use default
+          const criticalMultiplier =
+            CRITICAL_TRANSFERS[lineCombo] ||
+            CRITICAL_TRANSFERS[reversedLineCombo] ||
+            CRITICAL_TRANSFER_MULTIPLIER;
+
+          adjustedTime = Math.floor(baseTransferTime * criticalMultiplier);
+          costMultiplier = criticalMultiplier;
+        }
+        // Apply major interchange multiplier if applicable
+        else if (isMajorInterchange) {
+          // Scale transfer time based on importance (0-10)
+          const importanceFactor = interchange.transferImportance / 10; // 0-1 scale
+
+          // More aggressive reduction - higher importance = lower transfer time
+          const importanceLevel =
+            importanceFactor >= 0.9
+              ? 'critical'
+              : importanceFactor >= 0.7
+              ? 'major'
+              : importanceFactor >= 0.5
+              ? 'standard'
+              : 'minor';
+
+          const importanceMultiplier =
+            INTERCHANGE_CONFIG.importanceMultipliers[importanceLevel];
+
+          adjustedTime = Math.floor(baseTransferTime * importanceMultiplier);
+          costMultiplier = importanceMultiplier;
+        }
+
+        // Add bidirectional transfer edges with proper attributes
+        const transferEdgeData: EdgeData = {
           type: 'transfer',
           duration: adjustedTime,
           distance: 0,
-          isMajorInterchange: isMajorInterchange,
-        });
+          isMajorInterchange,
+          isCriticalTransfer,
+          transferImportance,
+          costMultiplier,
+        };
 
-        graph.addEdge(target, source, {
-          type: 'transfer',
-          duration: adjustedTime,
-          distance: 0,
-          isMajorInterchange: isMajorInterchange,
-        });
+        graph.addEdge(source, target, transferEdgeData);
+        graph.addEdge(target, source, transferEdgeData);
       }
     }
   }
 
-  // Add transfers between physically connected stations
-  // ...rest of implementation...
+  // Connect physically connected stations with transfer edges
+  for (const [stationId, connectedIds] of connectedStations.entries()) {
+    if (!virtualNodesCreated.has(stationId)) continue;
+
+    const sourceVirtualNodes = virtualNodesCreated.get(stationId)!;
+
+    for (const connectedId of connectedIds) {
+      if (!virtualNodesCreated.has(connectedId)) continue;
+
+      const targetVirtualNodes = virtualNodesCreated.get(connectedId)!;
+
+      // Get station coordinates for distance calculation
+      const sourceStation = graph.getNodeAttributes(stationId).station;
+      const targetStation = graph.getNodeAttributes(connectedId).station;
+
+      // Calculate actual walking distance
+      const distance = calculateDistanceSync(
+        sourceStation.coordinates,
+        targetStation.coordinates
+      );
+
+      // Calculate transfer time based on walking distance
+      const walkingDuration = Math.ceil(distance / 1.2); // 1.2 m/s walking speed
+
+      // In real networks, transfers between stations have additional penalties
+      const transferDuration = Math.max(
+        baseTransferTime / 2, // Minimum transfer time
+        walkingDuration + 20 // Walking time plus overhead
+      );
+
+      // Connect each virtual node of source to each virtual node of target
+      for (const sourceVNode of sourceVirtualNodes) {
+        for (const targetVNode of targetVirtualNodes) {
+          if (graph.hasEdge(sourceVNode, targetVNode)) continue;
+
+          // Skip connections between same lines to encourage proper interchange
+          const sourceLineId = sourceVNode.split('_')[1];
+          const targetLineId = targetVNode.split('_')[1];
+          if (sourceLineId === targetLineId) continue;
+
+          // Check if this is a critical transfer
+          const lineCombo = `${sourceLineId}-${targetLineId}`;
+          const reversedLineCombo = `${targetLineId}-${sourceLineId}`;
+          const isCriticalTransfer =
+            CRITICAL_TRANSFERS[lineCombo] !== undefined ||
+            CRITICAL_TRANSFERS[reversedLineCombo] !== undefined;
+
+          // Determine cost multiplier based on line combination
+          let costMultiplier = STANDARD_TRANSFER_MULTIPLIER;
+
+          if (isCriticalTransfer) {
+            costMultiplier =
+              CRITICAL_TRANSFERS[lineCombo] ||
+              CRITICAL_TRANSFERS[reversedLineCombo] ||
+              CRITICAL_TRANSFER_MULTIPLIER;
+          }
+          // Consider line priorities for transfers between primary lines
+          else if (
+            LINE_PRIORITY[sourceLineId] >= 8 &&
+            LINE_PRIORITY[targetLineId] >= 8
+          ) {
+            costMultiplier = PRIMARY_LINE_TRANSFER_MULTIPLIER;
+          }
+
+          // Add transfer edges with proper attributes
+          const transferEdgeData: EdgeData = {
+            type: 'transfer',
+            duration: transferDuration,
+            distance: distance,
+            isMajorInterchange: false,
+            isCriticalTransfer,
+            costMultiplier,
+          };
+
+          graph.addEdge(sourceVNode, targetVNode, transferEdgeData);
+          graph.addEdge(targetVNode, sourceVNode, transferEdgeData);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Log information about critical transfers for debugging
+ */
+function logCriticalTransferInfo(graph: Graph<NodeData, EdgeData>): void {
+  const importantStations = ['faizAhmadFaiz', 'pims_gate', 'faizabad', 'sohan'];
+
+  console.log('Checking critical transfer edges...');
+
+  for (const station of importantStations) {
+    try {
+      let nodeCount = 0;
+      let virtualNodeCount = 0;
+      let transferEdgeCount = 0;
+      let criticalTransferCount = 0;
+
+      // Count nodes associated with this station
+      graph.forEachNode((nodeId, attrs) => {
+        if (nodeId === station) {
+          nodeCount++;
+        } else if (nodeId.startsWith(`${station}_`)) {
+          virtualNodeCount++;
+
+          // Count transfer edges for this virtual node
+          graph.forEachOutEdge(nodeId, (edgeId, attrs) => {
+            if (attrs.type === 'transfer') {
+              transferEdgeCount++;
+
+              // Log details for critical transfers
+              if (attrs.isCriticalTransfer) {
+                criticalTransferCount++;
+                console.log(
+                  `Critical transfer: ${nodeId} -> ${graph.opposite(
+                    nodeId,
+                    edgeId
+                  )}`
+                );
+                console.log(
+                  `  Duration: ${attrs.duration}, Cost Multiplier: ${attrs.costMultiplier}`
+                );
+              }
+            }
+          });
+        }
+      });
+
+      console.log(`Station: ${station}`);
+      console.log(
+        `  Main nodes: ${nodeCount}, Virtual nodes: ${virtualNodeCount}`
+      );
+      console.log(
+        `  Transfer edges: ${transferEdgeCount}, Critical transfers: ${criticalTransferCount}`
+      );
+    } catch (error) {
+      console.error(`Error analyzing ${station}:`, error);
+    }
+  }
 }

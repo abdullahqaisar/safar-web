@@ -1,41 +1,13 @@
 import Graph from 'graphology';
-import { TRANSFER_TIME } from '@/lib/constants/route-config';
+import {
+  TRANSFER_TIME,
+  CRITICAL_TRANSFERS,
+  LINE_PRIORITY,
+} from '@/lib/constants/route-config';
 import { NodeData, EdgeData } from '../route/graph';
-
-/**
- * Major interchange stations for streamlined transfers
- */
-export interface Interchange {
-  stationId: string;
-  lines: string[];
-  transferImportance: number;
-}
-
-/**
- * Key interchange stations in the network
- */
-export const MAJOR_INTERCHANGES: Interchange[] = [
-  {
-    stationId: 'faizAhmadFaiz',
-    lines: ['red', 'orange'],
-    transferImportance: 10, // Higher means more important
-  },
-  {
-    stationId: 'pims_gate',
-    lines: ['green', 'blue'],
-    transferImportance: 8,
-  },
-  {
-    stationId: 'faizabad',
-    lines: ['red', 'fr_1', 'fr_9', 'fr_14'],
-    transferImportance: 7,
-  },
-  {
-    stationId: 'sohan',
-    lines: ['blue', 'fr_1', 'fr_9', 'fr_14'],
-    transferImportance: 6,
-  },
-];
+import { Interchange } from '@/types/station';
+import { MAJOR_INTERCHANGES } from '@/lib/constants/metro-data';
+import { stationManager } from './station';
 
 /**
  * Check if a station is a major interchange between specified lines
@@ -44,22 +16,14 @@ export function isMajorInterchange(
   stationId: string,
   lines?: string[]
 ): boolean {
-  const interchange = MAJOR_INTERCHANGES.find((i) => i.stationId === stationId);
-  if (!interchange) return false;
-
-  // If lines are specified, check if this interchange connects those lines
-  if (lines && lines.length > 0) {
-    return lines.every((line) => interchange.lines.includes(line));
-  }
-
-  return true;
+  return stationManager.isMajorInterchange(stationId, lines);
 }
 
 /**
  * Get interchange details for a station if it's a major interchange
  */
 export function getInterchangeDetails(stationId: string): Interchange | null {
-  return MAJOR_INTERCHANGES.find((i) => i.stationId === stationId) || null;
+  return stationManager.getInterchangeDetails(stationId);
 }
 
 /**
@@ -71,7 +35,6 @@ export function optimizeInterchangePaths(
 ): void {
   // Process each major interchange
   for (const interchange of MAJOR_INTERCHANGES) {
-    // Find all virtual nodes for this station
     const virtualNodes: string[] = [];
 
     graph.forEachNode((nodeId, attributes) => {
@@ -83,27 +46,75 @@ export function optimizeInterchangePaths(
       }
     });
 
-    // Create optimized connections between these virtual nodes
+    // Create optimized connections between virtual nodes
     for (let i = 0; i < virtualNodes.length; i++) {
       for (let j = i + 1; j < virtualNodes.length; j++) {
         const sourceId = virtualNodes[i];
         const targetId = virtualNodes[j];
 
-        // Skip if already connected
+        // Extract line IDs for transfer analysis
+        const sourceLineId = sourceId.split('_')[1];
+        const targetLineId = targetId.split('_')[1];
+        const lineCombo = `${sourceLineId}-${targetLineId}`;
+        const reverseLineCombo = `${targetLineId}-${sourceLineId}`;
+
+        // Check if this is a critical transfer between major lines
+        const isCriticalTransfer =
+          CRITICAL_TRANSFERS[lineCombo] !== undefined ||
+          CRITICAL_TRANSFERS[reverseLineCombo] !== undefined;
+
+        // Calculate importance factor
+        let importanceFactor = interchange.transferImportance / 10;
+        let costMultiplier = 0.7;
+
+        // Apply aggressive weight reduction for critical transfers
+        if (isCriticalTransfer) {
+          const criticalMultiplier =
+            CRITICAL_TRANSFERS[lineCombo] ||
+            CRITICAL_TRANSFERS[reverseLineCombo] ||
+            0.2;
+
+          importanceFactor = 0.95; // Extreme importance
+          costMultiplier = criticalMultiplier;
+        }
+        // For high-priority line combinations
+        else if (
+          (LINE_PRIORITY[sourceLineId] || 0) >= 8 &&
+          (LINE_PRIORITY[targetLineId] || 0) >= 8
+        ) {
+          importanceFactor = Math.max(importanceFactor, 0.8);
+          costMultiplier = 0.4;
+        }
+
+        // Modify existing edge if it exists
         if (graph.hasEdge(sourceId, targetId)) {
-          // If connected, just optimize the weight
           const edgeKey = graph.edge(sourceId, targetId);
           const currentData = graph.getEdgeAttributes(edgeKey);
 
-          // Apply interchange optimization - reduce transfer time for major interchanges
-          const optimizedDuration = Math.floor(
-            currentData.duration * (0.8 - interchange.transferImportance * 0.02)
+          // Calculate optimized duration - much more aggressive reduction for critical transfers
+          let optimizedDuration = Math.floor(
+            currentData.duration * (0.7 - importanceFactor * 0.6)
           );
+
+          if (isCriticalTransfer) {
+            optimizedDuration = Math.floor(optimizedDuration * 0.5); // 50% further reduction
+          }
 
           graph.setEdgeAttribute(edgeKey, 'duration', optimizedDuration);
           graph.setEdgeAttribute(edgeKey, 'isMajorInterchange', true);
+          graph.setEdgeAttribute(
+            edgeKey,
+            'isCriticalTransfer',
+            isCriticalTransfer
+          );
+          graph.setEdgeAttribute(edgeKey, 'costMultiplier', costMultiplier);
+          graph.setEdgeAttribute(
+            edgeKey,
+            'transferImportance',
+            interchange.transferImportance
+          );
 
-          // Do the same for the reverse edge
+          // Apply same changes to reverse edge
           if (graph.hasEdge(targetId, sourceId)) {
             const reverseEdgeKey = graph.edge(targetId, sourceId);
             graph.setEdgeAttribute(
@@ -112,36 +123,61 @@ export function optimizeInterchangePaths(
               optimizedDuration
             );
             graph.setEdgeAttribute(reverseEdgeKey, 'isMajorInterchange', true);
+            graph.setEdgeAttribute(
+              reverseEdgeKey,
+              'isCriticalTransfer',
+              isCriticalTransfer
+            );
+            graph.setEdgeAttribute(
+              reverseEdgeKey,
+              'costMultiplier',
+              costMultiplier
+            );
+            graph.setEdgeAttribute(
+              reverseEdgeKey,
+              'transferImportance',
+              interchange.transferImportance
+            );
           }
-
-          continue;
         }
+        // Create new transfer edge if needed
+        else {
+          const sourceAttrs = graph.getNodeAttributes(sourceId);
+          const targetAttrs = graph.getNodeAttributes(targetId);
 
-        // Create optimized transfer edges between different lines at this station
-        const sourceAttrs = graph.getNodeAttributes(sourceId);
-        const targetAttrs = graph.getNodeAttributes(targetId);
+          if (sourceAttrs.lineId !== targetAttrs.lineId) {
+            const baseTransferTime = TRANSFER_TIME.BASE;
 
-        if (sourceAttrs.lineId !== targetAttrs.lineId) {
-          // Calculate optimized transfer time based on importance
-          const baseTransferTime = TRANSFER_TIME.BASE;
-          const optimizedTime = Math.floor(
-            baseTransferTime * (0.7 - interchange.transferImportance * 0.02)
-          );
+            // Calculate transfer time with extreme reduction for critical transfers
+            let transferTime = Math.floor(
+              baseTransferTime * (0.7 - importanceFactor * 0.6)
+            );
 
-          // Create bidirectional transfer edges
-          graph.addEdge(sourceId, targetId, {
-            type: 'transfer',
-            duration: optimizedTime,
-            distance: 0,
-            isMajorInterchange: true,
-          });
+            if (isCriticalTransfer) {
+              transferTime = Math.floor(transferTime * 0.5);
+            }
 
-          graph.addEdge(targetId, sourceId, {
-            type: 'transfer',
-            duration: optimizedTime,
-            distance: 0,
-            isMajorInterchange: true,
-          });
+            // Create transfer edges in both directions
+            graph.addEdge(sourceId, targetId, {
+              type: 'transfer',
+              duration: transferTime,
+              distance: 0,
+              isMajorInterchange: true,
+              isCriticalTransfer,
+              transferImportance: interchange.transferImportance,
+              costMultiplier,
+            });
+
+            graph.addEdge(targetId, sourceId, {
+              type: 'transfer',
+              duration: transferTime,
+              distance: 0,
+              isMajorInterchange: true,
+              isCriticalTransfer,
+              transferImportance: interchange.transferImportance,
+              costMultiplier,
+            });
+          }
         }
       }
     }

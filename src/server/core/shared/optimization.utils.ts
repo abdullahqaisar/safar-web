@@ -1,5 +1,6 @@
 import { Route, TransitSegment, WalkSegment } from '@/types/route';
 import { SIMILARITY_WEIGHTS } from '@/lib/constants/route-config';
+import { extractLineIdsFromRoute, calculateLineSimilarity } from './line-utils';
 
 export function findFastestRoute(routes: Route[]): Route {
   return routes.reduce(
@@ -28,28 +29,19 @@ export function findTransitRoute(routes: Route[]): Route | undefined {
 }
 
 export function calculateRouteSimilarity(routeA: Route, routeB: Route): number {
-  const getLineIds = (route: Route): Set<string> => {
-    return new Set(
-      route.segments
-        .filter((s) => s.type === 'transit')
-        .map((s) => (s as TransitSegment).line?.id)
-        .filter((id): id is string => id !== undefined)
-    );
-  };
-
-  const linesA = getLineIds(routeA);
-  const linesB = getLineIds(routeB);
+  // Use our centralized line extraction utility
+  const linesA = extractLineIdsFromRoute(routeA);
+  const linesB = extractLineIdsFromRoute(routeB);
 
   if (linesA.size === 0 || linesB.size === 0) {
     if (linesA.size === 0 && linesB.size === 0) {
-      return 0.8;
+      return 0.8; // Both are walking-only routes
     }
     return 0.0;
   }
 
-  const lineIntersection = new Set([...linesA].filter((id) => linesB.has(id)));
-  const lineUnion = new Set([...linesA, ...linesB]);
-  const lineSimilarity = lineIntersection.size / (lineUnion.size || 1);
+  // Use our line similarity calculation
+  const lineSimilarity = calculateLineSimilarity(linesA, linesB);
 
   const transitSegmentsA = routeA.segments.filter(
     (s): s is TransitSegment => s.type === 'transit'
@@ -88,6 +80,7 @@ export function calculateRouteSimilarity(routeA: Route, routeB: Route): number {
     Math.abs(transitSegmentsA.length - transitSegmentsB.length) /
       Math.max(transitSegmentsA.length, transitSegmentsB.length, 1);
 
+  // Use the calculated lineSimilarity with existing weights
   return (
     lineSimilarity * SIMILARITY_WEIGHTS.LINE +
     keySimilarity * SIMILARITY_WEIGHTS.KEY_STATION +

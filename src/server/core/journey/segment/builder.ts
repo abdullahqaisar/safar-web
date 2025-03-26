@@ -7,10 +7,48 @@ import {
 } from '@/server/core/shared/maps';
 import { STOP_WAIT_TIME_SECONDS } from '@/lib/constants/config';
 import { metroLines } from '@/lib/constants/metro-data';
+import { calculateWalkingDuration } from '../../shared/graph-utils';
 
-/**
- * Creates a walking segment between two points
- */
+// Common helper for calculating walking metrics
+async function getWalkingMetrics(
+  fromCoords: Coordinates,
+  toCoords: Coordinates
+): Promise<{ duration: number; distance: number } | null> {
+  // Skip if coordinates are identical
+  if (fromCoords.lat === toCoords.lat && fromCoords.lng === toCoords.lng) {
+    return null;
+  }
+
+  try {
+    // Try using the API-based calculation first
+    const walkResult = await calculateWalkingTime(fromCoords, toCoords);
+
+    // If API calculation succeeds and returns valid results
+    if (walkResult && walkResult.duration > 0 && walkResult.distance > 0) {
+      return walkResult;
+    }
+
+    // If API calculation fails, fall back to local calculation
+    const distance =
+      Math.sqrt(
+        Math.pow(fromCoords.lat - toCoords.lat, 2) +
+          Math.pow(fromCoords.lng - toCoords.lng, 2)
+      ) * 111000; // Rough conversion from degrees to meters
+
+    if (distance <= 0) return null;
+
+    const duration = calculateWalkingDuration(distance);
+
+    return {
+      duration,
+      distance,
+    };
+  } catch (error) {
+    console.error('Error calculating walking metrics:', error);
+    return null;
+  }
+}
+
 export async function createWalkingSegment(
   from: Station,
   to: Station,
@@ -21,42 +59,25 @@ export async function createWalkingSegment(
   priority = 0,
   isAccessWalk = false
 ): Promise<WalkSegment | null> {
-  // Skip if coordinates are the same
-  if (fromCoords.lat === toCoords.lat && fromCoords.lng === toCoords.lng) {
-    return null;
-  }
+  const walkMetrics = await getWalkingMetrics(fromCoords, toCoords);
+  if (!walkMetrics) return null;
 
-  try {
-    const walkResult = await calculateWalkingTime(fromCoords, toCoords);
-
-    // Ensure the calculation returned valid results
-    if (!walkResult || walkResult.duration <= 0 || walkResult.distance <= 0) {
-      return null;
-    }
-
-    return {
-      type: 'walk',
-      stations: [
-        { ...from, coordinates: fromCoords },
-        { ...to, coordinates: toCoords },
-      ],
-      duration: walkResult.duration,
-      walkingTime: walkResult.duration,
-      walkingDistance: walkResult.distance,
-      isShortcut,
-      isExplicitShortcut,
-      priority: isExplicitShortcut ? priority : undefined,
-      isAccessWalk,
-    };
-  } catch (error) {
-    console.error('Error calculating walking segment:', error);
-    return null;
-  }
+  return {
+    type: 'walk',
+    stations: [
+      { ...from, coordinates: fromCoords },
+      { ...to, coordinates: toCoords },
+    ],
+    duration: walkMetrics.duration,
+    walkingTime: walkMetrics.duration,
+    walkingDistance: walkMetrics.distance,
+    isShortcut,
+    isExplicitShortcut,
+    priority: isExplicitShortcut ? priority : undefined,
+    isAccessWalk,
+  };
 }
 
-/**
- * Creates a transit segment between stations on a metro line
- */
 export async function createTransitSegment(
   line: MetroLine,
   stations: Station[]
@@ -95,9 +116,6 @@ export async function createTransitSegment(
   }
 }
 
-/**
- * Complete missing segment information with real-world data
- */
 export async function completeSegmentInfo(
   segment: RouteSegment
 ): Promise<RouteSegment | WalkSegment | TransitSegment | null> {
@@ -105,20 +123,19 @@ export async function completeSegmentInfo(
     const walkSegment = segment as WalkSegment;
     const [fromStation, toStation] = walkSegment.stations;
 
-    const walkResult = await calculateWalkingTime(
+    // Use shared walking metrics function
+    const walkMetrics = await getWalkingMetrics(
       fromStation.coordinates,
       toStation.coordinates
     );
 
-    if (!walkResult || walkResult.duration <= 0) {
-      return null;
-    }
+    if (!walkMetrics) return null;
 
     return {
       ...walkSegment,
-      duration: walkResult.duration,
-      walkingTime: walkResult.duration,
-      walkingDistance: walkResult.distance,
+      duration: walkMetrics.duration,
+      walkingTime: walkMetrics.duration,
+      walkingDistance: walkMetrics.distance,
     };
   }
 
@@ -147,9 +164,6 @@ export async function completeSegmentInfo(
   return null;
 }
 
-/**
- * Consolidate consecutive walking segments into a single segment
- */
 export function consolidateWalkingSegments(
   segments: RouteSegment[]
 ): RouteSegment[] {
@@ -161,18 +175,15 @@ export function consolidateWalkingSegments(
       const walk = segment as WalkSegment;
 
       if (currentWalk) {
-        // Extend current walking segment
         currentWalk.duration += walk.duration;
         currentWalk.walkingTime += walk.walkingTime;
         currentWalk.walkingDistance += walk.walkingDistance;
-        currentWalk.stations[1] = walk.stations[1]; // Update end station
+        currentWalk.stations[1] = walk.stations[1];
       } else {
-        // Start new walking segment
         currentWalk = { ...walk };
         consolidated.push(currentWalk);
       }
     } else {
-      // Reset current walking segment and add the non-walking segment
       currentWalk = null;
       consolidated.push(segment);
     }
@@ -181,32 +192,22 @@ export function consolidateWalkingSegments(
   return consolidated.filter((segment) => segment.duration > 0);
 }
 
-/**
- * Get metro line info by ID
- */
 export function getLineById(lineId: string): MetroLine | undefined {
   return metroLines.find((line) => line.id === lineId);
 }
 
-/**
- * Finds optimal sequence of stations between start and end on a specific line
- * Handles circular lines by computing both possible paths and choosing the shorter one
- */
 export async function findOptimalStationSequence(
   line: MetroLine,
   startStation: Station,
   endStation: Station,
   visitedStations?: Station[]
 ): Promise<Station[]> {
-  // Exit early for simple case
   if (startStation.id === endStation.id) {
     return [startStation];
   }
 
-  // Find all stations on the line
   const lineStations = line.stations;
 
-  // Exit early if line has only one station
   if (lineStations.length <= 1) {
     return visitedStations || [startStation, endStation];
   }
@@ -214,28 +215,20 @@ export async function findOptimalStationSequence(
   const startIndex = lineStations.findIndex((s) => s.id === startStation.id);
   const endIndex = lineStations.findIndex((s) => s.id === endStation.id);
 
-  // If either station isn't on this line, return the visited stations
   if (startIndex === -1 || endIndex === -1) {
     return visitedStations || [startStation, endStation];
   }
 
-  // If we have visited stations, verify they're in a valid order and return them
   if (visitedStations && visitedStations.length > 1) {
     const visitedIds = new Set(visitedStations.map((s) => s.id));
-
-    // Check if our visited stations form a valid connected path on this line
     if (isValidPathOnLine(lineStations, visitedIds)) {
       return visitedStations;
     }
   }
 
-  // For regular lines, just get the stations in the correct sequence
   return findStationsBetween(lineStations, startIndex, endIndex);
 }
 
-/**
- * Find stations between startIndex and endIndex in the lineStations array
- */
 function findStationsBetween(
   lineStations: Station[],
   startIndex: number,
@@ -246,12 +239,10 @@ function findStationsBetween(
   const stations: Station[] = [];
 
   if (startIndex < endIndex) {
-    // Forward direction
     for (let i = startIndex; i <= endIndex; i++) {
       stations.push(lineStations[i]);
     }
   } else {
-    // Backward direction
     for (let i = startIndex; i >= endIndex; i--) {
       stations.push(lineStations[i]);
     }
@@ -260,22 +251,17 @@ function findStationsBetween(
   return stations;
 }
 
-/**
- * Verify if a set of station IDs forms a valid path on a line
- */
 function isValidPathOnLine(
   lineStations: Station[],
   stationIds: Set<string>
 ): boolean {
   if (stationIds.size <= 1) return true;
 
-  // Create a map of station indexes for quick lookup
   const stationIndexMap = new Map<string, number>();
   lineStations.forEach((station, index) => {
     stationIndexMap.set(station.id, index);
   });
 
-  // Check if all stations are on this line
   const stationIndices: number[] = [];
   for (const id of stationIds) {
     const index = stationIndexMap.get(id);
@@ -283,13 +269,10 @@ function isValidPathOnLine(
     stationIndices.push(index);
   }
 
-  // Sort indices
   stationIndices.sort((a, b) => a - b);
 
-  // Check if they form a continuous sequence or a wrap-around sequence
   for (let i = 1; i < stationIndices.length; i++) {
     const diff = stationIndices[i] - stationIndices[i - 1];
-    // Not adjacent on the line
     if (diff > 1 && diff !== lineStations.length - 1) {
       return false;
     }

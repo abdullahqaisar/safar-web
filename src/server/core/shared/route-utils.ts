@@ -4,119 +4,72 @@ import { dijkstra } from 'graphology-shortest-path';
 import { calculateDistanceSync } from './distance';
 import { EdgeData, NodeData } from '../journey/route/graph';
 import { Route } from '@/types/route';
-import { Coordinates } from '@/types/station';
-import { metroLines } from '@/lib/constants/metro-data';
+import { Coordinates, Station } from '@/types/station';
 import { createWalkingSegment } from '../journey/segment/builder';
 import { areSimilarPaths, extractEdgesFromPath } from './graph-utils';
+import { stationManager } from '../journey/station/station';
 
 export async function createDirectWalkingRoute(
   origin: Coordinates,
   destination: Coordinates
 ): Promise<Route | null> {
-  const walkSegment = await createWalkingSegment(
-    { id: 'origin', name: 'Origin', coordinates: origin },
-    { id: 'destination', name: 'Destination', coordinates: destination },
-    origin,
-    destination
-  );
+  try {
+    const originStation: Station = {
+      id: 'origin',
+      name: 'Origin',
+      coordinates: origin,
+    };
 
-  if (!walkSegment) return null;
+    const destinationStation: Station = {
+      id: 'destination',
+      name: 'Destination',
+      coordinates: destination,
+    };
 
-  const { buildRoute } = await import('../journey/segment/calculator');
-  const route = await buildRoute([walkSegment], 0, walkSegment.walkingDistance);
+    const walkSegment = await createWalkingSegment(
+      originStation,
+      destinationStation,
+      origin,
+      destination
+    );
 
-  return {
-    ...route,
-    id: `walk-${uuidv4()}`,
-    isDirectWalk: true,
-  };
-}
+    if (!walkSegment) return null;
 
-export async function calculateStationDistances(
-  origin: Coordinates,
-  destination: Coordinates
-): Promise<{
-  originDistances: { stationId: string; distance: number }[];
-  destinationDistances: { stationId: string; distance: number }[];
-  minOriginDistance: number;
-  minDestDistance: number;
-  closestOriginStation: string;
-  closestDestStation: string;
-}> {
-  const originDistances: { stationId: string; distance: number }[] = [];
-  const destinationDistances: { stationId: string; distance: number }[] = [];
+    const { buildRoute } = await import('../journey/segment/calculator');
+    const route = await buildRoute(
+      [walkSegment],
+      0,
+      walkSegment.walkingDistance
+    );
 
-  let minOriginDistance = Infinity;
-  let minDestDistance = Infinity;
-  let closestOriginStation = '';
-  let closestDestStation = '';
-
-  const stationIds = new Set<string>();
-  for (const line of metroLines) {
-    for (const station of line.stations) {
-      stationIds.add(station.id);
-    }
+    return {
+      ...route,
+      id: `walk-${uuidv4()}`,
+      isDirectWalk: true,
+      directDistance: calculateDistanceSync(origin, destination),
+    };
+  } catch (error) {
+    console.error('Error creating direct walking route:', error);
+    return null;
   }
-
-  for (const stationId of stationIds) {
-    let stationCoords: Coordinates | null = null;
-    for (const line of metroLines) {
-      const station = line.stations.find((s) => s.id === stationId);
-      if (station) {
-        stationCoords = station.coordinates;
-        break;
-      }
-    }
-
-    if (stationCoords) {
-      const originDistance = calculateDistanceSync(origin, stationCoords);
-      const destDistance = calculateDistanceSync(destination, stationCoords);
-
-      originDistances.push({ stationId, distance: originDistance });
-      destinationDistances.push({ stationId, distance: destDistance });
-
-      if (originDistance < minOriginDistance) {
-        minOriginDistance = originDistance;
-        closestOriginStation = stationId;
-      }
-
-      if (destDistance < minDestDistance) {
-        minDestDistance = destDistance;
-        closestDestStation = stationId;
-      }
-    }
-  }
-
-  originDistances.sort((a, b) => a.distance - b.distance);
-  destinationDistances.sort((a, b) => a.distance - b.distance);
-
-  return {
-    originDistances,
-    destinationDistances,
-    minOriginDistance,
-    minDestDistance,
-    closestOriginStation,
-    closestDestStation,
-  };
 }
 
 export function determineWalkingThresholds(
-  stationDistances: {
-    originDistances: { stationId: string; distance: number }[];
-    destinationDistances: { stationId: string; distance: number }[];
-    minOriginDistance: number;
-    minDestDistance: number;
-  },
-  directDistance: number,
+  origin: Coordinates,
+  destination: Coordinates,
   maxOriginWalkingDistance: number,
   maxDestinationWalkingDistance: number
 ): { origin: number; destination: number } {
-  const {
-    originDistances,
-    destinationDistances,
-    minOriginDistance,
-    minDestDistance,
-  } = stationDistances;
+  // Get station distances
+  const stationDistances = stationManager.findStationDistances(
+    origin,
+    destination
+  );
+  const directDistance = calculateDistanceSync(origin, destination);
+
+  const minOriginDistance = stationDistances.originDistances[0]?.distance || 0;
+  const minDestDistance =
+    stationDistances.destinationDistances[0]?.distance || 0;
 
   const baseThreshold = Math.max(
     directDistance * 0.33,
@@ -125,13 +78,13 @@ export function determineWalkingThresholds(
   );
 
   const originDensity =
-    originDistances.length >= 3
-      ? originDistances[2].distance
+    stationDistances.originDistances.length >= 3
+      ? stationDistances.originDistances[2].distance
       : minOriginDistance * 2;
 
   const destDensity =
-    destinationDistances.length >= 3
-      ? destinationDistances[2].distance
+    stationDistances.destinationDistances.length >= 3
+      ? stationDistances.destinationDistances[2].distance
       : minDestDistance * 2;
 
   const originThreshold = Math.max(

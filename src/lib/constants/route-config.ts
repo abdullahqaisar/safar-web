@@ -82,3 +82,65 @@ export const WALKING_SHORTCUTS = {
    */
   LONG_THRESHOLD: 500,
 };
+
+/**
+ * Critical transfer configurations between metro lines
+ * Lower values mean more aggressive cost reduction (0.1 = 90% reduction)
+ */
+export const CRITICAL_TRANSFERS: Record<string, number> = {
+  // Principal transfers between primary lines
+  'red-orange': 0.15, // Critical Red-Orange transfer
+  'orange-red': 0.15, // Critical Orange-Red transfer
+  'green-blue': 0.3, // Important Green-Blue transfer
+  'blue-green': 0.3, // Important Blue-Green transfer
+
+  // Secondary important transfers
+  'red-blue': 0.4,
+  'blue-red': 0.4,
+  'red-green': 0.4,
+  'green-red': 0.4,
+  'orange-blue': 0.5,
+  'blue-orange': 0.5,
+  'orange-green': 0.5,
+  'green-orange': 0.5,
+};
+
+/**
+ * Priority levels for each line (higher = more important)
+ */
+export const LINE_PRIORITY: Record<string, number> = {
+  red: 10, // Highest priority
+  orange: 9, // Very high priority
+  green: 8, // High priority
+  blue: 8, // High priority
+  // Secondary lines would have lower priorities (5-7)
+  // Tertiary/feeder lines would have lowest priorities (1-4)
+};
+
+/**
+ * Interchange station importance levels
+ * Contains transfer importance and per-line-pair special weightings
+ */
+export const INTERCHANGE_CONFIG = {
+  // Transfer importance multipliers for different importance levels
+  importanceMultipliers: {
+    critical: 0.2, // 80% reduction
+    major: 0.3, // 70% reduction
+    standard: 0.5, // 50% reduction
+    minor: 0.8, // 20% reduction
+  },
+
+  // Special transfer pairs at specific interchanges (station-lineA-lineB)
+  specialTransfers: [
+    {
+      stationId: 'faizAhmadFaiz',
+      linePair: ['red', 'orange'],
+      multiplier: 0.1, // 90% reduction
+    },
+    {
+      stationId: 'pims_gate',
+      linePair: ['green', 'blue'],
+      multiplier: 0.2, // 80% reduction
+    },
+  ],
+};

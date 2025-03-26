@@ -1,5 +1,5 @@
 import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
-import { findNearestStation } from '@/server/core/journey/station/station';
+import { stationManager } from '@/server/core/journey/station/station';
 import { findBestRoutes } from '@/server/services/route.service';
 import { NextResponse } from 'next/server';
 
@@ -7,8 +7,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { fromLocation, toLocation } = body;
-
-    console.log('Locationnnnn ', fromLocation, toLocation);
 
     // Validate required parameters
     if (
@@ -26,13 +24,11 @@ export async function POST(request: Request) {
     }
 
     // Find the nearest stations to the provided coordinates
-    const fromStation = await findNearestStation(
+    const fromStation = await stationManager.findNearestStation(
       fromLocation,
       MAX_STATION_DISTANCE,
       true
     );
-
-    console.log(fromLocation, fromStation);
 
     if (!fromStation) {
       return NextResponse.json(
@@ -45,7 +41,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const toStation = await findNearestStation(
+    const toStation = await stationManager.findNearestStation(
       toLocation,
       MAX_STATION_DISTANCE,
       true

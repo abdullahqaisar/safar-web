@@ -1,5 +1,8 @@
 import { Route } from '@/types/route';
-import { calculateComfortScore, calculateRouteScore } from './scoring';
+import {
+  calculateComfortScore,
+  calculateRouteScore,
+} from '../optimization/scoring';
 import { MAX_ROUTES_TO_RETURN, MAX_TRANSFERS } from '@/lib/constants/config';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -15,7 +18,13 @@ import {
   handleWalkingTransitFiltering,
   getFallbackRoutes,
   ensurePriorityRoutes,
-} from '@/server/core/shared/route';
+} from '@/server/core/shared/optimization.utils';
+import {
+  calculateLineCoverageScore,
+  areRoutesComplementary,
+  usesPrimaryLines,
+  usesSecondaryLines,
+} from '@/server/core/shared/line-utils';
 
 export function filterAndRankRoutes(
   routes: Route[],
@@ -43,6 +52,7 @@ export function filterAndRankRoutes(
   const filteredRoutes = filterRoutesByQuality(nonDirectWalkRoutes);
   const rankedRoutes = rankRoutes(filteredRoutes);
 
+  // Ensure routes have good line diversity using our improved classification system
   let diverseRoutes = ensureRouteDiversity(
     rankedRoutes,
     isMediumDistance || isLongDistance
@@ -69,11 +79,22 @@ function processLongDistanceRoutes(
   }
 
   const bestDirectWalk = directWalkRoutes[0];
-  const hasTransitRoute = diverseRoutes.some((route) =>
-    route.segments.some((segment) => segment.type === 'transit')
+
+  // Check for transit routes with primary lines
+  const hasPrimaryTransitRoute = diverseRoutes.some(
+    (route) =>
+      route.segments.some((segment) => segment.type === 'transit') &&
+      usesPrimaryLines(route)
   );
 
-  if (!hasTransitRoute) {
+  // For long trips, also ensure we have at least one route with secondary lines if possible
+  const hasSecondaryTransitRoute = diverseRoutes.some(
+    (route) =>
+      route.segments.some((segment) => segment.type === 'transit') &&
+      usesSecondaryLines(route)
+  );
+
+  if (!hasPrimaryTransitRoute) {
     const transitRoute = findTransitRoute(diverseRoutes);
     if (transitRoute) {
       diverseRoutes.unshift(transitRoute);
@@ -82,10 +103,25 @@ function processLongDistanceRoutes(
 
   const includeWalking =
     bestDirectWalk.totalDuration < diverseRoutes[0].totalDuration * 0.8 ||
-    !hasTransitRoute;
+    !hasPrimaryTransitRoute;
 
+  // If walking is compelling or we lack good transit options, include the walking route
   if (includeWalking) {
     diverseRoutes.push(bestDirectWalk);
+  }
+
+  // If we're missing routes with secondary lines, try to add one
+  if (
+    !hasSecondaryTransitRoute &&
+    diverseRoutes.length < MAX_ROUTES_TO_RETURN
+  ) {
+    const secondaryRoute = diverseRoutes.find(
+      (route) => !diverseRoutes.includes(route) && usesSecondaryLines(route)
+    );
+
+    if (secondaryRoute) {
+      diverseRoutes.push(secondaryRoute);
+    }
   }
 
   return diverseRoutes;
@@ -227,6 +263,7 @@ function ensureRouteDiversity(
 
   const result: Route[] = [routes[0]];
 
+  // First ensure mode diversity if requested (transit vs walking)
   if (enforceModeDiversity) {
     const firstIsTransit = routes[0].segments.some((s) => s.type === 'transit');
     const needsMode = firstIsTransit ? 'walk' : 'transit';
@@ -244,6 +281,7 @@ function ensureRouteDiversity(
     }
   }
 
+  // Then ensure line diversity using our enhanced metrics
   for (
     let i = 1;
     i < routes.length && result.length < MAX_ROUTES_TO_RETURN;
@@ -252,21 +290,44 @@ function ensureRouteDiversity(
     if (result.includes(routes[i])) continue;
 
     const candidate = routes[i];
+
+    // Skip routes that are too similar to already selected routes
     let isSignificantlyDifferent = true;
+    let isComplementary = false;
 
     for (const selectedRoute of result) {
+      // Check basic similarity
       const similarity = calculateRouteSimilarity(candidate, selectedRoute);
 
       if (similarity > ROUTE_SIMILARITY_THRESHOLD) {
         isSignificantlyDifferent = false;
         break;
       }
+
+      // Check if this route complements existing routes by covering different line types
+      if (areRoutesComplementary(candidate, selectedRoute)) {
+        isComplementary = true;
+      }
     }
 
-    if (isSignificantlyDifferent) {
+    // Include routes that are different or complementary
+    if (isSignificantlyDifferent || isComplementary) {
       result.push(candidate);
     }
   }
 
-  return result;
+  // Calculate line coverage score for all routes
+  const scoredRoutes = result.map((route) => ({
+    route,
+    coverage: calculateLineCoverageScore(route),
+  }));
+
+  // Sort by coverage score (descending) while preserving the first route
+  const firstRoute = scoredRoutes[0];
+  const restRoutes = scoredRoutes
+    .slice(1)
+    .sort((a, b) => b.coverage - a.coverage);
+
+  // Return the sorted routes
+  return [firstRoute.route, ...restRoutes.map((r) => r.route)];
 }
