@@ -10,6 +10,12 @@ import {
   createFinalWalkingRoutes,
   createWalkingTransferRoutes,
 } from './walking-route';
+import { validateAndOptimizeRoutes } from './route-validator';
+import { consolidateRoutesByPath } from '../utils/route-signature';
+import { filterIrrationalRoutes } from './route-rationalization';
+
+// Direct route quality threshold - how much better a transfer route must be to be included
+const DIRECT_ROUTE_QUALITY_THRESHOLD = 0.15; // 15% improvement needed
 
 /**
  * Coordinates the discovery of all possible routes between origin and destination
@@ -19,25 +25,103 @@ export function discoverAllRoutes(
   originId: string,
   destinationId: string
 ): Route[] {
-  // Direct transit routes (Phase A)
-  const directRoutes = findDirectRoutes(graph, originId, destinationId);
+  // Phase A: Direct transit routes
+  let directRoutes = findDirectRoutes(graph, originId, destinationId);
+  directRoutes = validateAndOptimizeRoutes(directRoutes, graph);
 
-  // Transfer routes (Phase B)
-  const transferRoutes = findTransferRoutes(graph, originId, destinationId);
+  // If we have good direct routes, we'll use them as a baseline for deciding
+  // whether to explore transfer routes
+  if (directRoutes.length > 0) {
+    // Get the fastest direct route duration as benchmark
+    const fastestDirectDuration = Math.min(
+      ...directRoutes.map((route) => route.totalDuration)
+    );
 
-  // Combine transit routes
-  const transitRoutes = [...directRoutes, ...transferRoutes];
+    // Calculate minimum improvement threshold for transfer routes
+    const durationThreshold =
+      fastestDirectDuration * (1 - DIRECT_ROUTE_QUALITY_THRESHOLD);
 
-  // Walking routes (Phase C)
-  const walkingRoutes = discoverWalkingRoutes(
-    graph,
-    originId,
-    destinationId,
-    transitRoutes
-  );
+    // Phase B: Transfer routes - only if they might provide significantly better options
+    let transferRoutes = findTransferRoutes(
+      graph,
+      originId,
+      destinationId,
+      // Pass duration threshold as an optional parameter
+      undefined,
+      durationThreshold
+    );
 
-  // Combine all routes
-  return [...transitRoutes, ...walkingRoutes];
+    // If we found any transfer routes, validate and filter them
+    if (transferRoutes.length > 0) {
+      transferRoutes = validateAndOptimizeRoutes(transferRoutes, graph);
+      transferRoutes = filterIrrationalRoutes(
+        transferRoutes,
+        graph,
+        destinationId
+      );
+      transferRoutes = consolidateRoutesByPath(transferRoutes);
+
+      // After filtering, check if any transfer routes are actually better than direct routes
+      transferRoutes = transferRoutes.filter((transfer) => {
+        // Only keep transfer routes that offer significant improvement over direct routes
+        return transfer.totalDuration < durationThreshold;
+      });
+    }
+
+    // Combine direct and any remaining superior transfer routes
+    const transitRoutes = [...directRoutes, ...transferRoutes];
+
+    // Rest of function remains the same
+    // Phase C: Walking routes
+    let walkingRoutes = discoverWalkingRoutes(
+      graph,
+      originId,
+      destinationId,
+      transitRoutes
+    );
+    walkingRoutes = validateAndOptimizeRoutes(walkingRoutes, graph);
+    walkingRoutes = filterIrrationalRoutes(walkingRoutes, graph, destinationId);
+
+    // Final processing
+    let allRoutes = [...transitRoutes, ...walkingRoutes];
+    allRoutes = validateAndOptimizeRoutes(allRoutes, graph);
+    allRoutes = filterIrrationalRoutes(allRoutes, graph, destinationId);
+    allRoutes = consolidateRoutesByPath(allRoutes);
+
+    return allRoutes;
+  } else {
+    // No direct routes available - continue with normal multi-modal discovery
+
+    // Phase B: Transfer routes
+    let transferRoutes = findTransferRoutes(graph, originId, destinationId);
+    transferRoutes = validateAndOptimizeRoutes(transferRoutes, graph);
+    transferRoutes = filterIrrationalRoutes(
+      transferRoutes,
+      graph,
+      destinationId
+    );
+    transferRoutes = consolidateRoutesByPath(transferRoutes);
+
+    // Combine transit routes
+    const transitRoutes = [...directRoutes, ...transferRoutes];
+
+    // Rest of function remains unchanged
+    let walkingRoutes = discoverWalkingRoutes(
+      graph,
+      originId,
+      destinationId,
+      transitRoutes
+    );
+    walkingRoutes = validateAndOptimizeRoutes(walkingRoutes, graph);
+    walkingRoutes = filterIrrationalRoutes(walkingRoutes, graph, destinationId);
+
+    let allRoutes = [...transitRoutes, ...walkingRoutes];
+    allRoutes = validateAndOptimizeRoutes(allRoutes, graph);
+    allRoutes = filterIrrationalRoutes(allRoutes, graph, destinationId);
+    allRoutes = consolidateRoutesByPath(allRoutes);
+
+    return allRoutes;
+  }
 }
 
 /**

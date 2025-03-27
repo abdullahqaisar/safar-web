@@ -5,6 +5,7 @@ import {
   calculateStationOverlap,
 } from '../utils/route-comparison';
 import { TransitGraph } from '../graph/graph';
+import { getLinePathSignature } from '../utils/route-signature';
 
 /**
  * Optimize a set of routes to ensure diversity
@@ -83,6 +84,19 @@ function calculateDiversityValue(
   // If selected is empty, return the route quality score
   if (selectedRoutes.length === 0) return routeQualityScore;
 
+  // Get line path signature for candidate
+  const candidateSignature = getLinePathSignature(candidate);
+
+  // Check if we already have a route with the same line path signature
+  const hasSamePathRoute = selectedRoutes.some(
+    (route) => getLinePathSignature(route) === candidateSignature
+  );
+
+  // Heavily penalize routes with the same line path (decrease diversity value)
+  if (hasSamePathRoute) {
+    return routeQualityScore * 0.3; // 70% penalty for duplicate path strategy
+  }
+
   // Get station IDs for candidate route
   const candidateStationIds = getRouteStationIds(candidate);
 
@@ -137,14 +151,18 @@ function calculateDiversityValue(
     walkRatioDiversity / selectedRoutes.length
   );
 
+  // Calculate line diversity score
+  const lineDiversity = calculateLineDiversity(candidate, selectedRoutes);
+
   // Calculate weighted diversity value
   // Weight formula gives higher importance to route quality and station diversity
   const weightedValue =
-    routeQualityScore * 0.4 + // 40% route quality
-    diversityScore * 0.35 + // 35% station diversity
-    durationDiversityScore * 0.1 + // 10% duration diversity
-    transferDiversity * 0.1 + // 10% transfer diversity
-    walkRatioDiversity * 0.05; // 5% walk ratio diversity
+    routeQualityScore * 0.35 + // 35% route quality (down from 40%)
+    diversityScore * 0.25 + // 25% station diversity (down from 35%)
+    lineDiversity * 0.2 + // 20% NEW line diversity score
+    durationDiversityScore * 0.1 + // 10% duration diversity (unchanged)
+    transferDiversity * 0.05 + // 5% transfer diversity (down from 10%)
+    walkRatioDiversity * 0.05; // 5% walk ratio diversity (unchanged)
 
   return weightedValue;
 }
@@ -163,4 +181,51 @@ function calculateWalkRatio(route: Route): number {
   });
 
   return walkingDistance / route.totalDistance;
+}
+
+/**
+ * Calculate line diversity score by comparing transit line usage
+ */
+function calculateLineDiversity(
+  candidate: Route,
+  selectedRoutes: Route[]
+): number {
+  // Extract all line IDs used in candidate route
+  const candidateLines = new Set<string>();
+
+  candidate.segments.forEach((segment) => {
+    if (segment.type === 'transit') {
+      candidateLines.add(segment.line.id);
+    }
+  });
+
+  // For each selected route, calculate line overlap
+  let totalLineOverlap = 0;
+
+  for (const selectedRoute of selectedRoutes) {
+    const selectedLines = new Set<string>();
+
+    selectedRoute.segments.forEach((segment) => {
+      if (segment.type === 'transit') {
+        selectedLines.add(segment.line.id);
+      }
+    });
+
+    // Count common lines
+    let commonLines = 0;
+    candidateLines.forEach((line) => {
+      if (selectedLines.has(line)) commonLines++;
+    });
+
+    // Calculate overlap ratio
+    const overlapRatio =
+      commonLines / Math.max(candidateLines.size, selectedLines.size);
+
+    totalLineOverlap += overlapRatio;
+  }
+
+  const avgLineOverlap = totalLineOverlap / selectedRoutes.length;
+
+  // Return diversity score (0-100) where higher means more diverse
+  return 100 * (1 - avgLineOverlap);
 }

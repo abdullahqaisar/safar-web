@@ -3,6 +3,7 @@ import { PruningThresholds, PruningWeights } from '../utils/pruning-config';
 import { LineQualityFactors } from '../utils/scoring-config';
 import { getRouteStationIds } from '../utils/route-comparison';
 import { TransitGraph } from '../graph/graph';
+import { analyzeRouteRationality } from './route-rationalization';
 
 /**
  * Types of route inefficiencies that can be detected during pruning
@@ -18,7 +19,8 @@ export type RouteIssue =
   | 'PRESERVED_ROUTE'
   | 'UNNECESSARY_TRANSFER'
   | 'SELF_LOOP_SEGMENT'
-  | 'INVALID_SEGMENT_LENGTH';
+  | 'INVALID_SEGMENT_LENGTH'
+  | 'GEOGRAPHIC_IRRATIONALITY'; // New issue type
 
 /**
  * Container for route with analysis data
@@ -36,6 +38,7 @@ interface AnalyzedRoute {
 export function pruneRoutes(
   routes: Route[],
   graph: TransitGraph,
+  destinationId: string, // New parameter
   maxRoutes: number = 5
 ): Route[] {
   if (routes.length <= maxRoutes) {
@@ -43,7 +46,7 @@ export function pruneRoutes(
   }
 
   // Step 1: Analyze all routes
-  const analyzedRoutes = analyzeRoutes(routes);
+  const analyzedRoutes = analyzeRoutes(routes, graph, destinationId);
 
   // Step 2: Mark routes that should be preserved (special cases)
   markPreservedRoutes(analyzedRoutes);
@@ -58,7 +61,11 @@ export function pruneRoutes(
 /**
  * Analyze all routes and calculate efficiency metrics
  */
-function analyzeRoutes(routes: Route[]): AnalyzedRoute[] {
+function analyzeRoutes(
+  routes: Route[],
+  graph: TransitGraph,
+  destinationId: string
+): AnalyzedRoute[] {
   // Find min values for normalization
   const minDuration = Math.min(...routes.map((r) => r.totalDuration));
   const minDistance = Math.min(...routes.map((r) => r.totalDistance));
@@ -76,11 +83,19 @@ function analyzeRoutes(routes: Route[]): AnalyzedRoute[] {
       distanceRatio * PruningWeights.DISTANCE +
       transferRatio * PruningWeights.TRANSFERS;
 
-    // Initial analysis with no issues
+    // Check for route rationality issues
+    const rationality = analyzeRouteRationality(route, graph, destinationId);
+
+    // Initial analysis
+    const issues: RouteIssue[] = [];
+    if (rationality.hasIssues) {
+      issues.push('GEOGRAPHIC_IRRATIONALITY');
+    }
+
     return {
       route,
-      issues: [],
-      efficiencyScore,
+      issues,
+      efficiencyScore: efficiencyScore + rationality.score * 0.01, // Adjust efficiency score based on rationality
       preserved: false,
     };
   });
@@ -145,9 +160,11 @@ function applyProgressiveFiltering(
   identifyRedundantSimilarRoutes(analyzedRoutes);
   identifyExcessiveComplexity(analyzedRoutes);
   identifyPoorQualityLines(analyzedRoutes);
-  // Add new checks
   identifyUnnecessaryTransfers(analyzedRoutes);
   identifySelfLoops(analyzedRoutes);
+
+  // NOTE: We don't need to add another call here since route rationality is already
+  // factored into the efficiencyScore and GEOGRAPHIC_IRRATIONALITY issue during analysis
 
   // Step 2: Filter out routes with multiple issues first (unless preserved)
   let filteredRoutes = [...analyzedRoutes].sort((a, b) => {

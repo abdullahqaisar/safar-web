@@ -2,6 +2,8 @@ import { Route } from '../types/route';
 import { TransitGraph } from '../graph/graph';
 import { optimizeRouteDiversity } from '../routing/route-diversity';
 import { pruneRoutes } from '../routing/route-pruning';
+import { validateAndOptimizeRoutes } from '../routing/route-validator';
+import { consolidateRoutesByPath } from '../utils/route-signature';
 
 /**
  * Extract all station IDs from a route
@@ -42,8 +44,45 @@ export function isRouteDuplicate(
   // Get station IDs from route
   const routeStationIds = getRouteStationIds(route);
 
+  // Extract transit line IDs for this route
+  const routeLineIds = new Set<string>();
+  route.segments.forEach((segment) => {
+    if (segment.type === 'transit') {
+      routeLineIds.add(segment.line.id);
+    }
+  });
+
+  // Special case: direct routes (0 transfers) with a single transit line
+  // should never be considered duplicates of each other if they use different lines
+  const isDirectSingleLineRoute =
+    route.transfers === 0 && routeLineIds.size === 1;
+
   for (const existingRoute of existingRoutes) {
     const existingStationIds = getRouteStationIds(existingRoute);
+
+    // Extract transit line IDs for the existing route
+    const existingLineIds = new Set<string>();
+    existingRoute.segments.forEach((segment) => {
+      if (segment.type === 'transit') {
+        existingLineIds.add(segment.line.id);
+      }
+    });
+
+    // If both routes are direct routes with a single line, compare line IDs
+    if (
+      isDirectSingleLineRoute &&
+      existingRoute.transfers === 0 &&
+      existingLineIds.size === 1
+    ) {
+      // Check if they use different lines
+      const routeLineId = Array.from(routeLineIds)[0];
+      const existingLineId = Array.from(existingLineIds)[0];
+
+      // If lines are different, these are not duplicates, even if they follow the same path
+      if (routeLineId !== existingLineId) {
+        continue;
+      }
+    }
 
     // If routes are within 10% duration of each other
     const durationDifference = Math.abs(
@@ -116,17 +155,25 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
     return [];
   }
 
-  // Remove duplicate routes
-  const uniqueRoutes = removeDuplicateRoutes(routes);
+  // Apply validation and optimization to fix bugs
+  if (graph) {
+    routes = validateAndOptimizeRoutes(routes, graph);
+  }
+
+  // Remove duplicate routes - station-based
+  routes = removeDuplicateRoutes(routes);
+
+  // Consolidate routes with identical line paths
+  routes = consolidateRoutesByPath(routes);
 
   if (!graph) {
     // Fallback to simple ranking if graph is not provided
-    const sortedRoutes = rankRoutes(uniqueRoutes);
+    const sortedRoutes = rankRoutes(routes);
     return sortedRoutes.slice(0, MAX_ROUTES);
   }
 
   // Apply intelligent pruning to filter inefficient routes
-  const prunedRoutes = pruneRoutes(uniqueRoutes, graph, MAX_ROUTES * 2);
+  const prunedRoutes = pruneRoutes(routes, graph, MAX_ROUTES * 2);
 
   // Then optimize for diversity among the remaining candidates
   const diverseRoutes = optimizeRouteDiversity(prunedRoutes, graph, MAX_ROUTES);
