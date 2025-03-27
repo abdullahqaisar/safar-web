@@ -2,6 +2,65 @@ import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
 import { stationManager } from '@/server/core/journey/station/station';
 import { findBestRoutes } from '@/server/services/route.service';
 import { NextResponse } from 'next/server';
+import { TransitRouter } from '@/core/routing/routing';
+import { metroLines } from '@/core/data/metro-data';
+import { stationData } from '@/core/data/station-data';
+import { TransitGraph } from '@/core/graph/graph';
+
+export async function GET(request: Request) {
+  try {
+    const params = new URL(request.url).searchParams;
+    const fromStationId = params.get('from');
+    const toStationId = params.get('to');
+
+    // Validate required parameters
+    if (!fromStationId || !toStationId) {
+      return NextResponse.json(
+        {
+          message:
+            'Missing required parameters: "from" and "to" station IDs are required',
+          code: 'MISSING_PARAMETERS',
+        },
+        { status: 400 }
+      );
+    }
+    // First, create a TransitGraph instance
+    const transitGraph = new TransitGraph();
+
+    // Then create a TransitRouter with that graph
+    const router = new TransitRouter(transitGraph);
+
+    // Initialize with your stations and lines
+    router.initialize(stationData, metroLines);
+
+    const routingResult = router.findRoutes(fromStationId, toStationId);
+    // Check if there was an error
+    if ('error' in routingResult) {
+      return NextResponse.json(
+        {
+          message: routingResult.error,
+          code: routingResult.code,
+        },
+        { status: 404 }
+      );
+    }
+
+    // Return the found routes
+    return NextResponse.json(routingResult);
+  } catch (error) {
+    console.error('Route search error:', error);
+    return NextResponse.json(
+      {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to search for routes',
+        code: 'SERVER_ERROR',
+      },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {
