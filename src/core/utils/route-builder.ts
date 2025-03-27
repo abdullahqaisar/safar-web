@@ -20,8 +20,25 @@ export function createTransitSegment(
   line: TransitLine,
   stationIds: string[]
 ): TransitRouteSegment {
+  // Validate: require at least two distinct stations
+  if (stationIds.length < 2) {
+    throw new Error(
+      `Transit segment must have at least 2 stations, got ${stationIds.length}`
+    );
+  }
+
+  // Validate: check that first and last stations are different
+  if (stationIds[0] === stationIds[stationIds.length - 1]) {
+    throw new Error(`Transit segment start and end stations must be different`);
+  }
+
+  // Remove any duplicate consecutive stations
+  const cleanedStationIds = stationIds.filter(
+    (stationId, index) => index === 0 || stationId !== stationIds[index - 1]
+  );
+
   // Convert station IDs to route stations
-  const stations: RouteStation[] = stationIds.map((stationId) =>
+  const stations: RouteStation[] = cleanedStationIds.map((stationId) =>
     convertToRouteStation(graph.stations[stationId])
   );
 
@@ -29,9 +46,9 @@ export function createTransitSegment(
   let totalDistance = 0;
   let duration = 0;
 
-  for (let i = 0; i < stationIds.length - 1; i++) {
-    const fromId = stationIds[i];
-    const toId = stationIds[i + 1];
+  for (let i = 0; i < cleanedStationIds.length - 1; i++) {
+    const fromId = cleanedStationIds[i];
+    const toId = cleanedStationIds[i + 1];
     const fromStation = graph.stations[fromId];
     const toStation = graph.stations[toId];
 
@@ -57,7 +74,7 @@ export function createTransitSegment(
 
   // Add wait time for intermediate stops
   const stopWaitTime = DEFAULT_STOP_WAIT_TIME;
-  const waitTime = (stationIds.length - 2) * stopWaitTime; // No wait at origin and destination
+  const waitTime = (cleanedStationIds.length - 2) * stopWaitTime; // No wait at origin and destination
   duration += waitTime;
 
   return {
@@ -95,12 +112,22 @@ export function createWalkingSegment(
  * Create a complete route from segments
  */
 export function createRoute(segments: RouteSegment[]): Route {
+  // Validate segments: skip empty segments
+  const validSegments = segments.filter(
+    (segment) => segment.stations.length >= 2
+  );
+
+  // If no valid segments, throw an error
+  if (validSegments.length === 0) {
+    throw new Error('Cannot create route with no valid segments');
+  }
+
   let totalStops = 0;
   let totalDistance = 0;
   let totalDuration = 0;
 
   // Calculate route stats
-  segments.forEach((segment) => {
+  validSegments.forEach((segment) => {
     if (segment.type === 'transit') {
       totalStops += segment.stations.length - 1;
     }
@@ -120,12 +147,29 @@ export function createRoute(segments: RouteSegment[]): Route {
     .toString(36)
     .substring(2, 11)}`;
 
+  // Adjust transfers count to count only transitions between different transport modes or lines
+  let transferCount = 0;
+  for (let i = 1; i < validSegments.length; i++) {
+    const prevSegment = validSegments[i - 1];
+    const currSegment = validSegments[i];
+
+    // If segment types are different, or both are transit but different lines
+    if (
+      prevSegment.type !== currSegment.type ||
+      (prevSegment.type === 'transit' &&
+        currSegment.type === 'transit' &&
+        prevSegment.line.id !== currSegment.line.id)
+    ) {
+      transferCount++;
+    }
+  }
+
   return {
-    segments,
+    segments: validSegments,
     totalStops,
     totalDistance,
     totalDuration,
-    transfers: segments.length - 1,
+    transfers: transferCount,
     id,
   };
 }

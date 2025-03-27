@@ -265,6 +265,18 @@ function findMultiTransferRoutes(
         const nextLine = graph.lines[nextLineId];
         if (!nextLine) return;
 
+        // NEW CODE: Check if this transfer would be useful
+        // Prevent transfers that don't lead to new stations
+        const newStationsReachable = hasNewReachableStations(
+          nextLine,
+          stationId,
+          visitedStations
+        );
+
+        if (!newStationsReachable) {
+          return; // Skip this transfer as it doesn't reach any new stations
+        }
+
         const newVisitedLines = new Set(currentState.visitedLines);
         newVisitedLines.add(nextLineId);
 
@@ -289,6 +301,35 @@ function findMultiTransferRoutes(
   }
 
   return routes;
+}
+
+/**
+ * Check if transferring to this line allows reaching new unvisited stations
+ */
+function hasNewReachableStations(
+  line: TransitLine,
+  currentStationId: string,
+  visitedStations: Set<string>
+): boolean {
+  // Find position of current station in line
+  const stationIndex = line.stations.indexOf(currentStationId);
+  if (stationIndex === -1) return false;
+
+  // Check forward direction for any unvisited stations
+  for (let i = stationIndex + 1; i < line.stations.length; i++) {
+    if (!visitedStations.has(line.stations[i])) {
+      return true; // Found at least one unvisited station
+    }
+  }
+
+  // Check backward direction for any unvisited stations
+  for (let i = stationIndex - 1; i >= 0; i--) {
+    if (!visitedStations.has(line.stations[i])) {
+      return true; // Found at least one unvisited station
+    }
+  }
+
+  return false; // No new stations can be reached
 }
 
 /**
@@ -380,9 +421,15 @@ function constructRouteFromPath(
       // Get station IDs for this segment
       const stationIds = segmentPath.map((p) => p.stationId);
 
-      // Create segment
-      const segment = createTransitSegment(graph, line, stationIds);
-      segments.push(segment);
+      // NEW CODE: Validate segment - ensure start and end stations are different
+      if (
+        stationIds.length >= 2 &&
+        stationIds[0] !== stationIds[stationIds.length - 1]
+      ) {
+        // Create segment only if it's a valid segment (no self-loops)
+        const segment = createTransitSegment(graph, line, stationIds);
+        segments.push(segment);
+      }
 
       // If this was a transfer, make it the start of the next segment
       if (path[i].isTransfer) {
@@ -391,11 +438,19 @@ function constructRouteFromPath(
     }
   }
 
+  // NEW CODE: Filter out segments with only one station
+  const validSegments = segments.filter(
+    (segment) => segment.stations.length > 1
+  );
+
+  // Only create a route if we have valid segments
+  if (validSegments.length === 0) return null;
+
   // Add transfer wait times
-  for (let i = 1; i < segments.length; i++) {
-    segments[i].duration += INTERCHANGE_WALKING_TIME;
+  for (let i = 1; i < validSegments.length; i++) {
+    validSegments[i].duration += INTERCHANGE_WALKING_TIME;
   }
 
   // Create the route
-  return createRoute(segments);
+  return createRoute(validSegments);
 }

@@ -1,7 +1,7 @@
 import { Route } from '../types/route';
 import { TransitGraph } from '../graph/graph';
-import { calculateRouteScore } from '../routing/route-scoring';
 import { optimizeRouteDiversity } from '../routing/route-diversity';
+import { pruneRoutes } from '../routing/route-pruning';
 
 /**
  * Extract all station IDs from a route
@@ -109,7 +109,7 @@ export function rankRoutes(routes: Route[]): Route[] {
 const MAX_ROUTES = 5; // Maximum number of routes to return
 
 /**
- * Process routes by removing duplicates, ranking, and optimizing for diversity
+ * Process routes by pruning, optimizing for diversity, and limiting results
  */
 export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
   if (routes.length === 0) {
@@ -125,13 +125,11 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
     return sortedRoutes.slice(0, MAX_ROUTES);
   }
 
-  // First sort by score
-  const scoredRoutes = uniqueRoutes.sort(
-    (a, b) => calculateRouteScore(a, graph) - calculateRouteScore(b, graph)
-  );
+  // Apply intelligent pruning to filter inefficient routes
+  const prunedRoutes = pruneRoutes(uniqueRoutes, graph, MAX_ROUTES * 2);
 
-  // Then optimize for diversity
-  const diverseRoutes = optimizeRouteDiversity(scoredRoutes, graph, MAX_ROUTES);
+  // Then optimize for diversity among the remaining candidates
+  const diverseRoutes = optimizeRouteDiversity(prunedRoutes, graph, MAX_ROUTES);
 
   return diverseRoutes;
 }

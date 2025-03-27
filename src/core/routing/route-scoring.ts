@@ -70,16 +70,12 @@ function calculateTransferScore(route: Route, graph: TransitGraph): number {
       (transferCount - 1) * ScoringWeights.MULTIPLE_TRANSFER_PENALTY * 10;
   }
 
-  // Analyze transfer quality at each interchange
-  let transferIndex = 0;
   for (let i = 0; i < route.segments.length - 1; i++) {
     const currentSegment = route.segments[i];
     const nextSegment = route.segments[i + 1];
 
     // Only analyze transit-to-transit or walking-to-transit transfers
     if (currentSegment.type === 'transit' || nextSegment.type === 'transit') {
-      transferIndex++;
-
       // If this is a walking transfer
       if (currentSegment.type === 'walk' || nextSegment.type === 'walk') {
         const walkSegment =
@@ -126,14 +122,12 @@ function calculateTransferScore(route: Route, graph: TransitGraph): number {
  */
 function calculateWalkingScore(route: Route): number {
   let totalWalkingDistance = 0;
-  let walkSegmentCount = 0;
 
   // Sum all walking distances and count walking segments
   route.segments.forEach((segment) => {
     if (segment.type === 'walk') {
       const walkSegment = segment as WalkingRouteSegment;
       totalWalkingDistance += walkSegment.walkingDistance;
-      walkSegmentCount++;
     }
   });
 
