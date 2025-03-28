@@ -145,6 +145,13 @@ export function rankRoutes(routes: Route[]): Route[] {
   });
 }
 
+/**
+ * Sort routes strictly by time (fastest first)
+ */
+export function sortRoutesByTime(routes: Route[]): Route[] {
+  return [...routes].sort((a, b) => a.totalDuration - b.totalDuration);
+}
+
 const MAX_ROUTES = 5; // Maximum number of routes to return
 
 /**
@@ -169,7 +176,7 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
   if (!graph) {
     // Fallback to simple ranking if graph is not provided
     const sortedRoutes = rankRoutes(routes);
-    return sortedRoutes.slice(0, MAX_ROUTES);
+    return sortRoutesByTime(sortedRoutes.slice(0, MAX_ROUTES));
   }
 
   // Apply intelligent pruning to filter inefficient routes
@@ -178,5 +185,6 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
   // Then optimize for diversity among the remaining candidates
   const diverseRoutes = optimizeRouteDiversity(prunedRoutes, graph, MAX_ROUTES);
 
-  return diverseRoutes;
+  // As a final step, sort routes by time for consistent user experience
+  return sortRoutesByTime(diverseRoutes);
 }

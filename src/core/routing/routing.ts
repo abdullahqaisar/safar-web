@@ -1,7 +1,7 @@
 import { TransitGraph } from '../graph/graph';
 import { Station, TransitLine } from '../types/graph';
 import { RoutingResult } from '../types/route';
-import { processRoutes } from '../utils/route-comparison';
+import { processRoutes, sortRoutesByTime } from '../utils/route-comparison';
 import { discoverAllRoutes } from './route-discovery';
 
 export class TransitRouter {
@@ -48,7 +48,10 @@ export class TransitRouter {
     // Discover all possible routes
     const allRoutes = discoverAllRoutes(this.graph, originId, destinationId);
 
-    // Process routes (filter, rank, optimize diversity)
-    return processRoutes(allRoutes, this.graph);
+    // Process routes (filter, rank, optimize diversity) and ensure sorted by time
+    const processedRoutes = processRoutes(allRoutes, this.graph);
+
+    // Final sort by time to guarantee ordering
+    return sortRoutesByTime(processedRoutes);
   }
 }
