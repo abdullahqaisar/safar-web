@@ -1,5 +1,4 @@
 import { Route, RouteSegment, TransitRouteSegment } from '../types/route';
-import { TransitGraph } from '../graph/graph';
 import { createRoute } from '../utils/route-builder';
 
 /**
@@ -7,11 +6,9 @@ import { createRoute } from '../utils/route-builder';
  * 1. Removes self-loop segments
  * 2. Eliminates unnecessary transfers
  * 3. Merges redundant transit segments
+ * 4. Detects and fixes complex circular patterns
  */
-export function validateAndOptimizeRoute(
-  route: Route,
-  graph: TransitGraph
-): Route | null {
+export function validateAndOptimizeRoute(route: Route): Route | null {
   try {
     // First pass: Filter out invalid segments
     let segments = removeInvalidSegments(route.segments);
@@ -22,8 +19,11 @@ export function validateAndOptimizeRoute(
     // Second pass: Merge consecutive transit segments on same line
     segments = mergeRedundantSegments(segments);
 
-    // Third pass: Eliminate unnecessary transfers
+    // Third pass: Eliminate unnecessary transfers including complex patterns
     segments = eliminateUnnecessaryTransfers(segments);
+
+    // Fourth pass: Detect and eliminate complex circular patterns
+    segments = eliminateComplexCircularPatterns(segments);
 
     // Create a new optimized route
     return createRoute(segments);
@@ -171,14 +171,111 @@ function eliminateUnnecessaryTransfers(
 }
 
 /**
+ * Detect and eliminate complex circular patterns in routes
+ * Handles patterns like A→B→C→A where a route eventually returns to a line
+ * it previously traveled on, creating an unnecessary loop
+ */
+function eliminateComplexCircularPatterns(
+  segments: RouteSegment[]
+): RouteSegment[] {
+  if (segments.length < 3) return segments;
+
+  // Extract only transit segments for analysis
+  const transitSegments = segments.filter(
+    (segment): segment is TransitRouteSegment => segment.type === 'transit'
+  );
+
+  // If fewer than 3 transit segments, no complex patterns to detect
+  if (transitSegments.length < 3) return segments;
+
+  // Track the sequence of lines and the stations where they start
+  type LineInstance = {
+    lineId: string;
+    segmentIndex: number;
+    startStationId: string;
+    endStationId: string;
+  };
+
+  const lineSequence: LineInstance[] = [];
+
+  // Build a sequence of transit lines and their entry/exit stations
+  segments.forEach((segment, index) => {
+    if (segment.type === 'transit') {
+      const transitSegment = segment as TransitRouteSegment;
+      lineSequence.push({
+        lineId: transitSegment.line.id,
+        segmentIndex: index,
+        startStationId: transitSegment.stations[0].id,
+        endStationId:
+          transitSegment.stations[transitSegment.stations.length - 1].id,
+      });
+    }
+  });
+
+  // Look for circular patterns where we return to a line we've already used
+  const circularPatterns: number[][] = []; // Stores segment indexes to remove
+
+  for (let i = 0; i < lineSequence.length - 2; i++) {
+    const firstLineInstance = lineSequence[i];
+
+    // Look for later instances of the same line
+    for (let j = i + 2; j < lineSequence.length; j++) {
+      const laterLineInstance = lineSequence[j];
+
+      // Check if we've returned to the same line
+      if (firstLineInstance.lineId === laterLineInstance.lineId) {
+        // We found a potential circular pattern (format: A → ... → A)
+
+        // Only mark it as unnecessary if:
+        // 1. Second visit to the line is continuing in the same direction
+        // 2. The intermediate transfers didn't bring us to a useful different part of the line
+
+        // Check for station sequence to determine if this is a true circular pattern
+        // by comparing station IDs or checking if we're backtracking
+
+        // Check for strict circular pattern - returning to exactly the same station
+        const isCircular =
+          laterLineInstance.startStationId === firstLineInstance.endStationId;
+
+        // If it's definitely circular, mark the segments in between for removal
+        if (isCircular) {
+          const segmentsToRemove: number[] = [];
+          // Mark all intermediate segments for removal
+          for (
+            let k = firstLineInstance.segmentIndex + 1;
+            k < laterLineInstance.segmentIndex;
+            k++
+          ) {
+            segmentsToRemove.push(k);
+          }
+          circularPatterns.push(segmentsToRemove);
+          break; // Found the earliest circular pattern, stop looking
+        }
+      }
+    }
+  }
+
+  // If no circular patterns found, return the original segments
+  if (circularPatterns.length === 0) {
+    return segments;
+  }
+
+  // Filter out the segments that are part of unnecessary circular patterns
+  // Using the first (earliest) circular pattern
+  if (circularPatterns.length > 0) {
+    const segmentsToRemove = new Set(circularPatterns[0]);
+    return segments.filter((_, index) => !segmentsToRemove.has(index));
+  }
+
+  return segments;
+}
+
+/**
  * Validates and optimizes a batch of routes
  */
-export function validateAndOptimizeRoutes(
-  routes: Route[],
-  graph: TransitGraph
-): Route[] {
+export function validateAndOptimizeRoutes(routes: Route[]): Route[] {
   // Process each route and filter out any that become invalid
   return routes
-    .map((route) => validateAndOptimizeRoute(route, graph))
+    .map((route) => validateAndOptimizeRoute(route))
     .filter((route): route is Route => route !== null);
 }

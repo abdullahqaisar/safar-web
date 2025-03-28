@@ -3,6 +3,7 @@ import { Station, TransitLine } from '../types/graph';
 import { Route, TransitRouteSegment } from '../types/route';
 import { INTERCHANGE_WALKING_TIME } from '../utils/constants';
 import { createRoute, createTransitSegment } from '../utils/route-builder';
+import { calculateDistance } from '../utils/geo-utils';
 
 // Maximum allowed transfers (we could make this configurable later)
 const MAX_TRANSFERS = 2;
@@ -180,7 +181,7 @@ function findBestTransferOption(
       const route = createRoute([firstSegment, secondSegment]);
       transferOptions.push(route);
     } catch (error) {
-      // Skip invalid routes
+      console.error('Error creating route:', error);
     }
   });
 
@@ -249,7 +250,7 @@ function findMultiTransferRoutes(
     // Check if we've reached the destination
     if (stationId === destinationId) {
       // Before constructing a route, validate the path doesn't have unnecessary transfers
-      if (!hasUnnecessaryTransfers(path, graph)) {
+      if (!hasUnnecessaryTransfers(path)) {
         const route = constructRouteFromPath(graph, path);
 
         // Only add routes that meet the duration threshold (if specified)
@@ -342,14 +343,16 @@ function findMultiTransferRoutes(
         if (!nextLine) return;
 
         // Check if this transfer would be useful
-        // 1. Can this line reach new stations?
-        const newStationsReachable = hasNewReachableStations(
+        // 1. Can this line reach new stations or approach destination more efficiently?
+        const isTransferValuable = hasNewReachableStations(
           nextLine,
           stationId,
-          visitedStations
+          visitedStations,
+          destinationId,
+          graph
         );
 
-        if (!newStationsReachable) return;
+        if (!isTransferValuable) return;
 
         // 2. Can this transfer get us closer to the destination?
         // Only allow transfers that are either:
@@ -393,8 +396,7 @@ function findMultiTransferRoutes(
  * Check if a path has unnecessary transfers (transferring at interchange without line change)
  */
 function hasUnnecessaryTransfers(
-  path: { stationId: string; lineId: string; isTransfer: boolean }[],
-  graph: TransitGraph
+  path: { stationId: string; lineId: string; isTransfer: boolean }[]
 ): boolean {
   // Need at least one transfer to have unnecessary transfers
   if (path.length < 3) return false;
@@ -464,31 +466,99 @@ function hasCommonInterchange(
 
 /**
  * Check if transferring to this line allows reaching new unvisited stations
+ * or provides an efficient path toward the destination
  */
 function hasNewReachableStations(
   line: TransitLine,
   currentStationId: string,
-  visitedStations: Set<string>
+  visitedStations: Set<string>,
+  destinationId: string,
+  graph: TransitGraph
 ): boolean {
   // Find position of current station in line
   const stationIndex = line.stations.indexOf(currentStationId);
   if (stationIndex === -1) return false;
 
-  // Check forward direction for any unvisited stations
+  // Get destination station for distance calculations
+  const destinationStation = graph.stations[destinationId];
+  if (!destinationStation) return false;
+
+  // Option 1: Check for new stations (existing functionality)
+  let hasUnvisitedStations = false;
+  let closerToDestination = false;
+  let currentDistance = Number.MAX_SAFE_INTEGER;
+
+  // Get current station coordinates for distance comparison
+  const currentStation = graph.stations[currentStationId];
+  if (currentStation) {
+    currentDistance = calculateDistance(
+      currentStation.coordinates,
+      destinationStation.coordinates
+    );
+  }
+
+  // Check forward direction
   for (let i = stationIndex + 1; i < line.stations.length; i++) {
-    if (!visitedStations.has(line.stations[i])) {
-      return true; // Found at least one unvisited station
+    const stationId = line.stations[i];
+
+    // Check if station is unvisited
+    if (!visitedStations.has(stationId)) {
+      hasUnvisitedStations = true;
+    }
+
+    // Check if station is closer to destination
+    const station = graph.stations[stationId];
+    if (station) {
+      const stationDistance = calculateDistance(
+        station.coordinates,
+        destinationStation.coordinates
+      );
+
+      // If this station is significantly closer to destination (at least 10% closer)
+      if (stationDistance < currentDistance * 0.9) {
+        closerToDestination = true;
+      }
+    }
+
+    // Early return if we've found both benefits
+    if (hasUnvisitedStations && closerToDestination) {
+      return true;
     }
   }
 
-  // Check backward direction for any unvisited stations
+  // Check backward direction
   for (let i = stationIndex - 1; i >= 0; i--) {
-    if (!visitedStations.has(line.stations[i])) {
-      return true; // Found at least one unvisited station
+    const stationId = line.stations[i];
+
+    // Check if station is unvisited
+    if (!visitedStations.has(stationId)) {
+      hasUnvisitedStations = true;
+    }
+
+    // Check if station is closer to destination
+    const station = graph.stations[stationId];
+    if (station) {
+      const stationDistance = calculateDistance(
+        station.coordinates,
+        destinationStation.coordinates
+      );
+
+      // If this station is significantly closer to destination (at least 10% closer)
+      if (stationDistance < currentDistance * 0.9) {
+        closerToDestination = true;
+      }
+    }
+
+    // Early return if we've found both benefits
+    if (hasUnvisitedStations && closerToDestination) {
+      return true;
     }
   }
 
-  return false; // No new stations can be reached
+  // Return true if either condition is met:
+  // 1. We can reach new unvisited stations
+  // 2. We can get significantly closer to the destination
+  return hasUnvisitedStations || closerToDestination;
 }
 
 /**

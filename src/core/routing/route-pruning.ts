@@ -38,11 +38,34 @@ interface AnalyzedRoute {
 export function pruneRoutes(
   routes: Route[],
   graph: TransitGraph,
-  destinationId: string, // New parameter
+  destinationIdOrMaxRoutes?: string | number,
   maxRoutes: number = 5
 ): Route[] {
-  if (routes.length <= maxRoutes) {
+  let actualMaxRoutes = maxRoutes;
+  let destinationId: string | undefined = undefined;
+
+  // Handle flexible parameter order
+  if (typeof destinationIdOrMaxRoutes === 'number') {
+    actualMaxRoutes = destinationIdOrMaxRoutes;
+  } else if (typeof destinationIdOrMaxRoutes === 'string') {
+    destinationId = destinationIdOrMaxRoutes;
+  }
+
+  if (routes.length <= actualMaxRoutes) {
     return routes;
+  }
+
+  // Find destination ID from routes if not provided
+  if (!destinationId && routes.length > 0) {
+    // Try to extract destination from the last station of the last segment of any route
+    const sampleRoute = routes[0];
+    if (sampleRoute.segments.length > 0) {
+      const lastSegment = sampleRoute.segments[sampleRoute.segments.length - 1];
+      if (lastSegment.stations.length > 0) {
+        destinationId =
+          lastSegment.stations[lastSegment.stations.length - 1].id;
+      }
+    }
   }
 
   // Step 1: Analyze all routes
@@ -52,7 +75,10 @@ export function pruneRoutes(
   markPreservedRoutes(analyzedRoutes);
 
   // Step 3: Apply progressive filtering
-  const filteredRoutes = applyProgressiveFiltering(analyzedRoutes, maxRoutes);
+  const filteredRoutes = applyProgressiveFiltering(
+    analyzedRoutes,
+    actualMaxRoutes
+  );
 
   // Return the final set of routes
   return filteredRoutes.map((ar) => ar.route);
@@ -64,7 +90,7 @@ export function pruneRoutes(
 function analyzeRoutes(
   routes: Route[],
   graph: TransitGraph,
-  destinationId: string
+  destinationId?: string
 ): AnalyzedRoute[] {
   // Find min values for normalization
   const minDuration = Math.min(...routes.map((r) => r.totalDuration));
@@ -83,19 +109,23 @@ function analyzeRoutes(
       distanceRatio * PruningWeights.DISTANCE +
       transferRatio * PruningWeights.TRANSFERS;
 
-    // Check for route rationality issues
-    const rationality = analyzeRouteRationality(route, graph, destinationId);
-
     // Initial analysis
     const issues: RouteIssue[] = [];
-    if (rationality.hasIssues) {
-      issues.push('GEOGRAPHIC_IRRATIONALITY');
+    let rationalityScore = 0;
+
+    // Check for route rationality issues if destinationId is available
+    if (destinationId) {
+      const rationality = analyzeRouteRationality(route, graph, destinationId);
+      if (rationality.hasIssues) {
+        issues.push('GEOGRAPHIC_IRRATIONALITY');
+        rationalityScore = rationality.score * 0.01; // Convert to 0-1 scale
+      }
     }
 
     return {
       route,
       issues,
-      efficiencyScore: efficiencyScore + rationality.score * 0.01, // Adjust efficiency score based on rationality
+      efficiencyScore: efficiencyScore + rationalityScore,
       preserved: false,
     };
   });

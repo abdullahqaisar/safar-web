@@ -157,7 +157,7 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
 
   // Apply validation and optimization to fix bugs
   if (graph) {
-    routes = validateAndOptimizeRoutes(routes, graph);
+    routes = validateAndOptimizeRoutes(routes);
   }
 
   // Remove duplicate routes - station-based

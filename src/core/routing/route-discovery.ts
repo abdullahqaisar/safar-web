@@ -27,7 +27,7 @@ export function discoverAllRoutes(
 ): Route[] {
   // Phase A: Direct transit routes
   let directRoutes = findDirectRoutes(graph, originId, destinationId);
-  directRoutes = validateAndOptimizeRoutes(directRoutes, graph);
+  directRoutes = validateAndOptimizeRoutes(directRoutes);
 
   // If we have good direct routes, we'll use them as a baseline for deciding
   // whether to explore transfer routes
@@ -53,7 +53,7 @@ export function discoverAllRoutes(
 
     // If we found any transfer routes, validate and filter them
     if (transferRoutes.length > 0) {
-      transferRoutes = validateAndOptimizeRoutes(transferRoutes, graph);
+      transferRoutes = validateAndOptimizeRoutes(transferRoutes);
       transferRoutes = filterIrrationalRoutes(
         transferRoutes,
         graph,
@@ -79,12 +79,12 @@ export function discoverAllRoutes(
       destinationId,
       transitRoutes
     );
-    walkingRoutes = validateAndOptimizeRoutes(walkingRoutes, graph);
+    walkingRoutes = validateAndOptimizeRoutes(walkingRoutes);
     walkingRoutes = filterIrrationalRoutes(walkingRoutes, graph, destinationId);
 
     // Final processing
     let allRoutes = [...transitRoutes, ...walkingRoutes];
-    allRoutes = validateAndOptimizeRoutes(allRoutes, graph);
+    allRoutes = validateAndOptimizeRoutes(allRoutes);
     allRoutes = filterIrrationalRoutes(allRoutes, graph, destinationId);
     allRoutes = consolidateRoutesByPath(allRoutes);
 
@@ -94,7 +94,7 @@ export function discoverAllRoutes(
 
     // Phase B: Transfer routes
     let transferRoutes = findTransferRoutes(graph, originId, destinationId);
-    transferRoutes = validateAndOptimizeRoutes(transferRoutes, graph);
+    transferRoutes = validateAndOptimizeRoutes(transferRoutes);
     transferRoutes = filterIrrationalRoutes(
       transferRoutes,
       graph,
@@ -112,11 +112,11 @@ export function discoverAllRoutes(
       destinationId,
       transitRoutes
     );
-    walkingRoutes = validateAndOptimizeRoutes(walkingRoutes, graph);
+    walkingRoutes = validateAndOptimizeRoutes(walkingRoutes);
     walkingRoutes = filterIrrationalRoutes(walkingRoutes, graph, destinationId);
 
     let allRoutes = [...transitRoutes, ...walkingRoutes];
-    allRoutes = validateAndOptimizeRoutes(allRoutes, graph);
+    allRoutes = validateAndOptimizeRoutes(allRoutes);
     allRoutes = filterIrrationalRoutes(allRoutes, graph, destinationId);
     allRoutes = consolidateRoutesByPath(allRoutes);
 

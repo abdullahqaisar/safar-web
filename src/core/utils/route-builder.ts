@@ -43,7 +43,6 @@ export function createTransitSegment(
   );
 
   // Calculate segment duration and distance
-  let totalDistance = 0;
   let duration = 0;
 
   for (let i = 0; i < cleanedStationIds.length - 1; i++) {
@@ -56,7 +55,6 @@ export function createTransitSegment(
       fromStation.coordinates,
       toStation.coordinates
     );
-    totalDistance += distance;
 
     // Get edge attributes (duration) from the graph if they exist
     let segmentDuration = calculateTransitTime(distance);
@@ -66,7 +64,9 @@ export function createTransitSegment(
         segmentDuration = edgeAttributes.duration;
       }
     } catch (e) {
-      // Edge may not exist directly, use calculated duration
+      console.error(
+        `Error getting edge attributes for ${fromId} -> ${toId}, ${e}`
+      );
     }
 
     duration += segmentDuration;

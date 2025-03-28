@@ -116,10 +116,19 @@ export function detectUTurnPattern(route: Route): boolean {
 export function analyzeRouteRationality(
   route: Route,
   graph: TransitGraph,
-  destinationId: string
+  destinationId?: string
 ): RouteRationalizationResult {
   const issues: RouteRationalizationIssue[] = [];
   let score = 0;
+
+  // If no destination ID is provided, we can't check for rationality issues
+  if (!destinationId) {
+    return {
+      hasIssues: false,
+      issues: [],
+      score: 0,
+    };
+  }
 
   // Check for destination pass-through
   if (detectDestinationPassthrough(route, destinationId)) {
@@ -155,8 +164,13 @@ export function analyzeRouteRationality(
 export function filterIrrationalRoutes(
   routes: Route[],
   graph: TransitGraph,
-  destinationId: string
+  destinationId?: string
 ): Route[] {
+  // If no destination ID is provided, we can't filter based on rationality
+  if (!destinationId) {
+    return routes;
+  }
+
   return routes.filter((route) => {
     const analysis = analyzeRouteRationality(route, graph, destinationId);
 
