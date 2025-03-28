@@ -1,156 +1,183 @@
-import { MAX_STATION_DISTANCE } from '@/lib/constants/config';
-import { stationManager } from '@/server/core/journey/station/station';
-import { findBestRoutes } from '@/server/services/route.service';
 import { NextResponse } from 'next/server';
 import { TransitRouter } from '@/core/routing/routing';
 import { metroLines } from '@/core/data/metro-data';
 import { stationData } from '@/core/data/station-data';
 import { TransitGraph } from '@/core/graph/graph';
+import {
+  findNearestStationID,
+  findMultipleNearestStations,
+} from '@/core/station/station';
+import { Coordinates } from '@/core/types/graph';
+
+// Define shared error codes - these should match client-side codes
+export const ErrorCodes = {
+  MISSING_PARAMETERS: 'MISSING_PARAMETERS',
+  NO_START_STATION: 'NO_START_STATION',
+  NO_END_STATION: 'NO_END_STATION',
+  NO_ROUTES_FOUND: 'NO_ROUTES_FOUND',
+  SERVER_ERROR: 'SERVER_ERROR',
+};
+
+// Define the structure for nearby station information
+interface NearbyStationInfo {
+  id: string;
+  name: string;
+  distance: number;
+  coordinates: Coordinates;
+}
+
+// Define possible detail types
+interface ErrorResponseDetails {
+  nearbyStations?: NearbyStationInfo[];
+}
+
+// Standard error response interface with specific detail types
+interface ErrorResponse {
+  code: string;
+  message: string;
+  details?: ErrorResponseDetails;
+}
 
 export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
     const fromStationId = params.get('from');
     const toStationId = params.get('to');
+    const fromStationCoordinates = params.get('fromCoords');
+    const toStationCoordinates = params.get('toCoords');
 
-    // Validate required parameters
-    if (!fromStationId || !toStationId) {
-      return NextResponse.json(
-        {
-          message:
-            'Missing required parameters: "from" and "to" station IDs are required',
-          code: 'MISSING_PARAMETERS',
-        },
-        { status: 400 }
-      );
-    }
-    // First, create a TransitGraph instance
     const transitGraph = new TransitGraph();
+    transitGraph.initialize(stationData, metroLines);
 
-    // Then create a TransitRouter with that graph
+    let originId = fromStationId;
+    let destinationId = toStationId;
+
+    // Process from coordinates if provided
+    if (fromStationCoordinates && !originId) {
+      const [lat, lng] = fromStationCoordinates.split(',').map(Number);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        originId = findNearestStationID({ lat, lng }, transitGraph, 10000);
+      }
+    }
+
+    // Process to coordinates if provided
+    if (toStationCoordinates && !destinationId) {
+      const [lat, lng] = toStationCoordinates.split(',').map(Number);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        destinationId = findNearestStationID({ lat, lng }, transitGraph, 10000);
+      }
+    }
+
+    // Handle missing origin station with nearby suggestions
+    if (!originId && fromStationCoordinates) {
+      const [lat, lng] = fromStationCoordinates.split(',').map(Number);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const nearbyStations = findMultipleNearestStations(
+          { lat, lng },
+          transitGraph,
+          5,
+          10000
+        );
+
+        const error: ErrorResponse = {
+          code: ErrorCodes.NO_START_STATION,
+          message: 'No transit stations found near your starting location',
+          details: {
+            nearbyStations: nearbyStations.map((item) => ({
+              id: item.station.id,
+              name: item.station.name,
+              distance: Math.round(item.distance),
+              coordinates: item.station.coordinates,
+            })),
+          },
+        };
+
+        return NextResponse.json(error, { status: 404 });
+      }
+    }
+
+    // Handle missing destination station with nearby suggestions
+    if (!destinationId && toStationCoordinates) {
+      const [lat, lng] = toStationCoordinates.split(',').map(Number);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const nearbyStations = findMultipleNearestStations(
+          { lat, lng },
+          transitGraph,
+          5,
+          10000
+        );
+
+        const error: ErrorResponse = {
+          code: ErrorCodes.NO_END_STATION,
+          message: 'No transit stations found near your destination',
+          details: {
+            nearbyStations: nearbyStations.map((item) => ({
+              id: item.station.id,
+              name: item.station.name,
+              distance: Math.round(item.distance),
+              coordinates: item.station.coordinates,
+            })),
+          },
+        };
+
+        return NextResponse.json(error, { status: 404 });
+      }
+    }
+
+    // Handle missing parameters (no coordinates or station IDs)
+    if (!originId || !destinationId) {
+      const error: ErrorResponse = {
+        code: ErrorCodes.MISSING_PARAMETERS,
+        message: 'Missing origin or destination parameters',
+      };
+
+      return NextResponse.json(error, { status: 400 });
+    }
+
+    // Find routes
     const router = new TransitRouter(transitGraph);
+    const routingResult = router.findRoutes(originId, destinationId);
 
-    // Initialize with your stations and lines
-    router.initialize(stationData, metroLines);
-
-    const routingResult = router.findRoutes(fromStationId, toStationId);
-    // Check if there was an error
+    // Handle routing errors
     if ('error' in routingResult) {
       return NextResponse.json(
         {
-          message: routingResult.error,
           code: routingResult.code,
+          message: routingResult.error,
         },
         { status: 404 }
       );
     }
 
-    // Return the found routes
-    return NextResponse.json(routingResult);
+    // No routes found
+    if (routingResult.length === 0) {
+      const error: ErrorResponse = {
+        code: ErrorCodes.NO_ROUTES_FOUND,
+        message: 'No routes found between these locations',
+      };
+
+      return NextResponse.json(error, { status: 404 });
+    }
+
+    // Success response
+    return NextResponse.json({
+      routes: routingResult,
+      origin: transitGraph.stations[originId],
+      destination: transitGraph.stations[destinationId],
+    });
   } catch (error) {
     console.error('Route search error:', error);
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to search for routes',
-        code: 'SERVER_ERROR',
-      },
-      { status: 500 }
-    );
-  }
-}
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { fromLocation, toLocation } = body;
+    const serverError: ErrorResponse = {
+      code: ErrorCodes.SERVER_ERROR,
+      message:
+        error instanceof Error ? error.message : 'Failed to search for routes',
+    };
 
-    // Validate required parameters
-    if (
-      !fromLocation ||
-      !toLocation ||
-      typeof fromLocation.lat !== 'number' ||
-      typeof fromLocation.lng !== 'number' ||
-      typeof toLocation.lat !== 'number' ||
-      typeof toLocation.lng !== 'number'
-    ) {
-      return NextResponse.json(
-        { message: 'Invalid location coordinates provided' },
-        { status: 400 }
-      );
-    }
-
-    // Find the nearest stations to the provided coordinates
-    const fromStation = await stationManager.findNearestStation(
-      fromLocation,
-      MAX_STATION_DISTANCE,
-      true
-    );
-
-    if (!fromStation) {
-      return NextResponse.json(
-        {
-          message:
-            'No transit stations found near your starting location. Try selecting a location closer to public transportation.',
-          code: 'NO_START_STATION',
-        },
-        { status: 404 }
-      );
-    }
-
-    const toStation = await stationManager.findNearestStation(
-      toLocation,
-      MAX_STATION_DISTANCE,
-      true
-    );
-
-    if (!toStation) {
-      return NextResponse.json(
-        {
-          message:
-            'No transit stations found near your destination location. Try selecting a location closer to public transportation.',
-          code: 'NO_END_STATION',
-        },
-        { status: 404 }
-      );
-    }
-
-    const fromStationId = fromStation.station.id;
-    const toStationId = toStation.station.id;
-
-    // Find the best routes between these stations
-    const routes = await findBestRoutes(
-      fromStationId,
-      toStationId,
-      fromLocation,
-      toLocation
-    );
-
-    if (!routes || routes.length === 0) {
-      return NextResponse.json(
-        {
-          message:
-            'No routes found between these stations. The locations may be too far apart or not connected by our transit network.',
-          code: 'NO_ROUTES_FOUND',
-        },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(routes);
-  } catch (error) {
-    console.error('Route search error:', error);
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to search for routes',
-        code: 'SERVER_ERROR',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json(serverError, { status: 500 });
   }
 }
