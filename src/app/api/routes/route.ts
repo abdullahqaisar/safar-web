@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { TransitRouter } from '@/core/routing/routing';
-import { metroLines } from '@/core/data/metro-data';
-import { stationData } from '@/core/data/station-data';
-import { TransitGraph } from '@/core/graph/graph';
+import { getGraph } from '@/core/cache/graph-cache';
 import {
   findNearestStationID,
   findMultipleNearestStations,
@@ -29,8 +27,8 @@ export async function GET(request: Request) {
     const fromStationCoordinates = params.get('fromCoords');
     const toStationCoordinates = params.get('toCoords');
 
-    const transitGraph = new TransitGraph();
-    transitGraph.initialize(stationData, metroLines);
+    // Get cached graph instead of creating a new one
+    const transitGraph = getGraph();
 
     let originId = fromStationId;
     let destinationId = toStationId;
