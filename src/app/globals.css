@@ -20,8 +20,8 @@
 /* Base Themes and Variables */
 :root {
   /* Base colors */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ubuntu);
+  --font-mono: monospace;
 
   --color-white: #ffffff;
   --color-black: #171717;
@@ -159,7 +159,6 @@
   }
 
   .hero-title-accent {
-    font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2.75rem, 8vw, 3.25rem);
     font-weight: 700;
     font-style: italic;

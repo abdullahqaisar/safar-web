@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Ubuntu } from 'next/font/google';
 
 import { Navbar } from '@/components/layouts/Navbar';
 import { Footer } from '@/components/layouts/Footer';
@@ -6,6 +7,13 @@ import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { JourneyProvider } from '@/features/journey/context/JourneyContext';
+
+// Initialize Ubuntu font
+const ubuntu = Ubuntu({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-ubuntu',
+});
 
 export const metadata: Metadata = {
   title:
@@ -32,7 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans">
+      <body className={`${ubuntu.variable} font-sans`}>
         <QueryProvider>
           <JourneyProvider>
             <Navbar />
