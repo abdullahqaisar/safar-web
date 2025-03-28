@@ -2,7 +2,6 @@ import {
   AVG_METRO_SPEED_MS,
   AVG_WALKING_SPEED_M_MIN,
   ACCELERATION_FACTOR,
-  MIN_STATION_TIME,
 } from './constants';
 
 /**
@@ -19,7 +18,7 @@ export function calculateTransitTime(distanceMeters: number): number {
   const calculatedTime = baseTimeSeconds + accelerationTime;
 
   // Return the maximum of calculated time or minimum station time
-  return Math.max(Math.round(calculatedTime), MIN_STATION_TIME);
+  return calculatedTime;
 }
 
 /**

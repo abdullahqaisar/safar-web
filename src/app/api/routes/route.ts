@@ -7,26 +7,9 @@ import {
   findNearestStationID,
   findMultipleNearestStations,
 } from '@/core/station/station';
-import { Coordinates } from '@/core/types/graph';
+import { ErrorCodes } from '@/types/error';
+import { NearbyStationInfo } from '@/core/types/station';
 
-// Define shared error codes - these should match client-side codes
-export const ErrorCodes = {
-  MISSING_PARAMETERS: 'MISSING_PARAMETERS',
-  NO_START_STATION: 'NO_START_STATION',
-  NO_END_STATION: 'NO_END_STATION',
-  NO_ROUTES_FOUND: 'NO_ROUTES_FOUND',
-  SERVER_ERROR: 'SERVER_ERROR',
-};
-
-// Define the structure for nearby station information
-interface NearbyStationInfo {
-  id: string;
-  name: string;
-  distance: number;
-  coordinates: Coordinates;
-}
-
-// Define possible detail types
 interface ErrorResponseDetails {
   nearbyStations?: NearbyStationInfo[];
 }

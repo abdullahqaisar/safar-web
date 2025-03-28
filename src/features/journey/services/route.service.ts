@@ -1,23 +1,7 @@
 import { Coordinates } from '@/types/station';
 import { Route } from '@/types/route';
-
-// These error codes must match the server-side codes
-export const RouteErrorCodes = {
-  MISSING_PARAMETERS: 'MISSING_PARAMETERS',
-  NO_START_STATION: 'NO_START_STATION',
-  NO_END_STATION: 'NO_END_STATION',
-  NO_ROUTES_FOUND: 'NO_ROUTES_FOUND',
-  SERVER_ERROR: 'SERVER_ERROR',
-  NETWORK_ERROR: 'NETWORK_ERROR', // Client-side only
-};
-
-// Consistent with server-side structure
-interface NearbyStationInfo {
-  id: string;
-  name: string;
-  distance: number;
-  coordinates: Coordinates;
-}
+import { ErrorCodes } from '@/types/error';
+import { NearbyStationInfo } from '@/core/types/station';
 
 export class RouteError extends Error {
   constructor(
@@ -53,37 +37,37 @@ export async function fetchRoutes(
       const { code, message, details } = data;
 
       switch (code) {
-        case RouteErrorCodes.NO_START_STATION:
+        case ErrorCodes.NO_START_STATION:
           throw new RouteError(
             message || 'No transit stations found near your starting location',
-            RouteErrorCodes.NO_START_STATION,
+            ErrorCodes.NO_START_STATION,
             { nearbyStations: details?.nearbyStations }
           );
 
-        case RouteErrorCodes.NO_END_STATION:
+        case ErrorCodes.NO_END_STATION:
           throw new RouteError(
             message || 'No transit stations found near your destination',
-            RouteErrorCodes.NO_END_STATION,
+            ErrorCodes.NO_END_STATION,
             { nearbyStations: details?.nearbyStations }
           );
 
-        case RouteErrorCodes.NO_ROUTES_FOUND:
+        case ErrorCodes.NO_ROUTES_FOUND:
           throw new RouteError(
             message || 'No routes found between these locations',
-            RouteErrorCodes.NO_ROUTES_FOUND
+            ErrorCodes.NO_ROUTES_FOUND
           );
 
-        case RouteErrorCodes.MISSING_PARAMETERS:
+        case ErrorCodes.MISSING_PARAMETERS:
           throw new RouteError(
             message || 'Missing required parameters',
-            RouteErrorCodes.MISSING_PARAMETERS
+            ErrorCodes.MISSING_PARAMETERS
           );
 
-        case RouteErrorCodes.SERVER_ERROR:
+        case ErrorCodes.SERVER_ERROR:
         default:
           throw new RouteError(
             message || 'An error occurred while finding routes',
-            code || RouteErrorCodes.SERVER_ERROR
+            code || ErrorCodes.SERVER_ERROR
           );
       }
     }
@@ -92,7 +76,7 @@ export async function fetchRoutes(
     if (!data.routes || data.routes.length === 0) {
       throw new RouteError(
         'No routes found between these locations',
-        RouteErrorCodes.NO_ROUTES_FOUND
+        ErrorCodes.NO_ROUTES_FOUND
       );
     }
 
@@ -111,21 +95,21 @@ export async function fetchRoutes(
       ) {
         throw new RouteError(
           'Network error. Please check your internet connection and try again.',
-          RouteErrorCodes.NETWORK_ERROR
+          ErrorCodes.NETWORK_ERROR
         );
       }
 
       // Handle other errors
       throw new RouteError(
         error.message || 'An unexpected error occurred',
-        RouteErrorCodes.SERVER_ERROR
+        ErrorCodes.SERVER_ERROR
       );
     }
 
     // Fallback for unknown errors
     throw new RouteError(
       'An unexpected error occurred while finding routes',
-      RouteErrorCodes.SERVER_ERROR
+      ErrorCodes.SERVER_ERROR
     );
   }
 }
