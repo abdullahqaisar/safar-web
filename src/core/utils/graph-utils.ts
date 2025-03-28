@@ -1,5 +1,6 @@
 import { Station, Coordinates } from '../types/graph';
 import { TransitGraph } from '../graph/graph';
+import { WALKING_MAX_DISTANCE } from './constants';
 
 // Constants for spatial indexing
 const GRID_CELL_SIZE = 1000; // Grid cell size in meters
@@ -37,7 +38,7 @@ export function calculateWalkingPriority(
   distance: number,
   graph: TransitGraph
 ): number {
-  const WALKING_MAX_DISTANCE = 800; // Maximum walking distance in meters
+  // Maximum walking distance in meters
   let priority = 0;
 
   // 1. Base distance score - higher priority for shorter distances
