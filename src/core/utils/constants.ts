@@ -13,3 +13,6 @@ export const ACCELERATION_FACTOR = 0.2; // Time added for acceleration/decelerat
 
 export const DISTANCE_MATRIX_API_URL =
   'https://maps.googleapis.com/maps/api/distancematrix/json';
+
+// Maximum allowed transfers (we could make this configurable later)
+export const MAX_TRANSFERS = 2;

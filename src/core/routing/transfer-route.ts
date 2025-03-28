@@ -1,12 +1,9 @@
 import { TransitGraph } from '../graph/graph';
 import { Station, TransitLine } from '../types/graph';
 import { Route, TransitRouteSegment } from '../types/route';
-import { INTERCHANGE_WALKING_TIME } from '../utils/constants';
+import { INTERCHANGE_WALKING_TIME, MAX_TRANSFERS } from '../utils/constants';
 import { createRoute, createTransitSegment } from '../utils/route-builder';
 import { calculateDistance } from '../utils/geo-utils';
-
-// Maximum allowed transfers (we could make this configurable later)
-const MAX_TRANSFERS = 2;
 
 interface TransferState {
   stationId: string;

@@ -1,4 +1,5 @@
 import { Route, TransitRouteSegment } from '../types/route';
+import { ScoringThresholds } from './scoring-config';
 
 /**
  * Creates a unique signature representing the sequence of transit lines used in the route
@@ -26,8 +27,12 @@ export function selectBestRouteWithSamePath(routes: Route[]): Route {
 
   return routes.reduce((best, current) => {
     // Simple scoring: fewer transfers and shorter duration is better
-    const currentScore = current.totalDuration + current.transfers * 180;
-    const bestScore = best.totalDuration + best.transfers * 180;
+    const currentScore =
+      current.totalDuration +
+      current.transfers * ScoringThresholds.MEDIUM_TRANSFER_SECONDS;
+    const bestScore =
+      best.totalDuration +
+      best.transfers * ScoringThresholds.MEDIUM_TRANSFER_SECONDS;
 
     return currentScore < bestScore ? current : best;
   });
