@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Ubuntu } from 'next/font/google';
+import Script from 'next/script';
 
 import { Navbar } from '@/components/layouts/Navbar';
 import { Footer } from '@/components/layouts/Footer';
@@ -40,6 +41,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-BT2M4S0YH2"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-BT2M4S0YH2');
+          `}
+        </Script>
+      </head>
       <body className={`${ubuntu.variable} font-sans`}>
         <QueryProvider>
           <JourneyProvider>
