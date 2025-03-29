@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { getStationCoordinates } from '../../routes/utils/station-helpers';
+import {
+  getStationCoordinates,
+  getStationNameById,
+} from '../../routes/utils/station-helpers';
 
 interface Line {
   id: string;
@@ -142,8 +145,7 @@ export default function StationMarker({
 
   const coordinates = getStationCoordinates(stationId);
 
-  // Station name is the station ID (update as needed)
-  const stationName = stationId;
+  const stationName = getStationNameById(stationId);
 
   return (
     <Marker

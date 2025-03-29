@@ -17,8 +17,7 @@ import MapResizeHandler from './components/MapResizeHandler';
 import TileLoadTracker from './components/TileLoadTracker';
 import ZoomListener from './components/ZoomListener';
 import MetroLine from './components/MetroLine';
-import StationMarker from './components/StationMarker'; // Updated import
-import MapTypeControls from './components/MapTypeControls';
+import StationMarker from './components/StationMarker';
 import ResetViewButton from './components/ResetViewButton';
 import ZoomHintButton from './components/ZoomHintButton';
 
@@ -53,7 +52,6 @@ const TransitMap: React.FC<TransitMapProps> = ({
   onStationSelect = () => {},
   onLoadingChange = () => {},
 }) => {
-  const [mapType, setMapType] = useState<'streets' | 'satellite'>('streets');
   const [zoomLevel, setZoomLevel] = useState(12);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -183,11 +181,9 @@ const TransitMap: React.FC<TransitMapProps> = ({
       style={{ minHeight: '400px', position: 'relative' }}
       ref={mapContainerRef}
     >
-      <MapTypeControls mapType={mapType} setMapType={setMapType} />
-
       <div className="map-container-wrapper">
         <MapContainer
-          key={`map-${mapType}-${className}`}
+          key={`map-${className}`}
           center={getMapCenter()}
           zoom={zoomLevel}
           className="transit-map-leaflet"
@@ -200,17 +196,10 @@ const TransitMap: React.FC<TransitMapProps> = ({
           {/* Position ZoomControl bottom-right but with enough margin for Reset button */}
           <ZoomControl position="bottomright" />
 
-          {mapType === 'streets' ? (
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-          ) : (
-            <TileLayer
-              attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-              url="https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoicHJhYmh1bGlua2xuIiwiYSI6ImNrZzcxdWpkbzEzNWgzMmx3MXhyaDZmYWcifQ.Wf-lZ3g-yWAvBbxZMdD6Zw"
-            />
-          )}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
           <TileLoadTracker onTilesLoaded={handleTilesLoaded} />
           <ZoomListener onZoomChange={handleZoomChange} />
