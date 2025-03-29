@@ -1,3 +1,4 @@
+import { Container } from '@/components/common/Container';
 import { SectionBadge } from '@/components/common/SectionBadge';
 
 interface StepProps {
@@ -60,14 +61,14 @@ export function HowItWorksSection() {
     <section className="relative" id="how-it-works">
       <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)] to-transparent opacity-70"></div>
 
-      <div className="bg-[color:var(--color-bg-cream)] relative overflow-hidden py-16 sm:py-20 lg:py-24 ">
-        <div className="container mx-auto relative z-10">
-          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16 sm:mb-20 lg:mb-24">
-            <SectionBadge className="mb-6 sm:mb-8" icon={false}>
-              Simple Process
-            </SectionBadge>
+      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <Container className="relative z-10">
+          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-12 sm:mb-16 lg:mb-20">
+            <div className="mb-6">
+              <SectionBadge icon={false}>Simple Process</SectionBadge>
+            </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-6 sm:mb-8">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-6">
               How{' '}
               <span className="text-[color:var(--color-accent)]">Safar</span>{' '}
               Works
@@ -79,11 +80,11 @@ export function HowItWorksSection() {
             </p>
           </div>
 
-          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative max-w-6xl mx-auto">
             {/* Connecting line between steps */}
             <div className="hidden md:block absolute top-16 left-[5%] right-[5%] h-[1px] bg-[color:var(--color-accent)] opacity-15 z-0"></div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-6 lg:gap-8">
               {steps.map((step) => (
                 <Step
                   key={step.number}
@@ -94,7 +95,7 @@ export function HowItWorksSection() {
               ))}
             </div>
           </div>
-        </div>
+        </Container>
       </div>
     </section>
   );

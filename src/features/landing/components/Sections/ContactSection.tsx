@@ -69,84 +69,86 @@ export function ContactSection() {
 
   return (
     <section id="contact">
-      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[color:var(--color-bg-cream)] relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+      <div className="bg-[color:var(--color-bg-cream)] relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <Container className="relative z-10">
-          <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-8">
-            <SectionBadge className="mb-6 sm:mb-8" icon={false}>
-              Contact
-            </SectionBadge>
-
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-6 sm:mb-8">
-              Get in Touch
-            </h2>
-
-            <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto leading-relaxed">
-              Have questions or feedback? We&apos;d love to hear from you. Fill
-              out the form below and our team will get back to you as soon as
-              possible.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
-            {/* Contact Information */}
-            <div className="md:col-span-2 space-y-6">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-[color:var(--color-accent)]/10 flex items-center justify-center flex-shrink-0">
-                  <Mail
-                    size={18}
-                    className="text-[color:var(--color-accent)]"
-                  />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-gray-800">Email</h3>
-                  <p className="text-[color:var(--color-gray-600)]">
-                    <a
-                      href="mailto:info@safar.fyi"
-                      className="hover:text-[color:var(--color-accent)]"
-                    >
-                      info@safar.fyi
-                    </a>
-                  </p>
-                </div>
+          {/* Changed to grid layout with two columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left Column - Content */}
+            <div className="text-left">
+              <div className="mb-6">
+                <SectionBadge icon={false}>Contact</SectionBadge>
               </div>
 
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-[color:var(--color-accent)]/10 flex items-center justify-center flex-shrink-0">
-                  <MessageSquare
-                    size={18}
-                    className="text-[color:var(--color-accent)]"
-                  />
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                Get in{' '}
+                <span className="text-[color:var(--color-accent)]">Touch</span>
+              </h2>
+
+              <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] leading-relaxed mb-8">
+                Have questions or feedback? We&apos;d love to hear from you.
+                Fill out the form and our team will get back to you as soon as
+                possible.
+              </p>
+
+              <div className="space-y-6 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[color:var(--color-accent)]/10 flex items-center justify-center flex-shrink-0">
+                    <Mail
+                      size={18}
+                      className="text-[color:var(--color-accent)]"
+                    />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-gray-800">Email</h3>
+                    <p className="text-[color:var(--color-gray-600)]">
+                      <a
+                        href="mailto:info@safar.fyi"
+                        className="hover:text-[color:var(--color-accent)]"
+                      >
+                        info@safar.fyi
+                      </a>
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-gray-800">Social Media</h3>
-                  <p className="text-[color:var(--color-gray-600)]">
-                    <a
-                      href="https://instagram.com/safar.fyi"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-[color:var(--color-accent)]"
-                    >
-                      Instagram: @safar.fyi
-                    </a>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[color:var(--color-accent)]/10 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare
+                      size={18}
+                      className="text-[color:var(--color-accent)]"
+                    />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-gray-800">Social Media</h3>
+                    <p className="text-[color:var(--color-gray-600)]">
+                      <a
+                        href="https://instagram.com/safar.fyi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[color:var(--color-accent)]"
+                      >
+                        Instagram: @safar.fyi
+                      </a>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white/50 p-4 rounded-lg border border-[color:var(--color-accent)]/10">
+                  <h3 className="font-medium text-gray-800 mb-2">
+                    Response Time
+                  </h3>
+                  <p className="text-sm text-[color:var(--color-gray-600)]">
+                    We typically respond to inquiries within 24-48 hours during
+                    business days. Thank you for your patience.
                   </p>
                 </div>
-              </div>
-
-              <div className="bg-white/50 p-4 rounded-lg border border-[color:var(--color-accent)]/10 mt-6">
-                <h3 className="font-medium text-gray-800 mb-2">
-                  Response Time
-                </h3>
-                <p className="text-sm text-[color:var(--color-gray-600)]">
-                  We typically respond to inquiries within 24-48 hours during
-                  business days. Thank you for your patience.
-                </p>
               </div>
             </div>
 
-            {/* Contact Form */}
-            <div className="md:col-span-3">
+            {/* Right Column - Contact Form */}
+            <div className="flex justify-center md:justify-end">
               {isSuccess ? (
-                <div className="bg-white/50 border border-green-100 rounded-lg p-6 text-center">
+                <div className="bg-white/50 border border-green-100 rounded-lg p-6 text-center w-full max-w-md">
                   <div className="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
                     <CheckCircle size={32} />
                   </div>
@@ -167,7 +169,7 @@ export function ContactSection() {
               ) : (
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white/50 p-6 rounded-lg shadow-sm space-y-4"
+                  className="bg-white/50 p-6 rounded-lg shadow-sm space-y-4 w-full max-w-md"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>

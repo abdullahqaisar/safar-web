@@ -31,10 +31,7 @@ function JourneyContent() {
   } = useJourney();
 
   // Determine initial state from URL immediately to avoid flicker
-  const initialUrlParamsString = useMemo(
-    () => searchParams?.toString() || '',
-    []
-  );
+
   const hasInitialSearchParams = useMemo(() => {
     if (!searchParams) return false;
 
@@ -53,7 +50,7 @@ function JourneyContent() {
         !isNaN(parseFloat(toLat)) &&
         !isNaN(parseFloat(toLng))
     );
-  }, [initialUrlParamsString]);
+  }, [searchParams]);
 
   // States
   const [isInitialized, setIsInitialized] = useState(false);

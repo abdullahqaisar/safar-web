@@ -16,6 +16,12 @@ export interface TransitLine {
   name: string;
   color?: string;
   stations: string[]; // Ordered array of station IDs
+  frequency?: string;
+  schedule?: {
+    first?: string;
+    last?: string;
+  };
+  ticketCost?: number;
 }
 
 export interface Connection {

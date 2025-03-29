@@ -30,6 +30,12 @@ export const metroLines: TransitLine[] = [
       'marrirChowk',
       'saddar',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'orange',
@@ -45,6 +51,12 @@ export const metroLines: TransitLine[] = [
       'n5',
       'airport',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'green',
@@ -61,6 +73,12 @@ export const metroLines: TransitLine[] = [
       'shahdara',
       'bharakau',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'blue',
@@ -82,6 +100,12 @@ export const metroLines: TransitLine[] = [
       'koralChowk',
       'gulberg',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_1',
@@ -101,6 +125,12 @@ export const metroLines: TransitLine[] = [
       'shamaPark',
       'metroCashAndCarry',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_3a',
@@ -116,6 +146,12 @@ export const metroLines: TransitLine[] = [
       'navalComplex',
       'faisalMasjid',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_4',
@@ -147,6 +183,12 @@ export const metroLines: TransitLine[] = [
       'muslimColony',
       'bariImam',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_4a',
@@ -160,6 +202,12 @@ export const metroLines: TransitLine[] = [
       'babulQuaid',
       'qau',
     ],
+    frequency: 'Every 15-20 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_7',
@@ -186,6 +234,12 @@ export const metroLines: TransitLine[] = [
       'mehrabad',
       'nust',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_8a',
@@ -212,6 +266,12 @@ export const metroLines: TransitLine[] = [
       'tammaStop',
       'tramriChowk',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_8c',
@@ -240,6 +300,12 @@ export const metroLines: TransitLine[] = [
       'tammaStop',
       'tramriChowk',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_9',
@@ -271,6 +337,12 @@ export const metroLines: TransitLine[] = [
       'golraMorhChowk',
       'golraMorr',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_14',
@@ -295,6 +367,12 @@ export const metroLines: TransitLine[] = [
       'pullyStop',
       'mandiMorh',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_14a',
@@ -314,6 +392,12 @@ export const metroLines: TransitLine[] = [
       'alwadiColony',
       'satraMeel',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
   {
     id: 'fr_15',
@@ -336,6 +420,12 @@ export const metroLines: TransitLine[] = [
       'suparco',
       'tChowk',
     ],
+    frequency: 'Every 30 minutes',
+    schedule: {
+      first: '7:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
   },
 ];
 
