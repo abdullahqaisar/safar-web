@@ -61,7 +61,7 @@ export function HowItWorksSection() {
     <section className="relative" id="how-it-works">
       <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)] to-transparent opacity-70"></div>
 
-      <div className="bg-[color:var(--color-bg-cream)] relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <Container className="relative z-10">
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-12 sm:mb-16 lg:mb-20">
             <div className="mb-6">

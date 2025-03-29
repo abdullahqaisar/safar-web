@@ -534,6 +534,43 @@
   .journey-action-button svg {
     @apply flex-shrink-0;
   }
+
+  /* Transit Map Styles */
+  .station-popup .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .leaflet-container {
+    font-family: inherit;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1;
+  }
+
+  .transit-map-container {
+    min-height: 300px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .map-container-wrapper {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+  }
+
+  .transit-map-leaflet {
+    height: 100%;
+    width: 100%;
+  }
 }
 
 .dropdown-portal {
