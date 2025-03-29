@@ -1,7 +1,7 @@
 import { TransitSegment, WalkSegment } from '@/types/route';
 import { SegmentDetails } from './types';
-import { getBusColor } from '@/lib/utils/route';
 import { Bus, FootprintsIcon } from 'lucide-react';
+import { getLineColor } from '@/lib/utils/route';
 
 export function getWalkSegmentDetails(
   segment: WalkSegment,
@@ -30,7 +30,7 @@ export function getTransitSegmentDetails(
   isFirstTransit: boolean
 ): SegmentDetails {
   const lineColor = segment.line
-    ? getBusColor(segment.line.id || '')
+    ? getLineColor(segment.line.id || '')
     : 'bg-gray-500';
   const stationName = segment.stations[0].name;
   const lineName = segment.line?.name;
