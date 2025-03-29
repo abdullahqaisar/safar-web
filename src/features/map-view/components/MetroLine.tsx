@@ -1,149 +1,161 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Polyline } from 'react-leaflet';
+import { PathOptions } from 'leaflet';
 import { getStationCoordinates } from '../../routes/utils/station-helpers';
+import { calculateLineOffset } from '../utils/parallelLineHelper';
 import LineLabel from './LineLabel';
 
 interface MetroLineProps {
   stations: string[];
   color: string;
   isFeeder?: boolean;
-  lineIndex?: number;
-  totalLines?: number;
   zoomLevel: number;
-  lineName?: string; // Add line name for the label
-  lineId?: string; // Add line ID for keying purposes
-  isSelectedLine?: boolean; // Indicates if this is currently selected
+  lineName?: string;
+  isSelectedLine?: boolean;
+  lineId?: string;
+  parallelLineGroups?: Record<string, string[]>;
 }
 
 const MetroLine: React.FC<MetroLineProps> = ({
   stations,
   color,
   isFeeder = false,
-  lineIndex = 0,
-  totalLines = 1,
   zoomLevel,
   lineName = '',
-  lineId = '',
   isSelectedLine = false,
+  lineId = '',
+  parallelLineGroups = {},
 }) => {
-  // Build line coordinates
-  const stationCoords = stations.map(getStationCoordinates);
+  // Get regular station coordinates
+  const baseStationCoords = useMemo(
+    () => stations.map(getStationCoordinates),
+    [stations]
+  );
 
-  // Calculate offset for parallel lines at intersections
-  const getLineOptions = () => {
-    // Base options
-    const options = {
-      color: color,
-      weight: isFeeder ? 3 : zoomLevel >= 14 ? 6 : 5, // Adjust line thickness based on zoom level
-      opacity: isFeeder ? 0.7 : 0.85, // Slightly more transparent for feeder routes
+  // Calculate offset based on parallel group information
+  const parallelOffset = useMemo(() => {
+    if (lineId && Object.keys(parallelLineGroups).length > 0) {
+      return calculateLineOffset(lineId, parallelLineGroups, zoomLevel);
+    }
+    return 0;
+  }, [lineId, parallelLineGroups, zoomLevel]);
+
+  // Apply offset to create parallel lines visually
+  const stationCoords = useMemo(() => {
+    if (!parallelOffset) return baseStationCoords;
+
+    // For significant offsets, physically displace the line
+    return baseStationCoords.map((coord) => {
+      // Find perpendicular displacement
+      // We need to look ahead and behind to determine direction
+      const index = baseStationCoords.indexOf(coord);
+
+      // Skip if it's the first or last point (no direction)
+      if (index <= 0 || index >= baseStationCoords.length - 1) {
+        return coord;
+      }
+
+      // Get adjacent points
+      const prev = baseStationCoords[index - 1];
+      const next = baseStationCoords[index + 1];
+
+      // Calculate direction vector
+      const dx1 = coord[1] - prev[1]; // Note: [lat, lng] so dx/dy are swapped
+      const dy1 = coord[0] - prev[0];
+      const dx2 = next[1] - coord[1];
+      const dy2 = next[0] - coord[0];
+
+      // Average the directions
+      const dx = (dx1 + dx2) / 2;
+      const dy = (dy1 + dy2) / 2;
+
+      // Normalize to unit length
+      const length = Math.sqrt(dx * dx + dy * dy);
+      if (length === 0) return coord;
+
+      const unitX = dx / length;
+      const unitY = dy / length;
+
+      // Perpendicular vector (90 degrees rotation)
+      const perpX = -unitY;
+      const perpY = unitX;
+
+      // Apply offset (meters to degrees rough conversion - will vary by latitude)
+      // ~111,111 meters per degree of latitude
+      const offsetFactor = 0.000005 * parallelOffset; // Adjust this value for desired spacing
+
+      return [
+        coord[0] + perpY * offsetFactor,
+        coord[1] + perpX * offsetFactor,
+      ] as [number, number];
+    });
+  }, [baseStationCoords, parallelOffset]);
+
+  // Line styling with improved appearance - with brighter teal color
+  const lineOptions = useMemo((): PathOptions => {
+    // Weight (thickness) based on line type and zoom
+    const weight = isFeeder
+      ? zoomLevel >= 14
+        ? 3
+        : 2.5 // Thinner for feeder routes
+      : zoomLevel >= 14
+      ? 5
+      : 4; // Thicker for main routes
+
+    // Higher opacity for selected lines
+    const opacity = isSelectedLine ? 1 : isFeeder ? 0.85 : 0.9;
+
+    // Use a much brighter teal color for feeder lines - more distinctive from blue
+    // Using a vibrant teal color (#00D1D1) for maximum visibility
+    const lineColor = isFeeder ? '#00D1D1' : color;
+
+    // Add improved dash pattern for feeder routes
+    const dashArray = isFeeder ? '6, 8' : undefined;
+
+    return {
+      color: lineColor,
+      weight,
+      opacity,
+      dashArray,
+      lineCap: 'round' as const,
+      lineJoin: 'round' as const,
     };
+  }, [color, isFeeder, isSelectedLine, zoomLevel]);
 
-    // Only apply offsets when we have multiple lines (otherwise center the line)
-    if (totalLines > 1) {
-      // Calculate how far to offset the line (in pixels)
-      // For 2 lines: -1 and 1 pixels
-      // For 3 lines: -2, 0, and 2 pixels
-      // etc.
-      const maxOffset = Math.floor(totalLines / 2) * 2;
-      const offset = lineIndex - (totalLines - 1) / 2;
-      const normalizedOffset =
-        (offset / ((totalLines - 1) / 2)) * (maxOffset / 2);
+  // Calculate label position with offset
+  const labelData = useMemo(() => {
+    if (stationCoords.length < 2 || !lineName) return null;
 
-      // Add offset to options
-      return {
-        ...options,
-        offset: normalizedOffset,
-        smoothFactor: 1,
-      };
-    }
+    const middleIndex = Math.floor((stationCoords.length - 1) / 2);
+    const startCoord = stationCoords[middleIndex];
+    const endCoord = stationCoords[middleIndex + 1];
 
-    return options;
-  };
+    if (!startCoord || !endCoord) return null;
 
-  // Calculate label position and rotation
-  const calculateLabelPosition = () => {
-    // Only calculate if we have enough coordinates and a name
-    if (stationCoords.length < 2 || !lineName) {
-      return null;
-    }
-
-    // Find the longest segment for better label placement
-    let maxLength = 0;
-    let bestSegment = 0;
-
-    for (let i = 0; i < stationCoords.length - 1; i++) {
-      const dx = stationCoords[i + 1][0] - stationCoords[i][0];
-      const dy = stationCoords[i + 1][1] - stationCoords[i][1];
-      const length = Math.sqrt(dx * dx + dy * dy);
-
-      if (length > maxLength) {
-        maxLength = length;
-        bestSegment = i;
-      }
-    }
-
-    // Prefer segments closer to the middle for aesthetic purposes
-    const middleIndex = Math.floor(stationCoords.length / 2);
-    const candidateSegments = [];
-
-    // Consider segments that are at least 70% as long as the longest segment
-    for (let i = 0; i < stationCoords.length - 1; i++) {
-      const dx = stationCoords[i + 1][0] - stationCoords[i][0];
-      const dy = stationCoords[i + 1][1] - stationCoords[i][1];
-      const length = Math.sqrt(dx * dx + dy * dy);
-
-      if (length >= maxLength * 0.7) {
-        candidateSegments.push({
-          index: i,
-          length: length,
-          distanceFromMiddle: Math.abs(i - middleIndex),
-        });
-      }
-    }
-
-    // Sort by distance from middle (ascending) if we have candidates
-    if (candidateSegments.length > 0) {
-      candidateSegments.sort(
-        (a, b) => a.distanceFromMiddle - b.distanceFromMiddle
-      );
-      bestSegment = candidateSegments[0].index;
-    }
-
-    // Get the start and end coordinates of the chosen segment
-    const startCoord = stationCoords[bestSegment];
-    const endCoord = stationCoords[bestSegment + 1];
-
-    // Calculate position at the middle of the segment
+    // Position in the middle of the segment
     const position: [number, number] = [
       (startCoord[0] + endCoord[0]) / 2,
       (startCoord[1] + endCoord[1]) / 2,
     ];
 
-    // Calculate rotation angle based on segment direction
+    // Calculate rotation angle
     const dx = endCoord[1] - startCoord[1];
     const dy = endCoord[0] - startCoord[0];
-
-    // Calculate angle in degrees, adjusting for leaflet's coordinate system
     let angle = Math.atan2(dx, dy) * (180 / Math.PI);
 
-    // Normalize the angle to ensure the label is always readable
-    // Keep text either horizontal or upside down (easier to read)
+    // Make text readable
     if (angle > 90 || angle < -90) {
-      angle += 180; // Flip the label if it would be upside down
+      angle += 180;
     }
 
     return { position, angle };
-  };
+  }, [stationCoords, lineName]);
 
-  // Calculate label data
-  const labelData = calculateLabelPosition();
-
-  // Show labels only at higher zoom levels
   const shouldShowLabel = zoomLevel >= 13 && labelData && lineName;
 
   return (
     <>
-      <Polyline positions={stationCoords} {...getLineOptions()} />
+      <Polyline positions={stationCoords} pathOptions={lineOptions} />
 
       {shouldShowLabel && labelData && (
         <LineLabel
@@ -153,6 +165,7 @@ const MetroLine: React.FC<MetroLineProps> = ({
           text={lineName}
           isHighlighted={isSelectedLine}
           shouldFade={false}
+          isFeeder={isFeeder}
         />
       )}
     </>

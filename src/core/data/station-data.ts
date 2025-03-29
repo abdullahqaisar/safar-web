@@ -379,7 +379,7 @@ export const stationData: Station[] = [
   {
     id: 'pirWadhaiMorh',
     name: 'Pir Wadhai Morh',
-    coordinates: { lat: 33.63535673587158, lng: 73.03267 },
+    coordinates: { lat: 33.61542225707071, lng: 72.99468989770897 },
   },
   {
     id: 'tramriChowk',
@@ -426,7 +426,7 @@ export const stationData: Station[] = [
   {
     id: 'shaheenChowk',
     name: 'Shaheen Chowk',
-    coordinates: { lat: 33.71362676431455, lng: 73.0275167288363 },
+    coordinates: { lat: 33.71241498202111, lng: 73.0265294148113 },
   },
   {
     id: 'bahriaUniversity',
@@ -453,12 +453,12 @@ export const stationData: Station[] = [
   {
     id: 'salaiCentre',
     name: 'Salai Centre',
-    coordinates: { lat: 33.70262971156207, lng: 73.06683499999998 },
+    coordinates: { lat: 33.70284573323329, lng: 73.06655965263789 },
   },
   {
     id: 'sitaraMarket',
     name: 'Sitara Market',
-    coordinates: { lat: 33.707208687127434, lng: 73.06773299999999 },
+    coordinates: { lat: 33.705936632459554, lng: 73.06688972726191 },
   },
   {
     id: 'pullyStop',
@@ -473,12 +473,12 @@ export const stationData: Station[] = [
   {
     id: 'g61',
     name: 'G-6/1,2',
-    coordinates: { lat: 33.71130661291458, lng: 73.0780072711637 },
+    coordinates: { lat: 33.71269036217316, lng: 73.08028561293783 },
   },
   {
     id: 'melodyMarket',
     name: 'Melody Market',
-    coordinates: { lat: 33.714479613409246, lng: 73.08405227116371 },
+    coordinates: { lat: 33.7145957389907, lng: 73.08396560376245 },
   },
   {
     id: 'abparaMarket',
@@ -493,27 +493,27 @@ export const stationData: Station[] = [
   {
     id: 'metropolitanCorporation',
     name: 'Metropolitan Corporation',
-    coordinates: { lat: 33.71559768930707, lng: 73.0875952711637 },
+    coordinates: { lat: 33.71530782174842, lng: 73.0878072895949 },
   },
   {
     id: 'icbCollege',
     name: 'ICB College',
-    coordinates: { lat: 33.71750576572566, lng: 73.08649745767258 },
+    coordinates: { lat: 33.71742157160292, lng: 73.08919352428667 },
   },
   {
     id: 'nadraChowk',
     name: 'NADRA Chowk',
-    coordinates: { lat: 33.722593691125105, lng: 73.08312572883628 },
+    coordinates: { lat: 33.719987208819816, lng: 73.09539479156278 },
   },
   {
     id: 'lodgesPark',
     name: 'Lodges Park',
-    coordinates: { lat: 33.719835690408345, lng: 73.0937732711637 },
+    coordinates: { lat: 33.71590420555706, lng: 73.09845452792952 },
   },
   {
     id: 'sukhChaynPark',
     name: 'Sukh Chayn Park',
-    coordinates: { lat: 33.71334661323259, lng: 73.100178 },
+    coordinates: { lat: 33.7132938237439, lng: 73.10018187051067 },
   },
   {
     id: 'ministryOfForeignAffairs',
@@ -538,7 +538,7 @@ export const stationData: Station[] = [
   {
     id: 'diplomaticEnclaveGate4',
     name: 'Diplomatic Enclave Gate 4',
-    coordinates: { lat: 33.729095461437694, lng: 73.111223 },
+    coordinates: { lat: 33.73014086656989, lng: 73.11125296878984 },
   },
   {
     id: 'aiwanESadarColony',
@@ -548,7 +548,12 @@ export const stationData: Station[] = [
   {
     id: 'muslimColony',
     name: 'Muslim Colony',
-    coordinates: { lat: 33.7400716956686, lng: 73.10876872883628 },
+    coordinates: { lat: 33.7376211450211, lng: 73.10814617321213 },
+  },
+  {
+    id: 'pullyStopI10',
+    name: 'Pully Stop I-10',
+    coordinates: { lat: 33.637888373367744, lng: 73.03765011608328 },
   },
 
   // FR-4A Additional Stations
@@ -769,7 +774,7 @@ export const stationData: Station[] = [
   {
     id: 'britishHomes',
     name: 'British Homes',
-    coordinates: { lat: 33.615089597934094, lng: 72.9927667288363 },
+    coordinates: { lat: 33.615089597934094, lng: 72.99839134617069 },
   },
   {
     id: 'kohinoorMill',

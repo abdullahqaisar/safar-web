@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
@@ -9,6 +9,8 @@ interface MapResizeHandlerProps {
 
 const MapResizeHandler = ({ setMapRef, onMapReady }: MapResizeHandlerProps) => {
   const map = useMap();
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const [hasSignaledReady, setHasSignaledReady] = useState(false);
 
   // Store map reference
   useEffect(() => {
@@ -27,24 +29,52 @@ const MapResizeHandler = ({ setMapRef, onMapReady }: MapResizeHandlerProps) => {
     }
   }, [map]);
 
+  // Set up ResizeObserver for more reliable size detection
+  useEffect(() => {
+    const mapContainer = map.getContainer();
+
+    if (mapContainer && window.ResizeObserver) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        forceResizeMap();
+      });
+
+      resizeObserverRef.current.observe(mapContainer);
+    }
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+    };
+  }, [map, forceResizeMap]);
+
   // Handle window resize events
   useEffect(() => {
-    window.addEventListener('resize', forceResizeMap);
+    const handleResize = () => {
+      forceResizeMap();
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 
     // Force resize on component mount with a series of timed invalidations
     const timers = [
       setTimeout(forceResizeMap, 100),
       setTimeout(() => {
         forceResizeMap();
-        onMapReady(); // Signal that the map is ready after all resizing
+        if (!hasSignaledReady) {
+          setHasSignaledReady(true);
+          onMapReady();
+        }
       }, 500),
     ];
 
     return () => {
-      window.removeEventListener('resize', forceResizeMap);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
       timers.forEach(clearTimeout);
     };
-  }, [forceResizeMap, onMapReady]);
+  }, [forceResizeMap, onMapReady, hasSignaledReady]);
 
   return null;
 };

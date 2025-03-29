@@ -1,11 +1,14 @@
 import React, { useEffect } from 'react';
+import { Progress } from '@/components/ui/progress';
 
 interface MapSkeletonProps {
   loadingPhase?: 'initial' | 'loading' | 'ready';
+  loadingProgress?: number;
 }
 
 const MapSkeleton: React.FC<MapSkeletonProps> = ({
   loadingPhase = 'initial',
+  loadingProgress = 0,
 }) => {
   // Different messages based on loading phase
   const loadingMessage =
@@ -54,12 +57,22 @@ const MapSkeleton: React.FC<MapSkeletonProps> = ({
       <div className="absolute left-[25%] right-[20%] top-[65%] h-[3px] bg-red-400 opacity-30"></div>
       <div className="absolute left-[60%] top-[10%] bottom-[30%] w-[3px] bg-purple-400 opacity-30"></div>
 
-      {/* Loading indicator */}
-      <div className="relative z-10 bg-white/95 px-6 py-4 rounded-lg shadow-lg flex items-center">
-        <div className="h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-3"></div>
-        <span className="text-sm font-medium text-gray-700">
+      {/* Loading indicator - enhanced with progress bar */}
+      <div className="relative z-10 bg-white/95 px-6 py-4 rounded-lg shadow-lg flex flex-col items-center w-[80%] max-w-[300px]">
+        <div className="h-12 w-12 rounded-full border-4 border-[color:var(--color-accent)]/20 border-t-[color:var(--color-accent)] animate-spin mb-4"></div>
+        <span className="text-sm font-medium text-gray-700 mb-3 text-center">
           {loadingMessage}
         </span>
+
+        <div className="w-full">
+          <div className="relative">
+            <Progress value={loadingProgress} className="h-2" />
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span>Loading map</span>
+            <span>{Math.round(loadingProgress)}%</span>
+          </div>
+        </div>
       </div>
 
       {/* Map features placeholders */}
