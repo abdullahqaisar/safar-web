@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { TransitLine } from '@/core/types/graph';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Train } from 'lucide-react';
 
 interface LineSelectorProps {
   lines: TransitLine[];
@@ -43,17 +43,20 @@ export default function LineSelector({
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
-      <h3 className="text-sm font-medium mb-3 text-gray-700">Transit Lines</h3>
+      <h3 className="text-sm font-medium mb-3 flex items-center text-gray-700">
+        <Train className="w-4 h-4 mr-2 text-emerald-500" />
+        Transit Lines
+      </h3>
 
       <div className="relative">
         {/* Left scroll button */}
         {showLeftArrow && (
           <button
             onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 rounded-full p-1 shadow-md hover:bg-gray-50 text-gray-700"
+            className="absolute -left-1 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50 text-gray-700 transition-all"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
         )}
 
@@ -61,29 +64,32 @@ export default function LineSelector({
         {showRightArrow && (
           <button
             onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 rounded-full p-1 shadow-md hover:bg-gray-50 text-gray-700"
+            className="absolute -right-1 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50 text-gray-700 transition-all"
             aria-label="Scroll right"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         )}
 
         {/* Scrollable container */}
         <div
           ref={scrollContainerRef}
-          className="flex overflow-x-auto gap-2 px-1 pb-2 scrollbar-hide"
+          className="flex overflow-x-auto gap-2 px-1 py-1 scrollbar-hide"
           onScroll={handleScroll}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {/* All Lines option */}
           <Button
             size="sm"
-            variant={!selectedLine ? 'default' : 'outline'}
-            className={
-              !selectedLine
-                ? 'bg-primary text-white hover:bg-primary/90 whitespace-nowrap'
-                : 'text-gray-700 border-gray-200 hover:bg-gray-50 whitespace-nowrap'
-            }
+            variant="ghost"
+            className={`
+              whitespace-nowrap rounded-full px-4 transition-all border
+              ${
+                !selectedLine
+                  ? 'bg-emerald-500 text-white hover:bg-emerald-600 border-transparent'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
+              }
+            `}
             onClick={() => onLineSelect('')}
           >
             All Lines
@@ -94,20 +100,18 @@ export default function LineSelector({
             <Button
               key={line.id}
               size="sm"
-              variant={selectedLine === line.id ? 'default' : 'outline'}
+              variant="ghost"
               className={`
-                whitespace-nowrap
+                whitespace-nowrap rounded-full px-4 transition-all border
                 ${
                   selectedLine === line.id
-                    ? 'text-white'
-                    : 'text-gray-700 border-gray-200'
+                    ? 'text-white border-transparent hover:opacity-90'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
                 }
-                transition-colors
               `}
               style={{
                 backgroundColor:
-                  selectedLine === line.id ? line.color : 'transparent',
-                borderColor: selectedLine === line.id ? line.color : undefined,
+                  selectedLine === line.id ? line.color : undefined,
               }}
               onClick={() => onLineSelect(line.id)}
             >

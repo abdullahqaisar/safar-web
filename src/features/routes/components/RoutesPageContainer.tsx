@@ -9,26 +9,10 @@ import { formatScheduleTimes } from '../utils/station-helpers';
 
 // Import components
 import PageHeader from './StationInfo/PageHeader';
-import MapContainer from './MapDisplay/MapContainer';
+import MapContainer from '../../map-view/MapContainer';
 import LineDetails from './StationInfo/LineDetails';
 import LineSelector from './StationInfo/LineSelector';
-
-// Helper function to get line color based on ID
-function getLineColor(lineId: string): string {
-  switch (lineId) {
-    case 'red':
-      return '#E53E3E';
-    case 'green':
-      return '#38A169';
-    case 'blue':
-      return '#3182CE';
-    case 'orange':
-      return '#ED8936';
-    default:
-      // For feeder routes (FR-*)
-      return lineId.startsWith('fr_') ? '#0D9488' : '#4A5568';
-  }
-}
+import { getLineColor } from '@/lib/utils/route';
 
 // Enhance metro lines data with UI-specific defaults
 const enhancedMetroLines: TransitLine[] = metroLines.map((line) => ({

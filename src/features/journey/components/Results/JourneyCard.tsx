@@ -93,6 +93,9 @@ export function JourneyCard({ route, onSelect }: JourneyCardProps) {
                 ? 'bg-red-100 text-red-800'
                 : lineName.toLowerCase().includes('orange')
                 ? 'bg-orange-100 text-orange-800'
+                : lineName.toLowerCase().includes('fr-') ||
+                  lineName.toLowerCase().includes('fr_')
+                ? 'bg-cyan-100 text-cyan-600' // Updated to a brighter, more distinctive teal
                 : 'bg-gray-100 text-gray-800';
 
               return (

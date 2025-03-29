@@ -64,7 +64,6 @@ export function RouteSegment({
     const transitSegment = segment as TransitSegment;
     const lineName = transitSegment.line?.name || '';
 
-    console.log(lineName.toLowerCase().includes('fr-'));
     if (lineName.toLowerCase().includes('green')) {
       return 'bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] border border-[rgba(var(--color-accent-rgb),0.2)]';
     } else if (lineName.toLowerCase().includes('blue')) {
@@ -77,7 +76,8 @@ export function RouteSegment({
       lineName.toLowerCase().includes('fr-') ||
       lineName.toLowerCase().includes('fr_')
     ) {
-      return 'bg-teal-50 text-teal-700 border border-teal-100';
+      // Use a brighter teal that better differentiates from blue
+      return 'bg-cyan-50 text-cyan-500 border border-cyan-200';
     }
     return 'bg-gray-100 text-gray-700 border border-gray-200';
   };
