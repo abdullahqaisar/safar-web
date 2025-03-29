@@ -64,7 +64,7 @@ export function RouteSegment({
     const transitSegment = segment as TransitSegment;
     const lineName = transitSegment.line?.name || '';
 
-    console.log(lineName.toLowerCase().includes('fr-'));
+// (The console log has been removed)
     if (lineName.toLowerCase().includes('green')) {
       return 'bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] border border-[rgba(var(--color-accent-rgb),0.2)]';
     } else if (lineName.toLowerCase().includes('blue')) {
