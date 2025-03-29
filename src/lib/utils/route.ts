@@ -1,11 +1,15 @@
-import { MetroLine } from '@/types/metro';
-
-export function getBusColor(lineId: MetroLine['id']): string {
-  const colors: Record<string, string> = {
-    red: 'bg-red-500',
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    orange: 'bg-orange-500',
-  };
-  return colors[lineId];
-}
+// Get a color for a line
+export const getLineColor = (lineId: string): string => {
+  switch (lineId) {
+    case 'red':
+      return '#E53E3E';
+    case 'green':
+      return '#38A169';
+    case 'blue':
+      return '#3182CE';
+    case 'orange':
+      return '#ED8936';
+    default:
+      return lineId.startsWith('fr_') ? '#0D9488' : '#4A5568';
+  }
+};

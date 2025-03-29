@@ -15,6 +15,7 @@ import {
   getLinesForStation,
 } from '../../utils/station-helpers';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getLineColor } from '@/lib/utils/route';
 
 type Station = {
   id: string;
@@ -87,22 +88,6 @@ export default function LineStationsDisplay({
     return lineId.startsWith('fr_')
       ? lineId.replace('fr_', 'FR-').toUpperCase()
       : lineId.toUpperCase();
-  };
-
-  // Get a color for a line
-  const getLineColor = (lineId: string): string => {
-    switch (lineId) {
-      case 'red':
-        return '#E53E3E';
-      case 'green':
-        return '#38A169';
-      case 'blue':
-        return '#3182CE';
-      case 'orange':
-        return '#ED8936';
-      default:
-        return lineId.startsWith('fr_') ? '#0D9488' : '#4A5568';
-    }
   };
 
   return (
