@@ -22,9 +22,10 @@ const MapSkeleton: React.FC<MapSkeletonProps> = ({
   useEffect(() => {
     const startTime = Date.now();
 
+    let hasLogged = false;
     const intervalId = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      if (elapsed > 10000) {
+      if (elapsed > 10000 && !hasLogged) {
         // 10 seconds elapsed
         console.log(
           `MapSkeleton shown for ${elapsed}ms with phase: ${loadingPhase}`
