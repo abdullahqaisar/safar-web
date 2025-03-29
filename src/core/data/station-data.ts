@@ -56,15 +56,16 @@ export const stationData: Station[] = [
     name: 'Chaman',
     coordinates: { lat: 33.69018093106195, lng: 73.04354130034186 },
   },
+
   {
     id: 'kashmirHighway',
     name: 'Kashmir Highway',
-    coordinates: { lat: 33.6861871107659, lng: 73.048283867797 },
+    coordinates: { lat: 33.68405345144262, lng: 73.0479941899217 },
   },
   {
     id: 'faizAhmadFaiz',
     name: 'Faiz Ahmad Faiz',
-    coordinates: { lat: 33.676229226018755, lng: 73.05499703947167 },
+    coordinates: { lat: 33.67575602120364, lng: 73.05429966581899 },
   },
   {
     id: 'khayabanEJohar',
@@ -79,7 +80,7 @@ export const stationData: Station[] = [
   {
     id: 'ijPrincipal',
     name: 'IJ Principal',
-    coordinates: { lat: 33.651, lng: 73.074 },
+    coordinates: { lat: 33.656163442861896, lng: 73.07170186901382 },
   },
   {
     id: 'faizabad',
@@ -140,42 +141,42 @@ export const stationData: Station[] = [
   {
     id: 'g10',
     name: 'G-10',
-    coordinates: { lat: 33.66702433588719, lng: 73.0154890342314 },
+    coordinates: { lat: 33.667112143793666, lng: 73.01538476667001 },
   },
   {
     id: 'nha',
     name: 'NHA/G-9',
-    coordinates: { lat: 33.684, lng: 73.0335 },
+    coordinates: { lat: 33.677290179416886, lng: 73.03482322887444 },
   },
   {
     id: 'policeFoundation',
     name: 'Police Foundation',
-    coordinates: { lat: 33.6612, lng: 73.0027 },
+    coordinates: { lat: 33.6630204723897, lng: 73.00734863989365 },
   },
   {
     id: 'nust',
-    name: 'NUST',
-    coordinates: { lat: 33.6498, lng: 72.9873 },
+    name: 'NUST/G-12',
+    coordinates: { lat: 33.6557334964243, lng: 72.99340115280691 },
   },
   {
     id: 'g13',
-    name: 'G-13',
-    coordinates: { lat: 33.6327, lng: 72.9642 },
+    name: 'NUST/G-13 West',
+    coordinates: { lat: 33.649506251618746, lng: 72.98176309547301 },
   },
   {
     id: 'golraMorr',
     name: 'Golra Morr',
-    coordinates: { lat: 33.651, lng: 73.065 },
+    coordinates: { lat: 33.64057464603409, lng: 72.96167871478063 },
   },
   {
     id: 'n5',
-    name: 'N-5',
-    coordinates: { lat: 33.627, lng: 72.9565 },
+    name: 'N-5/26 No Chungi',
+    coordinates: { lat: 33.631963701490236, lng: 72.94477006878428 },
   },
   {
     id: 'airport',
     name: 'Airport',
-    coordinates: { lat: 33.55595323251649, lng: 72.83735356830452 },
+    coordinates: { lat: 33.555939595133935, lng: 72.83735610335114 },
   },
   {
     id: 'g7g8',
@@ -220,7 +221,7 @@ export const stationData: Station[] = [
   {
     id: 'h8Shakarparia',
     name: 'H-8 / Shakarparia',
-    coordinates: { lat: 33.683907271374636, lng: 73.055678 },
+    coordinates: { lat: 33.68387250174979, lng: 73.07260503240163 },
   },
   {
     id: 'i8ParadeGround',

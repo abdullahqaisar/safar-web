@@ -9,7 +9,7 @@ import { formatScheduleTimes } from '../utils/station-helpers';
 
 // Import components
 import PageHeader from './StationInfo/PageHeader';
-import MapContainer from './MapDisplay/MapContainer';
+import MapContainer from '../../map-view/MapContainer';
 import LineDetails from './StationInfo/LineDetails';
 import LineSelector from './StationInfo/LineSelector';
 import { getLineColor } from '@/lib/utils/route';

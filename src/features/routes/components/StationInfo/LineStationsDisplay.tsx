@@ -6,6 +6,8 @@ import {
   Users,
   Clock,
   ArrowRight,
+  CircleDot,
+  Circle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -96,17 +98,17 @@ export default function LineStationsDisplay({
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-medium flex items-center text-gray-800">
-            <MapPin className="w-4 h-4 mr-2 text-primary" />
+            <MapPin className="w-4 h-4 mr-2 text-emerald-500" />
             <span>Route Summary</span>
           </h4>
 
           <div className="flex items-center space-x-2">
-            <div className="flex items-center text-xs bg-gray-50 px-2 py-1 rounded-full text-gray-600">
-              <Clock className="w-3 h-3 mr-1 opacity-70" />
+            <div className="flex items-center text-xs bg-gray-50 px-2.5 py-1 rounded-full text-gray-600">
+              <Clock className="w-3 h-3 mr-1.5 opacity-70" />
               <span>~{duration} min</span>
             </div>
-            <div className="flex items-center text-xs bg-gray-50 px-2 py-1 rounded-full text-gray-600">
-              <Users className="w-3 h-3 mr-1 opacity-70" />
+            <div className="flex items-center text-xs bg-gray-50 px-2.5 py-1 rounded-full text-gray-600">
+              <Users className="w-3 h-3 mr-1.5 opacity-70" />
               <span>
                 {transferStationsCount} transfer
                 {transferStationsCount !== 1 ? 's' : ''}
@@ -116,28 +118,28 @@ export default function LineStationsDisplay({
         </div>
 
         {/* Terminal stations overview in a single line */}
-        <div className="p-3 bg-gray-50 rounded-lg flex items-center justify-between">
+        <div className="p-3.5 bg-gray-50 rounded-lg flex items-center justify-between">
           <div className="flex-1">
             <button
               onClick={() => handleStationClick(startStation.id)}
-              className="text-sm font-medium text-left hover:text-primary transition-colors focus:outline-none text-gray-800 block"
+              className="text-sm font-medium text-left hover:text-emerald-600 transition-colors focus:outline-none text-gray-800 block"
             >
               {startStation.name}
             </button>
             <Badge
               variant="secondary"
-              className="mt-1 text-xs bg-green-100 text-green-800 border-0"
+              className="mt-1 text-xs bg-emerald-100 text-emerald-800 border-0"
             >
               Start
             </Badge>
           </div>
 
-          <ArrowRight className="flex-shrink-0 mx-2 text-gray-400 w-4 h-4" />
+          <ArrowRight className="flex-shrink-0 mx-3 text-gray-400 w-4 h-4" />
 
           <div className="flex-1 text-right">
             <button
               onClick={() => handleStationClick(endStation.id)}
-              className="text-sm font-medium text-right hover:text-primary transition-colors focus:outline-none text-gray-800 block ml-auto"
+              className="text-sm font-medium text-right hover:text-emerald-600 transition-colors focus:outline-none text-gray-800 block ml-auto"
             >
               {endStation.name}
             </button>
@@ -158,7 +160,7 @@ export default function LineStationsDisplay({
         <Button
           variant="ghost"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full h-10 rounded-none flex items-center justify-between hover:bg-gray-50 text-gray-700"
+          className="w-full h-11 rounded-none flex items-center justify-between hover:bg-gray-50 text-gray-700"
         >
           <span className="text-sm font-medium">
             {isExpanded
@@ -184,7 +186,7 @@ export default function LineStationsDisplay({
             >
               <div
                 ref={stationsContainerRef}
-                className="max-h-[350px] overflow-y-auto p-3"
+                className="max-h-[350px] overflow-y-auto p-4"
                 style={{
                   scrollbarWidth: 'thin',
                   scrollbarColor: '#CBD5E0 transparent',
@@ -193,12 +195,12 @@ export default function LineStationsDisplay({
                 <div className="relative">
                   {/* Line connecting stations */}
                   <div
-                    className="absolute left-1.5 top-6 bottom-6 w-0.5 rounded-full"
-                    style={{ backgroundColor: lineColor, opacity: 0.4 }}
+                    className="absolute left-2.5 top-6 bottom-6 w-0.5 rounded-full"
+                    style={{ backgroundColor: lineColor, opacity: 0.6 }}
                   ></div>
 
                   {/* Stations list */}
-                  <ul className="relative z-10 space-y-2">
+                  <ul className="relative z-10 space-y-3">
                     {processedStations.map((station, index) => {
                       const isFirst = index === 0;
                       const isLast = index === processedStations.length - 1;
@@ -208,38 +210,48 @@ export default function LineStationsDisplay({
                         <li key={`${lineId}-${station.id}`}>
                           <div className="relative flex items-start">
                             {/* Station marker */}
-                            <div
-                              className={`shrink-0 w-3 h-3 rounded-full mt-1.5 relative z-10
-                                ${
-                                  isActive
-                                    ? 'ring-2 ring-offset-2 ring-offset-white ring-blue-400'
-                                    : ''
-                                }
-                                ${station.isTransfer ? 'ring-1 ring-white' : ''}
-                              `}
-                              style={{
-                                backgroundColor: isFirst
-                                  ? '#22C55E'
-                                  : isLast
-                                  ? '#EF4444'
-                                  : station.isTransfer
-                                  ? 'white'
-                                  : lineColor,
-                                border:
-                                  station.isTransfer && !isFirst && !isLast
-                                    ? `1.5px solid ${lineColor}`
-                                    : 'none',
-                              }}
-                            />
+                            <div className="shrink-0 relative z-10">
+                              {isFirst ? (
+                                <div className="w-5 h-5 flex items-center justify-center">
+                                  <CircleDot className="w-5 h-5 text-emerald-500" />
+                                </div>
+                              ) : isLast ? (
+                                <div className="w-5 h-5 flex items-center justify-center">
+                                  <CircleDot className="w-5 h-5 text-red-500" />
+                                </div>
+                              ) : station.isTransfer ? (
+                                <div className="w-5 h-5 flex items-center justify-center">
+                                  <Circle
+                                    className={`w-4 h-4 stroke-2 ${
+                                      isActive
+                                        ? 'text-blue-500'
+                                        : 'text-gray-500'
+                                    }`}
+                                    style={{ fill: 'white' }}
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className={`w-2.5 h-2.5 rounded-full mt-1 mx-auto ${
+                                    isActive
+                                      ? 'ring-2 ring-offset-2 ring-offset-white ring-blue-400'
+                                      : ''
+                                  }`}
+                                  style={{ backgroundColor: lineColor }}
+                                ></div>
+                              )}
+                            </div>
 
                             {/* Station content */}
                             <div className="ml-3 flex-1 min-w-0">
                               <div
                                 className={`
                                   ${
-                                    isActive ? 'bg-blue-50' : 'hover:bg-gray-50'
+                                    isActive
+                                      ? 'bg-blue-50 border-blue-100'
+                                      : 'hover:bg-gray-50 border-transparent'
                                   } 
-                                  -ml-3 py-1.5 px-3 rounded-md transition-colors
+                                  -ml-1 py-2 px-3 rounded-md transition-colors border
                                 `}
                               >
                                 <div className="flex items-center justify-between">
@@ -249,7 +261,11 @@ export default function LineStationsDisplay({
                                     }
                                     className={`
                                       text-sm text-left focus:outline-none flex-1
-                                      ${isFirst || isLast ? 'font-medium' : ''}
+                                      ${
+                                        isFirst || isLast || station.isTransfer
+                                          ? 'font-medium'
+                                          : ''
+                                      }
                                       ${
                                         isActive
                                           ? 'text-blue-700'
@@ -265,7 +281,7 @@ export default function LineStationsDisplay({
                                     {isFirst && (
                                       <Badge
                                         variant="secondary"
-                                        className="bg-green-100 text-green-800 border-0 text-[10px] px-1.5 py-0"
+                                        className="bg-emerald-100 text-emerald-800 border-0 text-[10px] px-1.5 py-0"
                                       >
                                         START
                                       </Badge>
@@ -292,12 +308,12 @@ export default function LineStationsDisplay({
                                 {/* Connection lines - only show if there are connections */}
                                 {station.connections &&
                                   station.connections.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
                                       {station.connections.map(
                                         (connectionId) => (
                                           <div
                                             key={connectionId}
-                                            className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-full border border-gray-100"
+                                            className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-full border border-gray-200 shadow-sm"
                                           >
                                             <div
                                               className="w-2 h-2 rounded-full"

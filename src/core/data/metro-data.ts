@@ -42,8 +42,8 @@ export const metroLines: TransitLine[] = [
     name: 'Orange Line',
     stations: [
       'faizAhmadFaiz',
-      'g10',
       'nha',
+      'g10',
       'policeFoundation',
       'nust',
       'g13',
@@ -53,7 +53,7 @@ export const metroLines: TransitLine[] = [
     ],
     frequency: 'Every 15-20 minutes',
     schedule: {
-      first: '6:30 AM',
+      first: '6:00 AM',
       last: '10:00 PM',
     },
     ticketCost: 50,
@@ -334,8 +334,8 @@ export const metroLines: TransitLine[] = [
       'pirWadhaiMorh',
       'kohinoorMillColony',
       'kohinoorMill',
-      'golraMorhChowk',
-      'golraMorr',
+      // 'golraMorhChowk',
+      // 'golraMorr',
     ],
     frequency: 'Every 30 minutes',
     schedule: {
