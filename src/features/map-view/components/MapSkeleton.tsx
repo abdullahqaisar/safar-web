@@ -22,7 +22,7 @@ const MapSkeleton: React.FC<MapSkeletonProps> = ({
   useEffect(() => {
     const startTime = Date.now();
 
-    let hasLogged = false;
+    const hasLogged = false;
     const intervalId = setInterval(() => {
       const elapsed = Date.now() - startTime;
       if (elapsed > 10000 && !hasLogged) {
