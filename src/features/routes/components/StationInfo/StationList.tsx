@@ -21,7 +21,6 @@ export default function StationList({
   lineId,
   lineColor,
   onStationSelect,
-  maxHeight = '300px',
 }: StationListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const connectorLineRef = useRef<HTMLDivElement>(null);
@@ -73,7 +72,7 @@ export default function StationList({
     <div className="h-full flex flex-col">
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto scrollbar-custom relative p-2 pb-4"
+        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative p-2 pb-4"
         style={{ height: '100%' }}
       >
         {/* Top shadow indicator for scrollable content */}
@@ -111,18 +110,18 @@ export default function StationList({
               <li key={stationId} className="group">
                 <button
                   onClick={() => onStationSelect(stationId)}
-                  className="w-full text-left flex items-start py-1.5 px-2 hover:bg-white rounded-lg transition-colors"
+                  className="w-full text-left flex items-start py-2 px-3 hover:bg-white rounded-lg transition-colors"
                 >
-                  {/* Station marker - now with station-marker class for positioning */}
-                  <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-2 mt-[3px] station-marker">
+                  {/* Station marker */}
+                  <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center mr-3 mt-[2px] station-marker">
                     <div
                       className={cn(
                         'rounded-full z-10',
                         isFirst || isLast
-                          ? 'w-3 h-3'
+                          ? 'w-4 h-4'
                           : isTransfer
-                          ? 'w-3 h-3 bg-white ring-1 ring-gray-300'
-                          : 'w-2.5 h-2.5'
+                          ? 'w-3.5 h-3.5 bg-white ring-1 ring-gray-300'
+                          : 'w-3 h-3'
                       )}
                       style={{
                         backgroundColor: isFirst
@@ -139,23 +138,23 @@ export default function StationList({
                   {/* Station details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center">
-                      <div className="text-sm font-medium text-gray-800 group-hover:text-[color:var(--color-accent)] transition-colors">
+                      <div className="text-sm font-medium text-gray-800 group-hover:text-emerald-600 transition-colors">
                         {stationName}
                       </div>
 
                       {/* Station badges */}
                       {isFirst && (
-                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-green-50 text-green-600">
-                          First
+                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 font-medium">
+                          Start
                         </span>
                       )}
                       {isLast && (
-                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">
-                          Last
+                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 font-medium">
+                          End
                         </span>
                       )}
                       {isTransfer && !isFirst && !isLast && (
-                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                        <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">
                           Transfer
                         </span>
                       )}
@@ -179,7 +178,7 @@ export default function StationList({
                               }}
                             >
                               <div
-                                className="w-1.5 h-1.5 rounded-full mr-1"
+                                className="w-2 h-2 rounded-full mr-1"
                                 style={{ backgroundColor: lineColor }}
                               ></div>
                               {lineName}

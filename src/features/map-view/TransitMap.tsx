@@ -25,7 +25,7 @@ import TileLoadTracker from './components/TileLoadTracker';
 import ZoomListener from './components/ZoomListener';
 import MetroLine from './components/MetroLine';
 import StationMarkerList from './components/StationMarkerList';
-import { RotateCcw, ZoomIn, Plus, Minus } from 'lucide-react';
+import { RotateCcw, ZoomIn } from 'lucide-react';
 
 const DefaultIcon = L.icon({
   iconUrl: '/images/icons/marker-icon.png',
@@ -62,6 +62,7 @@ interface TransitMapProps {
   onStationSelect?: (stationId: string | null) => void;
   onLoadingChange?: (state: 'initial' | 'loading' | 'ready') => void;
   onProgressChange?: (progress: number) => void;
+  onMapInstance?: (map: L.Map) => void;
 }
 
 // Updated MapControls component to show in top-left corner without keyboard controls
@@ -79,7 +80,7 @@ const MapControls: React.FC<{
           onClick={onZoomToDetails}
           aria-label="Zoom in for more details"
         >
-          <ZoomIn size={14} className="text-[color:var(--color-accent)]" />
+          <ZoomIn size={14} className="text-emerald-500" />
           <span>Zoom for details</span>
         </button>
       )}
@@ -90,43 +91,10 @@ const MapControls: React.FC<{
           onClick={onReset}
           aria-label="Reset map view"
         >
-          <RotateCcw size={14} className="text-[color:var(--color-accent)]" />
+          <RotateCcw size={14} className="text-emerald-500" />
           <span>Reset View</span>
         </button>
       )}
-    </div>
-  );
-};
-
-// New custom horizontal zoom controls
-const HorizontalZoomControls: React.FC<{
-  map: L.Map | null;
-}> = ({ map }) => {
-  const handleZoomIn = () => {
-    if (map) map.zoomIn();
-  };
-
-  const handleZoomOut = () => {
-    if (map) map.zoomOut();
-  };
-
-  return (
-    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-[999] flex items-center gap-1 bg-white rounded-md shadow-md border border-gray-200">
-      <button
-        className="p-2 flex items-center justify-center hover:bg-gray-50 transition-colors"
-        onClick={handleZoomOut}
-        aria-label="Zoom out"
-      >
-        <Minus size={16} className="text-gray-700" />
-      </button>
-      <div className="h-5 w-px bg-gray-200"></div>
-      <button
-        className="p-2 flex items-center justify-center hover:bg-gray-50 transition-colors"
-        onClick={handleZoomIn}
-        aria-label="Zoom in"
-      >
-        <Plus size={16} className="text-gray-700" />
-      </button>
     </div>
   );
 };
@@ -139,6 +107,7 @@ const TransitMap: React.FC<TransitMapProps> = ({
   onStationSelect = () => {},
   onLoadingChange = () => {},
   onProgressChange = () => {},
+  onMapInstance = () => {},
 }) => {
   const [zoomLevel, setZoomLevel] = useState(12);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -321,6 +290,13 @@ const TransitMap: React.FC<TransitMapProps> = ({
     [metroLines]
   );
 
+  // Update the map reference and pass it to the parent component
+  useEffect(() => {
+    if (mapRef.current) {
+      onMapInstance(mapRef.current);
+    }
+  }, [onMapInstance]);
+
   return (
     <div
       className={`transit-map-container ${className}`}
@@ -365,6 +341,9 @@ const TransitMap: React.FC<TransitMapProps> = ({
           <MapResizeHandler
             setMapRef={(map) => {
               mapRef.current = map;
+              if (map) {
+                onMapInstance(map);
+              }
             }}
             onMapReady={handleMapReady}
           />
@@ -395,9 +374,6 @@ const TransitMap: React.FC<TransitMapProps> = ({
           />
         </MapContainer>
       </div>
-
-      {/* Custom horizontal zoom controls at bottom center */}
-      <HorizontalZoomControls map={mapRef.current} />
 
       {/* Action buttons in top-left corner */}
       <MapControls
