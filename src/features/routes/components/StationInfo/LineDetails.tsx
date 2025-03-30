@@ -185,12 +185,6 @@ export default function LineDetails({
                     {getTicketPrice(selectedLineData.ticketCost, 'singleTrip')}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Day Pass:</span>
-                  <span className="font-medium">
-                    Rs. {getTicketPrice(selectedLineData.ticketCost, 'dayPass')}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -207,7 +201,7 @@ export default function LineDetails({
 
           {/* Station list - always visible with fixed height */}
           <div
-            className="bg-gray-50 rounded-lg overflow-hidden"
+            className="bg-gray-50 rounded-lg overflow-hidden flex flex-col"
             style={{ height: '280px' }}
           >
             <StationList
@@ -215,7 +209,7 @@ export default function LineDetails({
               lineId={selectedLineData.id}
               lineColor={lineColor}
               onStationSelect={onStationSelect}
-              maxHeight="100%"
+              maxHeight="280px"
             />
           </div>
         </div>
