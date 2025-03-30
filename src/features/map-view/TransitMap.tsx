@@ -7,12 +7,7 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
-import {
-  MapContainer,
-  TileLayer,
-  ZoomControl,
-  AttributionControl,
-} from 'react-leaflet';
+import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getStationCoordinates } from '../routes/utils/station-helpers';
@@ -30,7 +25,7 @@ import TileLoadTracker from './components/TileLoadTracker';
 import ZoomListener from './components/ZoomListener';
 import MetroLine from './components/MetroLine';
 import StationMarkerList from './components/StationMarkerList';
-import { RotateCcw, ZoomIn } from 'lucide-react';
+import { RotateCcw, ZoomIn, Plus, Minus } from 'lucide-react';
 
 const DefaultIcon = L.icon({
   iconUrl: '/images/icons/marker-icon.png',
@@ -69,7 +64,7 @@ interface TransitMapProps {
   onProgressChange?: (progress: number) => void;
 }
 
-// Create a new MapControls component to handle all map controls
+// Updated MapControls component to show in top-left corner without keyboard controls
 const MapControls: React.FC<{
   zoomLevel: number;
   isSelectionActive: boolean;
@@ -77,18 +72,7 @@ const MapControls: React.FC<{
   onZoomToDetails: () => void;
 }> = ({ zoomLevel, isSelectionActive, onReset, onZoomToDetails }) => {
   return (
-    <div className="absolute bottom-3 right-3 z-[999] flex flex-col gap-2 min-w-[150px]">
-      <div className="bg-white/90 p-1.5 rounded-md shadow-md border border-gray-100 text-xs flex items-center gap-1.5">
-        <kbd className="px-1 py-0.5 border border-gray-300 rounded bg-gray-50">
-          ↑↓←→
-        </kbd>
-        <span className="text-gray-700 mr-1">Pan</span>
-        <kbd className="px-1 py-0.5 border border-gray-300 rounded bg-gray-50">
-          +/-
-        </kbd>
-        <span className="text-gray-700">Zoom</span>
-      </div>
-
+    <div className="absolute top-3 left-3 z-[999] flex flex-col gap-2 min-w-[150px]">
       {zoomLevel < 12 && (
         <button
           className="bg-white rounded-md shadow-md px-3 py-2 flex items-center gap-2 w-full text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-[rgba(var(--color-accent-rgb),0.2)]"
@@ -110,6 +94,39 @@ const MapControls: React.FC<{
           <span>Reset View</span>
         </button>
       )}
+    </div>
+  );
+};
+
+// New custom horizontal zoom controls
+const HorizontalZoomControls: React.FC<{
+  map: L.Map | null;
+}> = ({ map }) => {
+  const handleZoomIn = () => {
+    if (map) map.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    if (map) map.zoomOut();
+  };
+
+  return (
+    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-[999] flex items-center gap-1 bg-white rounded-md shadow-md border border-gray-200">
+      <button
+        className="p-2 flex items-center justify-center hover:bg-gray-50 transition-colors"
+        onClick={handleZoomOut}
+        aria-label="Zoom out"
+      >
+        <Minus size={16} className="text-gray-700" />
+      </button>
+      <div className="h-5 w-px bg-gray-200"></div>
+      <button
+        className="p-2 flex items-center justify-center hover:bg-gray-50 transition-colors"
+        onClick={handleZoomIn}
+        aria-label="Zoom in"
+      >
+        <Plus size={16} className="text-gray-700" />
+      </button>
     </div>
   );
 };
@@ -304,75 +321,13 @@ const TransitMap: React.FC<TransitMapProps> = ({
     [metroLines]
   );
 
-  // Add keyboard navigation handler for accessibility
-  const handleKeyboardNavigation = useCallback(
-    (e: KeyboardEvent) => {
-      if (!mapRef.current) return;
-
-      const map = mapRef.current;
-      const moveAmount = 50; // Pixels to move
-
-      switch (e.key) {
-        case 'ArrowUp':
-          map.panBy([0, -moveAmount]);
-          break;
-        case 'ArrowDown':
-          map.panBy([0, moveAmount]);
-          break;
-        case 'ArrowLeft':
-          map.panBy([-moveAmount, 0]);
-          break;
-        case 'ArrowRight':
-          map.panBy([moveAmount, 0]);
-          break;
-        case '+':
-          map.zoomIn();
-          break;
-        case '-':
-          map.zoomOut();
-          break;
-        case 'Escape':
-          if (selectedStation && stationSelectRef.current) {
-            stationSelectRef.current(null);
-          }
-          break;
-      }
-    },
-    [selectedStation]
-  );
-
-  // Add keyboard navigation support
-  useEffect(() => {
-    // Only add keyboard handlers when map has focus
-    const mapElement = mapContainerRef.current;
-
-    if (!mapElement) return;
-
-    const handleFocus = () => {
-      window.addEventListener('keydown', handleKeyboardNavigation);
-    };
-
-    const handleBlur = () => {
-      window.removeEventListener('keydown', handleKeyboardNavigation);
-    };
-
-    mapElement.addEventListener('focus', handleFocus);
-    mapElement.addEventListener('blur', handleBlur);
-
-    return () => {
-      mapElement.removeEventListener('focus', handleFocus);
-      mapElement.removeEventListener('blur', handleBlur);
-      window.removeEventListener('keydown', handleKeyboardNavigation);
-    };
-  }, [handleKeyboardNavigation]);
-
   return (
     <div
       className={`transit-map-container ${className}`}
       style={{ minHeight: '400px', position: 'relative' }}
       ref={mapContainerRef}
       tabIndex={0} // Make container focusable for keyboard navigation
-      aria-label="Interactive transit map. Use arrow keys to pan, +/- keys to zoom"
+      aria-label="Interactive transit map"
     >
       <div className="map-container-wrapper relative">
         <MapContainer
@@ -383,7 +338,7 @@ const TransitMap: React.FC<TransitMapProps> = ({
           whenReady={() => {
             setTimeout(() => handleMapReady(), 100);
           }}
-          zoomControl={false}
+          zoomControl={false} // Disable default zoom control as we're using our custom one
           attributionControl={false} // We'll add our own for better positioning
           style={{ height: '100%', width: '100%' }}
           // Add improved map options for better UX
@@ -394,10 +349,7 @@ const TransitMap: React.FC<TransitMapProps> = ({
           touchZoom={true}
           doubleClickZoom={true}
         >
-          {/* Position ZoomControl bottom-right but with enough margin for Reset button */}
-          <ZoomControl position="bottomright" />
-
-          {/* Add custom attribution with better positioning */}
+          {/* Attribution positioned at bottom-left */}
           <AttributionControl position="bottomleft" prefix={false} />
 
           <TileLayer
@@ -444,7 +396,10 @@ const TransitMap: React.FC<TransitMapProps> = ({
         </MapContainer>
       </div>
 
-      {/* Use the MapControls component */}
+      {/* Custom horizontal zoom controls at bottom center */}
+      <HorizontalZoomControls map={mapRef.current} />
+
+      {/* Action buttons in top-left corner */}
       <MapControls
         zoomLevel={zoomLevel}
         isSelectionActive={Boolean(selectedLine || selectedStation)}
