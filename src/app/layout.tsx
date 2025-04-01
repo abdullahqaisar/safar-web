@@ -9,10 +9,11 @@ import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { JourneyProvider } from '@/features/journey/context/JourneyContext';
 
-// Initialize Ubuntu font
+// Initialize Ubuntu font with all weights needed
 const ubuntu = Ubuntu({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  weight: ['300', '400', '500', '700'],
+  display: 'swap', // Use 'swap' to ensure text remains visible during font loading
   variable: '--font-ubuntu',
 });
 
@@ -40,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={ubuntu.variable}>
       <head>
         {/* Google Analytics */}
         <Script
@@ -56,7 +57,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${ubuntu.variable} font-sans`}>
+      <body className="font-sans">
         <QueryProvider>
           <JourneyProvider>
             <Navbar />

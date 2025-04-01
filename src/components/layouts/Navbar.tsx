@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils/formatters';
 
 const navigationLinks = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/journey', label: 'Find Routes', icon: Map },
+  { href: '/route', label: 'Find Route', icon: Map },
+  { href: '/map', label: 'Routes Map', icon: Map },
   { href: '/help', label: 'Help', icon: HelpCircle },
 ];
 

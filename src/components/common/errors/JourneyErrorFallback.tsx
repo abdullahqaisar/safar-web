@@ -15,7 +15,7 @@ export function JourneyErrorFallback({
 }: JourneyErrorFallbackProps) {
   // Get error details
   const errorMessage =
-    error?.message || 'Something went wrong with the journey planner';
+    error?.message || 'Something went wrong with the Route planner';
 
   function handleReset() {
     // Reload the page if no reset function provided
@@ -34,7 +34,7 @@ export function JourneyErrorFallback({
         </div>
 
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
-          Journey Planner Error
+          Route Planner Error
         </h2>
 
         <p className="text-gray-600 mb-6 max-w-md">{errorMessage}</p>

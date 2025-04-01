@@ -242,11 +242,9 @@
 
   .route-header {
     @apply p-4 text-white flex justify-between items-center;
-    background: linear-gradient(
-      135deg,
-      var(--color-primary),
-      var(--color-primary-light)
-    );
+    background: linear-gradient(135deg,
+        var(--color-primary),
+        var(--color-primary-light));
     position: relative;
     overflow: hidden;
   }
@@ -789,6 +787,7 @@ body.search-section-editing .dropdown-portal {
 }
 
 @keyframes pulseSlow {
+
   0%,
   100% {
     opacity: 0.7;
@@ -800,6 +799,7 @@ body.search-section-editing .dropdown-portal {
 }
 
 @keyframes slowFloat {
+
   0%,
   100% {
     transform: translateY(0) scale(1.5);
@@ -811,6 +811,7 @@ body.search-section-editing .dropdown-portal {
 }
 
 @keyframes waveEffect {
+
   0%,
   100% {
     transform: scaleY(1);
@@ -906,11 +907,11 @@ body.search-section-editing .dropdown-portal {
     @apply flex-col items-start;
   }
 
-  .results-header > div {
+  .results-header>div {
     @apply w-full;
   }
 
-  .results-header > div:last-child {
+  .results-header>div:last-child {
     @apply mt-3;
   }
 
