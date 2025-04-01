@@ -3,7 +3,7 @@ import { TransitLine } from '@/core/types/graph';
 import dynamic from 'next/dynamic';
 import MapSkeleton from './components/MapSkeleton';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import MapControls from '../routes/components/MapControls';
+import MapControls from './components/MapControls';
 import MapLegend from '../routes/components/MapLegend';
 import type { Map as LeafletMap } from 'leaflet';
 
@@ -18,10 +18,9 @@ interface MapContainerProps {
   selectedStation: string | null;
   onStationSelect: (stationId: string | null) => void;
   isFullscreen?: boolean;
-  showStations?: boolean;
   toggleFullscreen?: () => void;
-  toggleStations?: () => void;
   toggleFiltersPanel?: () => void;
+  onResetFilters?: () => void;
 }
 
 export default function MapContainer({
@@ -30,10 +29,9 @@ export default function MapContainer({
   selectedStation,
   onStationSelect,
   isFullscreen = false,
-  showStations = true,
   toggleFullscreen = () => {},
-  toggleStations = () => {},
   toggleFiltersPanel = () => {},
+  onResetFilters,
 }: MapContainerProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
@@ -197,6 +195,7 @@ export default function MapContainer({
               onLoadingChange={handleMapLoadingChange}
               onProgressChange={handleProgressChange}
               onMapInstance={handleMapInstance}
+              onResetFilters={onResetFilters}
             />
           </div>
 
@@ -214,9 +213,7 @@ export default function MapContainer({
           {mapLoadingState === 'ready' && (
             <MapControls
               isFullscreen={isFullscreen}
-              showStations={showStations}
               toggleFullscreen={enterFullScreen}
-              toggleStations={toggleStations}
               toggleFiltersPanel={toggleFiltersPanel}
               showMobileControls={isMobile}
               onZoomIn={handleZoomIn}

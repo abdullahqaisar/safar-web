@@ -71,7 +71,21 @@ const MapControls: React.FC<{
   isSelectionActive: boolean;
   onReset: () => void;
   onZoomToDetails: () => void;
-}> = ({ zoomLevel, isSelectionActive, onReset, onZoomToDetails }) => {
+  onResetFilters?: () => void;
+}> = ({
+  zoomLevel,
+  isSelectionActive,
+  onReset,
+  onZoomToDetails,
+  onResetFilters,
+}) => {
+  const handleFullReset = () => {
+    onReset();
+    if (onResetFilters) {
+      onResetFilters();
+    }
+  };
+
   return (
     <div className="absolute top-3 left-3 z-[999] flex flex-col gap-2 min-w-[150px]">
       {zoomLevel < 12 && (
@@ -88,8 +102,8 @@ const MapControls: React.FC<{
       {isSelectionActive && (
         <button
           className="bg-white rounded-md shadow-md px-3 py-2 flex items-center gap-2 w-full text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-[rgba(var(--color-accent-rgb),0.2)]"
-          onClick={onReset}
-          aria-label="Reset map view"
+          onClick={handleFullReset}
+          aria-label="Reset map view and filters"
         >
           <RotateCcw size={14} className="text-emerald-500" />
           <span>Reset View</span>
@@ -99,7 +113,11 @@ const MapControls: React.FC<{
   );
 };
 
-const TransitMap: React.FC<TransitMapProps> = ({
+const TransitMap: React.FC<
+  TransitMapProps & {
+    onResetFilters?: () => void;
+  }
+> = ({
   metroLines,
   selectedLine,
   className = 'h-[600px]',
@@ -108,6 +126,7 @@ const TransitMap: React.FC<TransitMapProps> = ({
   onLoadingChange = () => {},
   onProgressChange = () => {},
   onMapInstance = () => {},
+  onResetFilters,
 }) => {
   const [zoomLevel, setZoomLevel] = useState(12);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -381,6 +400,7 @@ const TransitMap: React.FC<TransitMapProps> = ({
         isSelectionActive={Boolean(selectedLine || selectedStation)}
         onReset={handleReset}
         onZoomToDetails={handleZoomToDetails}
+        onResetFilters={onResetFilters}
       />
     </div>
   );

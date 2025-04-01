@@ -14,6 +14,7 @@ import MapLayout from './MapLayout';
 import MapSidebar from './MapSidebar';
 import MapContentArea from './MapContentArea';
 import MobileLineSelector from './MobileLineSelector';
+import MobileFilterPanel from './MobileFilterPanel';
 
 // Enhance metro lines data with UI-specific defaults
 const enhancedMetroLines: TransitLine[] = metroLines.map((line) => ({
@@ -24,6 +25,7 @@ const enhancedMetroLines: TransitLine[] = metroLines.map((line) => ({
 export default function RoutesPageContainer() {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
   const [showInfoPanel] = useState(true); // Always show info panel
+  const [showMobileFilterPanel, setShowMobileFilterPanel] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Use custom hooks
@@ -53,6 +55,25 @@ export default function RoutesPageContainer() {
         }
       }, 100);
     }
+  };
+
+  // Handle toggling the mobile filter panel
+  const handleToggleMobileFilterPanel = () => {
+    setShowMobileFilterPanel((prev) => !prev);
+
+    // Track analytics
+    trackEvent(
+      showMobileFilterPanel
+        ? 'mobile_filter_panel_closed'
+        : 'mobile_filter_panel_opened'
+    );
+  };
+
+  // Handle reset filters and view
+  const handleResetFilters = () => {
+    lineSelection.showAllLines();
+    lineSelection.setSelectedLineId('');
+    trackEvent('filters_reset');
   };
 
   return (
@@ -90,16 +111,25 @@ export default function RoutesPageContainer() {
               selectedLineId={lineSelection.selectedLineId}
               selectedLineData={lineSelection.selectedLineData}
               isFullscreen={mapControls.isFullscreen}
-              showStations={mapControls.showStations}
-              showFiltersPanel={mapControls.showFiltersPanel}
               showInfoPanel={showInfoPanel}
               toggleFullscreen={mapControls.toggleFullscreen}
-              toggleStations={mapControls.toggleStations}
-              toggleFiltersPanel={mapControls.toggleFiltersPanel}
+              toggleFiltersPanel={handleToggleMobileFilterPanel}
               onStationSelect={handleStationSelect}
               selectedStation={selectedStation}
+              onResetFilters={handleResetFilters}
             />
           }
+        />
+
+        {/* Mobile Filter Panel */}
+        <MobileFilterPanel
+          isOpen={showMobileFilterPanel}
+          onClose={() => setShowMobileFilterPanel(false)}
+          metroLines={enhancedMetroLines}
+          visibleLines={lineSelection.visibleLines}
+          onToggleLineVisibility={lineSelection.handleLineVisibilityToggle}
+          onShowAll={lineSelection.showAllLines}
+          onHideAll={lineSelection.hideAllLines}
         />
       </main>
     </div>

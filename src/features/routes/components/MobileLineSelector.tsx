@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { TransitLine } from '@/core/types/graph';
 import { cn } from '@/lib/utils/formatters';
 
@@ -46,9 +46,7 @@ const MobileLineSelector: React.FC<MobileLineSelectorProps> = ({
             </>
           ) : (
             <>
-              <div className="w-5 h-5 rounded-full bg-safar-light-green/20 mr-2 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-safar-light-green"></div>
-              </div>
+              <Layers className="h-4 w-4 mr-2" />
               <span className="text-gray-700">All Lines</span>
             </>
           )}
@@ -77,9 +75,8 @@ const MobileLineSelector: React.FC<MobileLineSelectorProps> = ({
               onClick={() => handleLineSelect('')}
               className="w-full text-left p-3 rounded-md hover:bg-gray-50 transition-colors flex items-center"
             >
-              <div className="w-5 h-5 rounded-full bg-safar-light-green/20 mr-2 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-safar-light-green"></div>
-              </div>
+              <Layers className="h-4 w-4 mr-2" />
+
               <span className="text-gray-700">All Lines</span>
             </button>
 

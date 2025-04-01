@@ -1,12 +1,7 @@
-import {
-  ChevronRight,
-  Layers,
-  Train,
-  Eye,
-  Route as RouteIcon,
-} from 'lucide-react';
+import { Layers, Train, Eye, EyeOff } from 'lucide-react';
 import { TransitLine } from '@/core/types/graph';
 import { cn } from '@/lib/utils/formatters';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface LineSelectorProps {
   lines: TransitLine[];
@@ -27,161 +22,162 @@ export default function LineSelector({
   onShowAll,
   onHideAll,
 }: LineSelectorProps) {
-  // Check if multiple lines are visible
-  const multipleVisibleLines = visibleLines.length > 1;
+  const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
 
-  // Handle line selection with enhanced UX
-  const handleLineSelect = (lineId: string) => {
-    // If selecting a specific line (not "All Lines")
-    if (lineId) {
-      // Check if this is a new selection
-      const isNewSelection = selectedLine !== lineId;
-
-      // Select the line
-      onLineSelect(lineId);
-
-      // If this is a new selection, ensure the line is visible
-      if (isNewSelection && !visibleLines.includes(lineId)) {
-        onToggleLineVisibility(lineId);
-      }
-    } else {
-      // For "All Lines" selection
-      onLineSelect('');
-      onShowAll();
-    }
+  // Match map height from MapContainer
+  const selectorStyle = {
+    maxHeight: isTablet ? '550px' : '600px',
   };
 
-  // Handle visibility toggle with enhanced UX
-  const handleVisibilityToggle = (lineId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent the parent button click
-
-    // Toggle the visibility
-    onToggleLineVisibility(lineId);
-
-    // If we're making this line visible and no line is currently selected,
-    // also select this line
-    if (!visibleLines.includes(lineId) && selectedLine === null) {
-      onLineSelect(lineId);
-    }
-
-    // If we're hiding the currently selected line, go back to all lines
-    if (visibleLines.includes(lineId) && selectedLine === lineId) {
-      onLineSelect('');
-    }
-  };
+  // Calculate how many lines are currently visible
+  const visibleLineCount = visibleLines.length;
+  const totalLineCount = lines.length;
 
   return (
-    <div className="bg-white shadow-sm overflow-hidden rounded-xl">
+    <div
+      className="bg-white shadow-sm overflow-hidden rounded-xl"
+      style={selectorStyle}
+    >
+      {/* Header */}
       <div className="p-4 bg-emerald-50 border-b border-gray-100">
-        <h3 className="font-semibold text-emerald-800 flex items-center">
-          <Train className="h-4 w-4 mr-2 text-emerald-500" />
-          Metro Lines
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-emerald-800 flex items-center">
+            <Train className="h-4 w-4 mr-2 text-emerald-500" />
+            Metro Lines
+          </h3>
+          <div className="text-xs text-emerald-700 font-medium">
+            {visibleLineCount}/{totalLineCount} visible
+          </div>
+        </div>
       </div>
 
-      <div className="divide-y divide-gray-100">
-        {/* All Lines Option */}
-        <div className="p-3">
-          <button
-            key="all-lines"
-            className={cn(
-              'w-full justify-start text-left font-medium h-auto py-2.5 px-3 rounded-md flex items-center',
-              selectedLine === null
-                ? 'bg-emerald-600 text-white'
-                : 'hover:bg-gray-100'
-            )}
-            onClick={() => {
-              onLineSelect('');
-              onShowAll(); // Show all lines when "All Lines" is selected
-            }}
-          >
-            <Layers className="h-4 w-4 mr-2" />
-            <span>All Lines</span>
-          </button>
-        </div>
+      <div className="flex flex-col h-full">
+        {/* Main content area */}
+        <div className="flex-1 overflow-auto p-3">
+          {/* All Lines Option */}
+          <div className="mb-3">
+            <button
+              key="all-lines"
+              className={cn(
+                'w-full justify-between text-left h-auto py-2.5 px-3 rounded-md flex items-center',
+                selectedLine === null
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-50 hover:bg-gray-100'
+              )}
+              onClick={() => {
+                onLineSelect('');
+                onShowAll();
+              }}
+            >
+              <div className="flex items-center">
+                <Layers className="h-4 w-4 mr-2" />
+                <span className="font-medium">All Lines</span>
+              </div>
+              <span className="text-xs font-normal opacity-80">
+                {visibleLineCount === totalLineCount ? 'All visible' : 'Mixed'}
+              </span>
+            </button>
+          </div>
 
-        {/* Line Options with Visibility Toggles */}
-        <div className="p-3">
-          <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
-            {lines.map((line) => (
-              <div key={line.id} className="flex items-center mb-1">
-                <button
+          {/* Line divider */}
+          <div className="mb-3 border-t border-gray-100"></div>
+
+          {/* Lines List */}
+          <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1">
+            {lines.map((line) => {
+              const isVisible = visibleLines.includes(line.id);
+              const isSelected = selectedLine === line.id;
+
+              return (
+                <div
+                  key={line.id}
                   className={cn(
-                    'flex-grow justify-start text-left font-medium h-auto py-2.5 px-3 rounded-md flex items-center',
-                    selectedLine === line.id
-                      ? 'bg-emerald-600 text-white'
-                      : 'hover:bg-gray-100'
+                    'group flex items-center mb-2 rounded-md pl-3 pr-1.5 py-1.5 hover:bg-gray-50 transition-colors',
+                    isSelected && 'bg-emerald-50'
                   )}
-                  onClick={() => handleLineSelect(line.id)}
                 >
-                  <div
-                    className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
-                    style={{ backgroundColor: line.color }}
-                  ></div>
-                  <span className="truncate">{line.name}</span>
-                  <ChevronRight
+                  {/* Color indicator and name */}
+                  <button
+                    className="flex-grow flex items-center focus:outline-none"
+                    onClick={() => onLineSelect(line.id)}
+                  >
+                    <div
+                      className={cn(
+                        'w-3 h-3 rounded-full mr-2.5 transition-all duration-200',
+                        !isVisible && 'opacity-40'
+                      )}
+                      style={{ backgroundColor: line.color }}
+                    ></div>
+                    <span
+                      className={cn(
+                        'truncate text-sm font-medium transition-colors duration-200',
+                        isSelected && 'text-emerald-700',
+                        !isVisible && 'text-gray-400'
+                      )}
+                    >
+                      {line.name}
+                    </span>
+                  </button>
+
+                  {/* Visibility toggle */}
+                  <button
+                    onClick={() => onToggleLineVisibility(line.id)}
                     className={cn(
-                      'ml-auto h-4 w-4 transition-transform duration-200 flex-shrink-0',
-                      selectedLine === line.id && 'transform rotate-90'
+                      'ml-1.5 h-7 w-7 rounded-full transition-colors flex items-center justify-center',
+                      isVisible
+                        ? 'text-emerald-500 hover:bg-emerald-50'
+                        : 'text-gray-400 hover:bg-gray-100'
+                    )}
+                    title={isVisible ? 'Hide line' : 'Show line'}
+                    aria-label={isVisible ? 'Hide line' : 'Show line'}
+                  >
+                    {isVisible ? (
+                      <Eye className="h-3.5 w-3.5" />
+                    ) : (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+
+                  {/* Selection indicator */}
+                  <div
+                    className={cn(
+                      'w-1 h-8 rounded-full transition-all duration-200 ml-1.5',
+                      isSelected ? 'bg-emerald-500' : 'bg-transparent'
                     )}
                   />
-                </button>
-                <button
-                  className={cn(
-                    'ml-2 h-8 w-8 p-0 rounded flex items-center justify-center transition-colors shrink-0',
-                    visibleLines.includes(line.id)
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-100 border border-gray-200 text-gray-400 hover:bg-gray-200'
-                  )}
-                  onClick={(e) => handleVisibilityToggle(line.id, e)}
-                  title={
-                    visibleLines.includes(line.id) ? 'Hide line' : 'Show line'
-                  }
-                  aria-label={
-                    visibleLines.includes(line.id) ? 'Hide line' : 'Show line'
-                  }
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Show/Hide All Buttons */}
-        <div className="p-3 bg-gray-50">
-          <div className="flex justify-between">
-            <button
-              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-md transition-colors font-medium"
-              onClick={onHideAll}
-            >
-              Hide All
-            </button>
-            <button
-              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-md transition-colors font-medium"
-              onClick={onShowAll}
-            >
-              Show All
-            </button>
-          </div>
-        </div>
+        {/* Footer actions */}
+        <div className="p-3 bg-gray-50 border-t border-gray-100">
+          <div className="flex justify-between items-center">
+            <div className="flex space-x-2">
+              <button
+                className="px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs rounded-md transition-colors font-medium hover:bg-gray-50"
+                onClick={onHideAll}
+              >
+                Hide All
+              </button>
+              <button
+                className="px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs rounded-md transition-colors font-medium hover:bg-gray-50"
+                onClick={onShowAll}
+              >
+                Show All
+              </button>
+            </div>
 
-        {/* Line Selection Prompt Card (shown when all lines or multiple lines are selected) */}
-        {(selectedLine === null || multipleVisibleLines) && (
-          <div className="p-3 bg-gray-50">
-            <div className="bg-white border border-gray-100 rounded-md p-3 text-center">
-              <div className="w-10 h-10 mx-auto rounded-full bg-emerald-50 flex items-center justify-center mb-2">
-                <RouteIcon className="w-5 h-5 text-emerald-500" />
-              </div>
-              <h4 className="text-sm font-medium text-gray-800 mb-1">
-                Select a Line
-              </h4>
-              <p className="text-xs text-gray-500 mb-0">
-                Select a metro line to view its details and stations
-              </p>
+            <div className="text-xs text-gray-500">
+              {visibleLineCount === 0
+                ? 'No lines visible'
+                : visibleLineCount === 1
+                ? '1 line visible'
+                : `${visibleLineCount} lines visible`}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

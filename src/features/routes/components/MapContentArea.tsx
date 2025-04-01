@@ -10,15 +10,13 @@ interface MapContentAreaProps {
   selectedLineId: string | null;
   selectedLineData: TransitLine | null;
   isFullscreen: boolean;
-  showStations: boolean;
-  showFiltersPanel: boolean;
   showInfoPanel: boolean;
   toggleFullscreen: () => void;
-  toggleStations: () => void;
   toggleFiltersPanel: () => void;
   mapContainerRef?: React.RefObject<HTMLDivElement>;
   onStationSelect: (stationId: string | null) => void;
   selectedStation: string | null;
+  onResetFilters?: () => void;
 }
 
 const MapContentArea: React.FC<MapContentAreaProps> = ({
@@ -26,14 +24,13 @@ const MapContentArea: React.FC<MapContentAreaProps> = ({
   selectedLineId,
   selectedLineData,
   isFullscreen,
-  showStations,
   showInfoPanel,
   toggleFullscreen,
-  toggleStations,
   toggleFiltersPanel,
   mapContainerRef,
   onStationSelect,
   selectedStation,
+  onResetFilters,
 }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -55,21 +52,20 @@ const MapContentArea: React.FC<MapContentAreaProps> = ({
           selectedStation={selectedStation}
           onStationSelect={onStationSelect}
           isFullscreen={isFullscreen}
-          showStations={showStations}
           toggleFullscreen={toggleFullscreen}
-          toggleStations={toggleStations}
           toggleFiltersPanel={toggleFiltersPanel}
+          onResetFilters={onResetFilters}
         />
       </div>
 
-      {/* Line/Station Information Card */}
-      {selectedLineData && (showInfoPanel || isMobile) && (
-        <div className="bg-white rounded-xl p-5 shadow-sm">
+      {/* Line/Station Information Card - Always show it, with or without selected line */}
+      {(showInfoPanel || isMobile) && (
+        <div className="bg-white rounded-xl shadow-sm">
           <LineDetails
-            selectedLineData={selectedLineData}
+            selectedLineData={selectedLineData || undefined}
             schedule={schedule}
             onStationSelect={onStationSelect}
-            onClearSelection={() => {}} // This is needed for the LineDetails component
+            onClearSelection={() => onStationSelect(null)}
           />
         </div>
       )}

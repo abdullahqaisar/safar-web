@@ -56,22 +56,24 @@ export default function LineDetails({
 }: LineDetailsProps) {
   if (!selectedLineData) {
     return (
-      <div className="bg-white rounded-xl h-full p-5 flex flex-col items-center justify-center text-center">
-        <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
-          <RouteIcon className="w-8 h-8 text-gray-300" />
+      <div className="bg-white rounded-xl h-full flex flex-col p-5">
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 flex items-center justify-center mb-3">
+            <RouteIcon className="w-7 h-7 text-emerald-500" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Select a Line
+          </h3>
+          <p className="text-sm text-gray-500 mb-4 max-w-xs">
+            Select a metro line to view its details and stations
+          </p>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-sm transition-colors"
+          >
+            Choose from List
+          </button>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-1">
-          No Line Selected
-        </h3>
-        <p className="text-sm text-gray-500 mb-6 max-w-xs">
-          Select a transit line to view detailed route and station information.
-        </p>
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-sm transition-colors"
-        >
-          Select a Line
-        </button>
       </div>
     );
   }

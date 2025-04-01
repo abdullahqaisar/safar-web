@@ -1,58 +1,117 @@
 import React from 'react';
-import { RotateCcw, ZoomIn } from 'lucide-react';
+import { Maximize2, Minimize2, Filter, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface MapControlsProps {
-  zoomLevel: number;
-  isSelectionActive: boolean;
-  onReset: () => void;
-  onZoomToDetails: () => void;
+  isFullscreen: boolean;
+  toggleFullscreen: () => void;
+  toggleFiltersPanel: () => void;
+  showMobileControls?: boolean;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
-  zoomLevel,
-  isSelectionActive,
-  onReset,
-  onZoomToDetails,
+  isFullscreen,
+  toggleFullscreen,
+  toggleFiltersPanel,
+  showMobileControls = false,
+  onZoomIn = () => {},
+  onZoomOut = () => {},
 }) => {
-  return (
-    <div className="map-controls flex flex-col gap-2">
-      {/* Keyboard controls help */}
-      <div className="bg-white/90 p-1.5 rounded-md shadow-md border border-gray-100 text-xs flex items-center gap-1.5">
-        <kbd className="px-1 py-0.5 border border-gray-300 rounded bg-gray-50">
-          ↑↓←→
-        </kbd>
-        <span className="text-gray-700 mr-1">Pan</span>
-        <kbd className="px-1 py-0.5 border border-gray-300 rounded bg-gray-50">
-          +/-
-        </kbd>
-        <span className="text-gray-700">Zoom</span>
+  // Common button styles for consistency
+  const buttonClass =
+    'bg-white shadow-md border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50';
+
+  if (showMobileControls) {
+    // Mobile controls as a bottom bar
+    return (
+      <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 z-10 flex items-center bg-white/95 backdrop-blur-sm px-2 py-1.5 rounded-full shadow-md border border-gray-200">
+        {/* Zoom Out */}
+        <button
+          className={`${buttonClass} h-9 w-9 mr-1`}
+          onClick={onZoomOut}
+          title="Zoom out"
+          aria-label="Zoom out"
+        >
+          <ZoomOut className="h-4 w-4 text-gray-700" />
+        </button>
+
+        {/* Zoom In */}
+        <button
+          className={`${buttonClass} h-9 w-9 mr-1`}
+          onClick={onZoomIn}
+          title="Zoom in"
+          aria-label="Zoom in"
+        >
+          <ZoomIn className="h-4 w-4 text-gray-700" />
+        </button>
+
+        {/* Fullscreen Button */}
+        <button
+          className={`${buttonClass} h-9 w-9 mr-1`}
+          onClick={toggleFullscreen}
+          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="h-4 w-4 text-gray-700" />
+          ) : (
+            <Maximize2 className="h-4 w-4 text-gray-700" />
+          )}
+        </button>
+
+        {/* Filter Button */}
+        <button
+          className={`${buttonClass} h-9 w-9`}
+          onClick={toggleFiltersPanel}
+          title="Line visibility options"
+          aria-label="Line visibility options"
+        >
+          <Filter className="h-4 w-4 text-gray-700" />
+        </button>
       </div>
+    );
+  }
 
-      {/* Show zoom hint button when zoomed out */}
-      {zoomLevel < 12 && (
-        <button
-          className="bg-white rounded-md shadow-md px-3 py-2 flex items-center gap-2 w-full text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-[rgba(var(--color-accent-rgb),0.2)]"
-          onClick={onZoomToDetails}
-          aria-label="Zoom in for more details"
-          title="Zoom in to see station details"
-        >
-          <ZoomIn size={14} className="text-[color:var(--color-accent)]" />
-          <span className="whitespace-nowrap">Zoom for details</span>
-        </button>
-      )}
+  // Desktop controls
+  return (
+    <div
+      className="absolute right-4 top-4 z-10 flex flex-col gap-2"
+      role="group"
+      aria-label="Map controls"
+    >
+      {/* Fullscreen Button */}
+      <button
+        className={`${buttonClass} h-10 w-10`}
+        onClick={toggleFullscreen}
+        title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+      >
+        {isFullscreen ? (
+          <Minimize2 className="h-5 w-5 text-gray-700" />
+        ) : (
+          <Maximize2 className="h-5 w-5 text-gray-700" />
+        )}
+      </button>
 
-      {/* Show reset view button when something is selected */}
-      {isSelectionActive && (
-        <button
-          className="bg-white rounded-md shadow-md px-3 py-2 flex items-center gap-2 w-full text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-[rgba(var(--color-accent-rgb),0.2)]"
-          onClick={onReset}
-          aria-label="Reset map view"
-          title="Reset to default view"
-        >
-          <RotateCcw size={14} className="text-[color:var(--color-accent)]" />
-          <span>Reset View</span>
-        </button>
-      )}
+      {/* Zoom Controls */}
+      <button
+        className={`${buttonClass} h-10 w-10`}
+        onClick={onZoomIn}
+        title="Zoom in"
+        aria-label="Zoom in"
+      >
+        <ZoomIn className="h-5 w-5 text-gray-700" />
+      </button>
+
+      <button
+        className={`${buttonClass} h-10 w-10`}
+        onClick={onZoomOut}
+        title="Zoom out"
+        aria-label="Zoom out"
+      >
+        <ZoomOut className="h-5 w-5 text-gray-700" />
+      </button>
     </div>
   );
 };
