@@ -22,16 +22,14 @@ interface ErrorResponse {
 export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
-    const fromStationId = params.get('from');
-    const toStationId = params.get('to');
     const fromStationCoordinates = params.get('fromCoords');
     const toStationCoordinates = params.get('toCoords');
 
     // Get cached graph instead of creating a new one
     const transitGraph = getGraph();
 
-    let originId = fromStationId;
-    let destinationId = toStationId;
+    let originId;
+    let destinationId;
 
     // Process from coordinates if provided
     if (fromStationCoordinates && !originId) {

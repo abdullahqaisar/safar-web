@@ -1,86 +1,68 @@
+import React from 'react';
 import Link from 'next/link';
-import { Container } from '@/components/common/Container';
 import {
   Mail,
-  Phone,
-  MapPin,
   Facebook,
-  Twitter,
   Instagram,
+  Linkedin,
+  ChevronRight,
 } from 'lucide-react';
+import Image from 'next/image';
 
-// Extract footer data into organized objects for maintainability
-const quickLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/routes', label: 'Routes' },
-  { href: '/maps', label: 'Maps' },
-  { href: '/help', label: 'Help' },
-];
-
-const resourceLinks = [
-  { href: '/blog', label: 'Blog' },
-  { href: '/city-guide', label: 'City Guide' },
-  { href: '/updates', label: 'Transit Updates' },
-];
-
-const contactInfo = [
-  { icon: Mail, text: 'info@safar.pk', ariaLabel: 'Email' },
-  { icon: Phone, text: '+92 51 123 4567', ariaLabel: 'Phone' },
-  { icon: MapPin, text: 'Islamabad, Pakistan', ariaLabel: 'Location' },
-];
-
-const socialLinks = [
-  {
-    href: 'https://facebook.com',
-    icon: Facebook,
-    label: 'Facebook',
-  },
-  { href: 'https://twitter.com', icon: Twitter, label: 'Twitter' },
-  {
-    href: 'https://instagram.com',
-    icon: Instagram,
-    label: 'Instagram',
-  },
-];
-
-export function Footer() {
-  const currentYear = new Date().getFullYear();
+const Footer = () => {
+  const year = new Date().getFullYear();
 
   return (
     <footer
-      className="text-white py-12 relative"
+      className="bg-[var(--color-primary)] text-white relative"
       role="contentinfo"
       aria-label="Site footer"
     >
-      {/* Background gradient using theme variables */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[color:var(--color-primary)] to-[color:var(--color-primary-dark)] -z-10"></div>
+      {/* Top divider shape */}
+      <div className="absolute top-0 left-0 right-0 h-8 overflow-hidden">
+        <svg
+          viewBox="0 0 1200 120"
+          preserveAspectRatio="none"
+          className="absolute bottom-0 left-0 w-full h-full"
+        >
+          <path
+            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+            className="fill-white dark:fill-[var(--color-primary)]/95"
+          />
+        </svg>
+      </div>
 
-      <Container>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Logo and Tagline */}
-          <div>
-            <h4 className="text-xl font-bold mb-4 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 mr-2 text-[color:var(--color-accent)]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+      <div className="max-w-7xl mx-auto pt-16 pb-8 px-4 sm:px-6 lg:px-8">
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {/* Column 1: About */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 relative">
+                <Image
+                  src="/lovable-uploads/1e41c855-044c-48d3-9d14-109b0b044d53.png"
+                  alt="Safar Logo"
+                  fill
+                  className="object-contain"
+                  sizes="40px"
                 />
-              </svg>
-              <span>Safar</span>
-            </h4>
-            <p className="text-gray-400">Public Transportation Made Easy</p>
+              </div>
+              <span className="font-semibold text-xl tracking-tight">
+                Safar
+              </span>
+            </div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Making public transportation in Pakistan easier, faster, and
+              stress-free.
+            </p>
+            <div className="flex space-x-3">
+              <SocialLink href="#" icon={<Facebook size={18} />} />
+              <SocialLink href="#" icon={<Instagram size={18} />} />
+              <SocialLink href="#" icon={<Linkedin size={18} />} />
+            </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Column 2: Quick Links */}
           <nav aria-labelledby="footer-quick-links">
             <h5
               id="footer-quick-links"
@@ -89,87 +71,73 @@ export function Footer() {
               Quick Links
             </h5>
             <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-400 hover:text-[color:var(--color-accent-light)] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              <FooterLink href="/" label="Home" />
+              <FooterLink href="/route" label="Find your Route" />
+              <FooterLink href="/map" label="View Routes Map" />
+              <FooterLink href="/help" label="Help Center" />
             </ul>
           </nav>
 
-          {/* Resources */}
-          <nav aria-labelledby="footer-resources">
-            <h5
-              id="footer-resources"
-              className="font-medium mb-4 text-gray-200"
-            >
-              Resources
-            </h5>
-            <ul className="space-y-2">
-              {resourceLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-400 hover:text-[color:var(--color-accent-light)] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Contact */}
+          {/* Column 3: Contact */}
           <div>
             <h5 className="font-medium mb-4 text-gray-200">Contact</h5>
-            <ul className="space-y-2 text-gray-400">
-              {contactInfo.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <li key={index} className="flex items-center">
-                    <Icon
-                      size={16}
-                      className="mr-2 text-[color:var(--color-accent)]"
-                    />
-                    <span>{item.text}</span>
-                  </li>
-                );
-              })}
+            <ul className="space-y-4">
+              <li className="flex items-center">
+                <Mail className="h-5 w-5 text-[var(--color-accent)] mr-3 flex-shrink-0" />
+                <span className="text-gray-300">info@safar.fyi</span>
+              </li>
             </ul>
-
-            <div className="mt-4 flex space-x-3">
-              {socialLinks.map((social) => {
-                const Icon = social.icon;
-                return (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-400 hover:text-white transition-colors"
-                    aria-label={social.label}
-                  >
-                    <Icon size={18} />
-                  </a>
-                );
-              })}
-            </div>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="border-t border-[color:var(--color-primary-light)] mt-8 pt-6 text-center text-gray-400 text-sm">
-          <p>© {currentYear} Safar. All rights reserved.</p>
+        {/* Bottom section */}
+        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-400 text-sm mb-4 md:mb-0">
+            © {year} Safar. All rights reserved.
+          </p>
+          <div className="flex space-x-4">
+            <span className="text-gray-400 text-sm">
+              Made with ❤️ in Pakistan
+            </span>
+          </div>
         </div>
-
-        {/* Bottom Accent Line */}
-        <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-[color:var(--color-primary-dark)] via-[color:var(--color-accent)] to-[color:var(--color-primary-dark)]"></div>
-      </Container>
+      </div>
     </footer>
   );
+};
+
+interface FooterLinkProps {
+  href: string;
+  label: string;
 }
+
+const FooterLink = ({ href, label }: FooterLinkProps) => (
+  <li>
+    <Link
+      href={href}
+      className="text-gray-300 hover:text-white transition-colors flex items-center group text-sm"
+    >
+      <ChevronRight className="h-4 w-4 mr-2 text-[var(--color-accent)] transform transition-transform group-hover:translate-x-1" />
+      {label}
+    </Link>
+  </li>
+);
+
+interface SocialLinkProps {
+  href: string;
+  icon: React.ReactNode;
+}
+
+const SocialLink = ({ href, icon }: SocialLinkProps) => (
+  <a
+    href={href}
+    className="bg-white/10 hover:bg-[var(--color-accent)] hover:text-white transition-colors p-2 rounded-full"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={`Visit Safar on ${href.split('.')[1]}`}
+  >
+    {icon}
+  </a>
+);
+
+export default Footer;

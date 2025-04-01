@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Navbar } from '@/components/layouts/Navbar';
-import { Footer } from '@/components/layouts/Footer';
 
 export default function NotFound() {
   const pathname = usePathname();
@@ -18,8 +16,6 @@ export default function NotFound() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-
       <main className="flex-grow pt-16 flex items-center justify-center bg-[color:var(--color-bg-cream)]">
         <div className="max-w-md mx-auto text-center px-4 py-16 animate-fade-in">
           <h1 className="text-8xl font-bold text-[color:var(--color-accent)] mb-4">
@@ -38,8 +34,6 @@ export default function NotFound() {
           </Link>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

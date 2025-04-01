@@ -221,7 +221,7 @@ export default function LineDetails({
           <button
             className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center"
             onClick={() => {
-              window.location.href = `/journey`;
+              window.location.href = `/route`;
             }}
           >
             <Navigation className="w-4 h-4 mr-1.5" />

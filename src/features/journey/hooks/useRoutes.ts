@@ -6,11 +6,14 @@ import { useJourneyContext } from '../context/JourneyContext';
 export const routeQueryKeys = {
   all: ['routes'] as const,
   byLocations: (
-    fromLat?: number,
-    fromLng?: number,
-    toLat?: number,
-    toLng?: number
-  ) => [...routeQueryKeys.all, fromLat, fromLng, toLat, toLng] as const,
+    from?: { lat: number; lng: number } | null,
+    to?: { lat: number; lng: number } | null
+  ) =>
+    [
+      ...routeQueryKeys.all,
+      from ? `${from.lat},${from.lng}` : null,
+      to ? `${to.lat},${to.lng}` : null,
+    ] as const,
 };
 
 /**
@@ -22,12 +25,7 @@ export const useRoutes = (enabled = false) => {
   const queryClient = useQueryClient();
 
   // Generate query key based on current locations
-  const currentQueryKey = routeQueryKeys.byLocations(
-    fromLocation?.lat,
-    fromLocation?.lng,
-    toLocation?.lat,
-    toLocation?.lng
-  );
+  const currentQueryKey = routeQueryKeys.byLocations(fromLocation, toLocation);
 
   // Query for automatic fetching when enabled
   const routesQuery = useQuery({

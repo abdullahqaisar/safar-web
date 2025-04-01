@@ -31,25 +31,13 @@ function JourneyContent() {
   } = useJourney();
 
   // Determine initial state from URL immediately to avoid flicker
-
   const hasInitialSearchParams = useMemo(() => {
     if (!searchParams) return false;
 
-    const fromLat = searchParams.get('fromLat');
-    const fromLng = searchParams.get('fromLng');
-    const toLat = searchParams.get('toLat');
-    const toLng = searchParams.get('toLng');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
 
-    return Boolean(
-      fromLat &&
-        fromLng &&
-        toLat &&
-        toLng &&
-        !isNaN(parseFloat(fromLat)) &&
-        !isNaN(parseFloat(fromLng)) &&
-        !isNaN(parseFloat(toLat)) &&
-        !isNaN(parseFloat(toLng))
-    );
+    return Boolean(from && to && from.includes(',') && to.includes(','));
   }, [searchParams]);
 
   // States
@@ -131,10 +119,8 @@ function JourneyContent() {
     if (currentUrlParams !== paramsString) {
       setCurrentUrlParams(paramsString);
 
-      const fromLat = searchParams.get('fromLat');
-      const fromLng = searchParams.get('fromLng');
-      const toLat = searchParams.get('toLat');
-      const toLng = searchParams.get('toLng');
+      const from = searchParams.get('from');
+      const to = searchParams.get('to');
 
       // Get location text if available
       const fromTextParam = searchParams.get('fromText');
@@ -144,17 +130,8 @@ function JourneyContent() {
       let needsPlaceNames = false;
 
       // Check if we have valid coordinates
-      const hasValidFrom =
-        fromLat &&
-        fromLng &&
-        !isNaN(parseFloat(fromLat)) &&
-        !isNaN(parseFloat(fromLng));
-
-      const hasValidTo =
-        toLat &&
-        toLng &&
-        !isNaN(parseFloat(toLat)) &&
-        !isNaN(parseFloat(toLng));
+      const hasValidFrom = from && from.includes(',');
+      const hasValidTo = to && to.includes(',');
 
       // Enter search mode if any required params are missing
       if (!hasValidFrom || !hasValidTo) {
@@ -168,45 +145,47 @@ function JourneyContent() {
       setIsSearchMode(false);
 
       if (hasValidFrom) {
-        const fromLatNum = parseFloat(fromLat!);
-        const fromLngNum = parseFloat(fromLng!);
+        const [fromLat, fromLng] = from!.split(',').map(parseFloat);
 
-        setFromLocation({
-          lat: fromLatNum,
-          lng: fromLngNum,
-        });
+        if (!isNaN(fromLat) && !isNaN(fromLng)) {
+          setFromLocation({
+            lat: fromLat,
+            lng: fromLng,
+          });
 
-        if (fromTextParam) {
-          // If text is in URL, use it directly
-          setFromText(decodeURIComponent(fromTextParam));
-        } else {
-          // Set a placeholder until we get the real name
-          setFromText('Loading origin...');
-          needsPlaceNames = true;
+          if (fromTextParam) {
+            // If text is in URL, use it directly
+            setFromText(decodeURIComponent(fromTextParam));
+          } else {
+            // Set a placeholder until we get the real name
+            setFromText('Loading origin...');
+            needsPlaceNames = true;
+          }
+
+          hasValidLocations = true;
         }
-
-        hasValidLocations = true;
       }
 
       if (hasValidTo) {
-        const toLatNum = parseFloat(toLat!);
-        const toLngNum = parseFloat(toLng!);
+        const [toLat, toLng] = to!.split(',').map(parseFloat);
 
-        setToLocation({
-          lat: toLatNum,
-          lng: toLngNum,
-        });
+        if (!isNaN(toLat) && !isNaN(toLng)) {
+          setToLocation({
+            lat: toLat,
+            lng: toLng,
+          });
 
-        if (toTextParam) {
-          // If text is in URL, use it directly
-          setToText(decodeURIComponent(toTextParam));
-        } else {
-          // Set a placeholder until we get the real name
-          setToText('Loading destination...');
-          needsPlaceNames = true;
+          if (toTextParam) {
+            // If text is in URL, use it directly
+            setToText(decodeURIComponent(toTextParam));
+          } else {
+            // Set a placeholder until we get the real name
+            setToText('Loading destination...');
+            needsPlaceNames = true;
+          }
+
+          hasValidLocations = true;
         }
-
-        hasValidLocations = true;
       }
 
       if (hasValidLocations) {
@@ -215,12 +194,14 @@ function JourneyContent() {
         // If we need to fetch place names, do so after a small delay
         if (needsPlaceNames) {
           setTimeout(() => {
-            fetchMissingPlaceNames(
-              fromLat ? parseFloat(fromLat) : undefined,
-              fromLng ? parseFloat(fromLng) : undefined,
-              toLat ? parseFloat(toLat) : undefined,
-              toLng ? parseFloat(toLng) : undefined
-            );
+            const [fromLat, fromLng] = from
+              ? from.split(',').map(parseFloat)
+              : [undefined, undefined];
+            const [toLat, toLng] = to
+              ? to.split(',').map(parseFloat)
+              : [undefined, undefined];
+
+            fetchMissingPlaceNames(fromLat, fromLng, toLat, toLng);
           }, 1000);
         }
       }

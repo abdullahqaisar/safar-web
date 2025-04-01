@@ -3,7 +3,7 @@ import { Ubuntu } from 'next/font/google';
 import Script from 'next/script';
 
 import { Navbar } from '@/components/layouts/Navbar';
-import { Footer } from '@/components/layouts/Footer';
+import Footer from '@/components/layouts/Footer';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
