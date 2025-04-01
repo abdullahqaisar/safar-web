@@ -11,23 +11,48 @@ const TileLoadTracker = ({
   onProgressChange = () => {},
 }: TileLoadTrackerProps) => {
   const map = useMap();
+
+  // Use refs to track loading state persistently
   const loadTrackerRef = useRef({
     hasLoaded: false,
     activeTiles: 0,
     loadedTiles: 0,
-    estimatedTotalTiles: 25, // Start with a reasonable estimate
+    estimatedTotalTiles: 25, // Reasonable starting estimate
     startTime: Date.now(),
+    currentProgress: 0,
+    lastReportedProgress: 0,
+    progressReported: false,
   });
 
   useEffect(() => {
-    // Set initial progress to 10% immediately
-    onProgressChange(10);
+    // Set initial progress immediately but only once
+    if (!loadTrackerRef.current.progressReported) {
+      loadTrackerRef.current.currentProgress = 10;
+      loadTrackerRef.current.lastReportedProgress = 10;
+      loadTrackerRef.current.progressReported = true;
+      onProgressChange(10);
+    }
 
-    // Improved tile loading tracking that counts tiles and reports progress
+    // Smooth progress reporter that prevents flickering and ensures progress always moves forward
+    const reportProgress = (newProgress: number) => {
+      const { currentProgress, lastReportedProgress } = loadTrackerRef.current;
+
+      // Never decrease progress - only move forward
+      const smoothedProgress = Math.max(currentProgress, newProgress);
+
+      // Only report significant changes to avoid micro-updates
+      if (Math.abs(smoothedProgress - lastReportedProgress) > 0.5) {
+        loadTrackerRef.current.currentProgress = smoothedProgress;
+        loadTrackerRef.current.lastReportedProgress = smoothedProgress;
+        onProgressChange(smoothedProgress);
+      }
+    };
+
+    // Handle tile loading start events
     const handleTileLoadStart = () => {
       loadTrackerRef.current.activeTiles++;
 
-      // Update estimated total if it grows
+      // Update estimate of total tiles if needed
       if (
         loadTrackerRef.current.activeTiles >
         loadTrackerRef.current.estimatedTotalTiles
@@ -35,105 +60,108 @@ const TileLoadTracker = ({
         loadTrackerRef.current.estimatedTotalTiles =
           loadTrackerRef.current.activeTiles;
       }
-
-      // Calculate progress based on current knowledge
-      calculateAndReportProgress();
     };
 
+    // Handle successful tile loads
     const handleTileLoad = () => {
       loadTrackerRef.current.loadedTiles++;
       calculateAndReportProgress();
-
-      // Consider loaded when we've loaded most tiles and no new ones are pending for a while
       checkIfComplete();
     };
 
+    // Handle tile load errors (still count as loaded for progress purposes)
     const handleTileError = () => {
       loadTrackerRef.current.loadedTiles++;
       calculateAndReportProgress();
       checkIfComplete();
     };
 
-    // Calculate progress as a percentage
+    // Calculate progress based on loaded vs total tiles with smooth transitions
     const calculateAndReportProgress = () => {
-      const { loadedTiles, estimatedTotalTiles } = loadTrackerRef.current;
+      const { loadedTiles, estimatedTotalTiles, startTime } =
+        loadTrackerRef.current;
 
-      // If we have an estimate of total tiles, use that for progress
+      // Calculate progress from loaded tiles
+      let tilesProgress = 0;
       if (estimatedTotalTiles > 0) {
-        // Clamp progress to 0-100
-        const rawProgress = (loadedTiles / estimatedTotalTiles) * 100;
-
-        // Make progress at least 10% and cap at 95% until fully loaded
-        const progress = Math.max(10, Math.min(95, rawProgress));
-        onProgressChange(progress);
-      } else {
-        // Default progress based on time elapsed if we don't know total tiles
-        // This ensures progress always moves forward
-        const timeProgress = Math.min(
-          95,
-          10 + ((Date.now() - loadTrackerRef.current.startTime) / 5000) * 85
-        );
-        onProgressChange(timeProgress);
+        tilesProgress = (loadedTiles / estimatedTotalTiles) * 80; // Max 80% from tile loading
       }
 
-      // Add time-based incremental progress regardless of tile loading
-      // This ensures the progress bar always moves, even if tile events are slow
-      const timeSinceStart = Date.now() - loadTrackerRef.current.startTime;
-      if (timeSinceStart > 1000 && timeSinceStart % 500 < 100) {
-        const timeBonus = Math.min(95, 10 + (timeSinceStart / 8000) * 85);
-        onProgressChange(timeBonus);
-      }
+      // Calculate progress from elapsed time as fallback
+      const timeElapsed = Date.now() - startTime;
+      const timeProgress = Math.min(80, 10 + (timeElapsed / 8000) * 70);
+
+      // Use the higher of the two progress values, ensuring we never go backward
+      const combinedProgress = Math.max(10, tilesProgress, timeProgress);
+
+      // Limit to 95% until fully loaded to avoid premature completion appearance
+      const cappedProgress = Math.min(95, combinedProgress);
+
+      // Report smoothed progress
+      reportProgress(cappedProgress);
     };
 
-    // Check if loading is complete
+    // Determine if loading is complete
     const checkIfComplete = () => {
       const { loadedTiles, activeTiles, hasLoaded } = loadTrackerRef.current;
 
-      // Consider loaded when we've loaded at least some tiles and no new ones are pending
-      if (loadedTiles > 0 && loadedTiles >= activeTiles && !hasLoaded) {
+      // Consider loaded when we have loaded tiles and they match or exceed active count
+      if (loadedTiles > 5 && loadedTiles >= activeTiles && !hasLoaded) {
+        console.log(
+          `TileLoadTracker: All tiles loaded (${loadedTiles}/${activeTiles})`
+        );
         loadTrackerRef.current.hasLoaded = true;
-        onProgressChange(100);
+        reportProgress(100);
         onTilesLoaded();
       }
     };
 
-    // Setup progress simulation to keep moving even without tile events
+    // Gradual progress simulation to ensure smooth progress even without tile events
     const simulationInterval = setInterval(() => {
       if (!loadTrackerRef.current.hasLoaded) {
         const elapsed = Date.now() - loadTrackerRef.current.startTime;
-        const simulatedProgress = Math.min(90, 10 + (elapsed / 10000) * 80);
-        onProgressChange(simulatedProgress);
-      }
-    }, 200);
 
-    // Fallback timer to ensure we exit loading state after a timeout
+        // Create a logarithmic curve that approaches 95% asymptotically
+        const simulatedProgress = 10 + 85 * (1 - Math.exp(-elapsed / 5000));
+
+        reportProgress(Math.min(95, simulatedProgress));
+      }
+    }, 100);
+
+    // Safety fallback to ensure we don't get stuck in loading state
     const fallbackTimer = setTimeout(() => {
       if (!loadTrackerRef.current.hasLoaded) {
-        console.log('Fallback: forcing tile load completion after timeout');
+        console.log('TileLoadTracker: Fallback timer forcing completion');
         loadTrackerRef.current.hasLoaded = true;
-        onProgressChange(100);
+        reportProgress(100);
         onTilesLoaded();
       }
-    }, 8000); // 8 seconds fallback
+    }, 8000);
 
+    // Attach map event listeners
     map.on('tileloadstart', handleTileLoadStart);
     map.on('tileload', handleTileLoad);
     map.on('tileerror', handleTileError);
 
-    // Also listen to general map load event as backup
+    // Listen to map load event as additional signal
     map.on('load', () => {
       setTimeout(() => {
-        if (!loadTrackerRef.current.hasLoaded) {
+        if (
+          !loadTrackerRef.current.hasLoaded &&
+          loadTrackerRef.current.loadedTiles > 0
+        ) {
+          console.log('TileLoadTracker: Map load event triggered completion');
           loadTrackerRef.current.hasLoaded = true;
-          onProgressChange(100);
+          reportProgress(100);
           onTilesLoaded();
         }
-      }, 500);
+      }, 1000);
     });
 
+    // Clean up event listeners and timers
     return () => {
-      clearTimeout(fallbackTimer);
       clearInterval(simulationInterval);
+      clearTimeout(fallbackTimer);
       map.off('tileloadstart', handleTileLoadStart);
       map.off('tileload', handleTileLoad);
       map.off('tileerror', handleTileError);

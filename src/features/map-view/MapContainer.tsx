@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { TransitLine } from '@/core/types/graph';
 import dynamic from 'next/dynamic';
 import MapSkeleton from './components/MapSkeleton';
@@ -7,6 +7,7 @@ import MapControls from './components/MapControls';
 import MapLegend from '../routes/components/MapLegend';
 import type { Map as LeafletMap } from 'leaflet';
 
+// Load the TransitMap component dynamically to reduce initial bundle size
 const TransitMap = dynamic(() => import('./TransitMap'), {
   loading: () => null, // Don't show anything during code splitting load
   ssr: false,
@@ -48,60 +49,71 @@ export default function MapContainer({
   const [mapLoadingState, setMapLoadingState] = useState<
     'initial' | 'loading' | 'ready'
   >('initial');
-  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingProgress, setLoadingProgress] = useState(10);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
 
-  // Add a persistent reference to track if the map has been initialized
+  // Track if the map has been fully initialized to prevent reloading states
   const hasInitializedMapRef = useRef(false);
+  // Track the highest loading progress value to prevent going backward
+  const highestProgressRef = useRef(10);
 
-  // Unified loading state handler with protection against re-initialization
-  const handleMapLoadingChange = (state: 'initial' | 'loading' | 'ready') => {
-    // Skip loading state changes if we've already initialized the map once
-    if (state === 'loading' && hasInitializedMapRef.current) {
-      console.log('Map already initialized, skipping loading state change');
-      return;
-    }
-
-    console.log(`Map loading state changing to: ${state}`);
-    setMapLoadingState(state);
-
-    // Mark as initialized when ready state is reached
-    if (state === 'ready') {
-      hasInitializedMapRef.current = true;
-    }
-
-    // Safety fallback - if we're in loading state for too long, force to ready
-    if (state === 'loading') {
-      const fallbackTimer = setTimeout(() => {
-        setMapLoadingState((prev) => {
-          if (prev !== 'ready') {
-            console.log('Fallback: MapContainer forcing ready state');
-            hasInitializedMapRef.current = true;
-            return 'ready';
-          }
-          return prev;
-        });
-      }, 8000); // 8 second safety timeout
-
-      return () => clearTimeout(fallbackTimer);
-    }
-  };
-
-  // Handle progress updates - only when not initialized
-  const handleProgressChange = (progress: number) => {
-    if (!hasInitializedMapRef.current) {
+  // Smooth progress handler to prevent flickering
+  const handleProgressChange = useCallback((progress: number) => {
+    // Only update if the new progress is higher than what we've seen before
+    if (progress > highestProgressRef.current || progress >= 100) {
+      highestProgressRef.current = progress;
       setLoadingProgress(progress);
     }
-  };
+  }, []);
+
+  // Unified loading state handler with protection against re-initialization
+  const handleMapLoadingChange = useCallback(
+    (state: 'initial' | 'loading' | 'ready') => {
+      // Skip loading state changes if we've already initialized the map once
+      if (hasInitializedMapRef.current) {
+        return;
+      }
+
+      // If transitioning to ready state, mark as initialized
+      if (state === 'ready') {
+        hasInitializedMapRef.current = true;
+
+        // Add a small delay before showing the map to ensure smooth transition
+        setTimeout(() => {
+          setMapLoadingState('ready');
+          handleProgressChange(100);
+        }, 500);
+        return;
+      }
+
+      setMapLoadingState(state);
+
+      // Safety fallback - force ready state after a maximum wait time
+      if (state === 'loading') {
+        const fallbackTimer = setTimeout(() => {
+          if (!hasInitializedMapRef.current) {
+            hasInitializedMapRef.current = true;
+            setMapLoadingState('ready');
+            handleProgressChange(100);
+          }
+        }, 10000); // 10 second maximum timeout
+
+        return () => clearTimeout(fallbackTimer);
+      }
+    },
+    [handleProgressChange]
+  );
 
   // Ensure map resize on orientation change
   useEffect(() => {
     const handleResize = () => {
-      if (mapRef.current && mapLoadingState === 'ready') {
-        // Trigger invalidation of map size
-        const event = new Event('resize');
-        window.dispatchEvent(event);
+      if (
+        mapRef.current &&
+        mapLoadingState === 'ready' &&
+        mapInstanceRef.current
+      ) {
+        mapInstanceRef.current.invalidateSize();
       }
     };
 
@@ -114,8 +126,7 @@ export default function MapContainer({
     };
   }, [mapLoadingState]);
 
-  // Create a stabilized callback for station selection to avoid regenerating
-  // the function on each render, which contributes to unnecessary re-renders
+  // Create a stabilized callback for station selection
   const handleStationSelect = useRef((stationId: string | null) => {
     onStationSelect(stationId);
   });
@@ -126,8 +137,8 @@ export default function MapContainer({
   }, [onStationSelect]);
 
   // Function to handle fullscreen mode
-  const enterFullScreen = () => {
-    if (mapRef.current && toggleFullscreen) {
+  const enterFullScreen = useCallback(() => {
+    if (mapRef.current) {
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
@@ -135,10 +146,10 @@ export default function MapContainer({
       }
       toggleFullscreen();
     }
-  };
+  }, [toggleFullscreen]);
 
   // Zoom handler functions
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     if (mapInstanceRef.current) {
       try {
         const map = mapInstanceRef.current;
@@ -148,9 +159,9 @@ export default function MapContainer({
         console.error('Error zooming in:', error);
       }
     }
-  };
+  }, []);
 
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     if (mapInstanceRef.current) {
       try {
         const map = mapInstanceRef.current;
@@ -160,12 +171,12 @@ export default function MapContainer({
         console.error('Error zooming out:', error);
       }
     }
-  };
+  }, []);
 
-  // Function to store map instance
-  const handleMapInstance = (mapInstance: LeafletMap) => {
+  // Store map instance reference
+  const handleMapInstance = useCallback((mapInstance: LeafletMap) => {
     mapInstanceRef.current = mapInstance;
-  };
+  }, []);
 
   return (
     <div className="animate-fade-in">
@@ -176,11 +187,11 @@ export default function MapContainer({
         ref={mapRef}
         style={{ height: mapHeight, minHeight: '450px' }}
       >
-        {/* Use position relative/absolute to stack the map and loading UI */}
+        {/* Container for map and loading UI with proper z-stacking */}
         <div className="relative w-full h-full">
           {/* Always render TransitMap but keep it invisible until ready */}
           <div
-            className={`absolute inset-0 transition-opacity duration-300 ${
+            className={`absolute inset-0 transition-opacity duration-500 ${
               mapLoadingState === 'ready' ? 'opacity-100' : 'opacity-0'
             }`}
           >
@@ -200,14 +211,18 @@ export default function MapContainer({
           </div>
 
           {/* Show skeleton until map is fully ready */}
-          {mapLoadingState !== 'ready' && (
-            <div className="absolute inset-0 z-10 transition-opacity duration-300 ease-in-out">
-              <MapSkeleton
-                loadingPhase={mapLoadingState}
-                loadingProgress={loadingProgress}
-              />
-            </div>
-          )}
+          <div
+            className={`absolute inset-0 z-10 transition-opacity duration-500 ease-in-out ${
+              mapLoadingState === 'ready'
+                ? 'opacity-0 pointer-events-none'
+                : 'opacity-100'
+            }`}
+          >
+            <MapSkeleton
+              loadingPhase={mapLoadingState}
+              loadingProgress={loadingProgress}
+            />
+          </div>
 
           {/* Map controls */}
           {mapLoadingState === 'ready' && (
