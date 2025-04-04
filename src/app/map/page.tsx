@@ -1,11 +1,13 @@
+import { Suspense } from 'react';
 import RoutesPageContainer from '@/features/routes/components/RoutesPageContainer';
 import { Metadata } from 'next';
+import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 
 // Define metadata for the page
 export const metadata: Metadata = {
   title: 'Transit Network Map | Safar',
   description:
-    'Interactive transit network map for Islamabad Metropolitan Area',
+    'Metro routes map for Islamabad, Rawalpindi. Feeder bus routes, Blue line, Red line, Orange Line, Green Line FR 15, FR 14, FR 1, metro lines, and bus stops.',
   keywords: [
     'transit map',
     'bus routes',
@@ -18,7 +20,14 @@ export const metadata: Metadata = {
 
 /**
  * Routes page that displays the interactive transit network map
+ * Allows users to explore and visualize the transit system
  */
 export default function RoutesPage() {
-  return <RoutesPageContainer />;
+  return (
+    <main>
+      <Suspense fallback={<SearchParamsFallback />}>
+        <RoutesPageContainer />
+      </Suspense>
+    </main>
+  );
 }

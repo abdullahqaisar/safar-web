@@ -4,9 +4,9 @@ import { Info, Clock, Zap, Search, MapPin } from 'lucide-react';
 
 export function JourneyTips() {
   return (
-    <Card className="bg-white rounded-xl p-5 h-full">
+    <Card className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 h-full">
       <div className="flex items-center mb-4">
-        <Info size={18} className="text-blue-500 mr-2" />
+        <Info size={18} className="text-emerald-500 mr-2" />
         <h2 className="text-lg font-semibold text-gray-800">
           Journey Planning Tips
         </h2>
@@ -15,7 +15,7 @@ export function JourneyTips() {
       <div className="space-y-4">
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <Search className="w-5 h-5 text-[var(--color-accent)] mr-3" />
+            <Search className="w-5 h-5 text-emerald-600 mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Be Specific</h3>
@@ -28,7 +28,7 @@ export function JourneyTips() {
 
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <Clock className="w-5 h-5 text-[var(--color-accent)] mr-3" />
+            <Clock className="w-5 h-5 text-emerald-600 mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Plan Ahead</h3>
@@ -41,7 +41,7 @@ export function JourneyTips() {
 
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <MapPin className="w-5 h-5 text-[var(--color-accent)] mr-3" />
+            <MapPin className="w-5 h-5 text-emerald-600 mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Use Nearby Stations</h3>
@@ -54,7 +54,7 @@ export function JourneyTips() {
 
         <div className="flex">
           <div className="flex-shrink-0 mt-1">
-            <Zap className="w-5 h-5 text-[var(--color-accent)] mr-3" />
+            <Zap className="w-5 h-5 text-emerald-600 mr-3" />
           </div>
           <div>
             <h3 className="font-medium text-gray-800">Compare Options</h3>

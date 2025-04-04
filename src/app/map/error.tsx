@@ -21,13 +21,13 @@ export default function RoutesError({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-white to-[color:var(--color-bg-cream)] dark:from-gray-900 dark:to-gray-900">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 text-center">
+    <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center p-4 bg-gradient-to-b from-white to-[color:var(--color-bg-cream)]">
+      <div className="max-w-md w-full bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center">
         <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
           Something went wrong!
         </h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
+        <p className="text-gray-600 mb-6">
           We had trouble loading the transit network map. Please try again or
           return to the home page.
         </p>

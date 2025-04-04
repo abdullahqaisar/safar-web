@@ -4,7 +4,7 @@
  */
 export default function RoutesLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-[color:var(--color-bg-cream)]">
+    <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center bg-gradient-to-b from-white to-[color:var(--color-bg-cream)]">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-t-[color:var(--color-accent)] border-[color:var(--color-accent)]/30 rounded-full animate-spin mx-auto mb-6"></div>
         <h2 className="text-xl font-medium text-gray-800 mb-2">

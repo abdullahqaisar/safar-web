@@ -73,7 +73,7 @@ const NetworkMapSection = () => {
                 ))}
               </div>
 
-              <Link href="/routes" className="inline-block">
+              <Link href="/map" className="inline-block">
                 <button className="inline-flex items-center px-6 py-3 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white rounded-lg shadow-md hover:shadow-lg shadow-[color:var(--color-accent)]/15 transition-all duration-300 hover:-translate-y-0.5">
                   Explore Routes Map
                   <ArrowRight className="ml-2 h-4 w-4" />

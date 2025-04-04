@@ -9,7 +9,6 @@ import { getLineColor } from '@/lib/utils/route';
 import { TransitLine } from '@/core/types/graph';
 
 // Import components
-import PageHeader from './PageHeader';
 import MapLayout from './MapLayout';
 import MapSidebar from './MapSidebar';
 import MapContentArea from './MapContentArea';
@@ -77,61 +76,81 @@ export default function RoutesPageContainer() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Page Header */}
-      <PageHeader
-        title="Transit Network Map"
-        description="Explore Pakistan's modern transit network with our interactive map"
-      />
+    <div className="min-h-screen flex flex-col pt-16 md:pt-20">
+      <div className="relative flex-grow bg-gradient-to-b from-[color:var(--color-accent)]/5 to-[#FEF6EC] pb-16">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-50 rounded-full blur-3xl opacity-40 translate-x-1/3 translate-y-1/3"></div>
+        </div>
 
-      <main className="flex-grow container mx-auto px-4 sm:px-6 py-2 md:py-6">
-        {/* Metro line selector dropdown (mobile only) */}
-        <MobileLineSelector
-          metroLines={enhancedMetroLines}
-          selectedLineId={lineSelection.selectedLineId}
-          onSelectLine={lineSelection.setSelectedLineId}
-        />
+        {/* Page Header with consistent styling */}
+        <div className="py-8 mb-4 page-header">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8">
+            <div className="flex items-center mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-emerald-700">
+                Transit Network Map
+              </h1>
+            </div>
+            <p className="text-sm md:text-base text-gray-600 max-w-3xl leading-relaxed">
+              Explore Pakistan&apos;s modern transit network with our
+              interactive map
+            </p>
+          </div>
+        </div>
 
-        {/* Map Layout */}
-        <MapLayout
-          sidebar={
-            <MapSidebar
+        <main className="relative z-10">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-2 md:py-6">
+            {/* Metro line selector dropdown (mobile only) */}
+            <MobileLineSelector
               metroLines={enhancedMetroLines}
               selectedLineId={lineSelection.selectedLineId}
-              visibleLines={lineSelection.visibleLines}
               onSelectLine={lineSelection.setSelectedLineId}
+            />
+
+            {/* Map Layout */}
+            <MapLayout
+              sidebar={
+                <MapSidebar
+                  metroLines={enhancedMetroLines}
+                  selectedLineId={lineSelection.selectedLineId}
+                  visibleLines={lineSelection.visibleLines}
+                  onSelectLine={lineSelection.setSelectedLineId}
+                  onToggleLineVisibility={
+                    lineSelection.handleLineVisibilityToggle
+                  }
+                  onShowAll={lineSelection.showAllLines}
+                  onHideAll={lineSelection.hideAllLines}
+                />
+              }
+              content={
+                <MapContentArea
+                  filteredLines={lineSelection.filteredLines}
+                  selectedLineId={lineSelection.selectedLineId}
+                  selectedLineData={lineSelection.selectedLineData}
+                  isFullscreen={mapControls.isFullscreen}
+                  showInfoPanel={showInfoPanel}
+                  toggleFullscreen={mapControls.toggleFullscreen}
+                  toggleFiltersPanel={handleToggleMobileFilterPanel}
+                  onStationSelect={handleStationSelect}
+                  selectedStation={selectedStation}
+                  onResetFilters={handleResetFilters}
+                />
+              }
+            />
+
+            {/* Mobile Filter Panel */}
+            <MobileFilterPanel
+              isOpen={showMobileFilterPanel}
+              onClose={() => setShowMobileFilterPanel(false)}
+              metroLines={enhancedMetroLines}
+              visibleLines={lineSelection.visibleLines}
               onToggleLineVisibility={lineSelection.handleLineVisibilityToggle}
               onShowAll={lineSelection.showAllLines}
               onHideAll={lineSelection.hideAllLines}
             />
-          }
-          content={
-            <MapContentArea
-              filteredLines={lineSelection.filteredLines}
-              selectedLineId={lineSelection.selectedLineId}
-              selectedLineData={lineSelection.selectedLineData}
-              isFullscreen={mapControls.isFullscreen}
-              showInfoPanel={showInfoPanel}
-              toggleFullscreen={mapControls.toggleFullscreen}
-              toggleFiltersPanel={handleToggleMobileFilterPanel}
-              onStationSelect={handleStationSelect}
-              selectedStation={selectedStation}
-              onResetFilters={handleResetFilters}
-            />
-          }
-        />
-
-        {/* Mobile Filter Panel */}
-        <MobileFilterPanel
-          isOpen={showMobileFilterPanel}
-          onClose={() => setShowMobileFilterPanel(false)}
-          metroLines={enhancedMetroLines}
-          visibleLines={lineSelection.visibleLines}
-          onToggleLineVisibility={lineSelection.handleLineVisibilityToggle}
-          onShowAll={lineSelection.showAllLines}
-          onHideAll={lineSelection.hideAllLines}
-        />
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

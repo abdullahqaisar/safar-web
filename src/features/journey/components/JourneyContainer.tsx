@@ -280,61 +280,72 @@ function JourneyContent() {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
-      <div className="px-0 sm:px-2">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
-            onClick={() => router.push('/')}
-            leftIcon={<ArrowLeft size={16} />}
-            data-variant="ghost"
-          >
-            Back
-          </Button>
-          {isSearchMode && (
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 ml-2">
-              Plan Your Journey
-            </h1>
-          )}
+    <div className="min-h-screen flex flex-col pt-16 md:pt-20">
+      <div className="relative flex-grow bg-gradient-to-b from-[color:var(--color-accent)]/5 to-[#FEF6EC] pb-16">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-50 rounded-full blur-3xl opacity-40 translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-        {isSearchMode && (
-          <div className="mb-8">
-            <p className="text-gray-600 max-w-2xl">
-              Find the best transit routes to get you where you need to go.
-              Enter your starting point and destination to see available
-              options, estimated travel times, and more.
+        {/* Page Header with consistent styling */}
+        <div className="py-8 mb-4 page-header">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8">
+            <div className="flex items-center mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 mr-2"
+                onClick={() => router.push('/')}
+                leftIcon={<ArrowLeft size={16} />}
+              >
+                Back
+              </Button>
+              <h1 className="text-2xl md:text-3xl font-bold text-emerald-700">
+                {isSearchMode ? 'Plan Your Journey' : 'Journey Options'}
+              </h1>
+            </div>
+            <p className="text-sm md:text-base text-gray-600 max-w-3xl leading-relaxed">
+              {isSearchMode
+                ? 'Find the best transit routes to get you where you need to go. Enter your starting point and destination.'
+                : 'Review available transit options for your selected journey.'}
             </p>
           </div>
-        )}
+        </div>
 
-        <SearchSection
-          fromText={fromText || ''}
-          toText={toText || ''}
-          isResultsPage={!isSearchMode}
-          isSearchMode={isSearchMode}
-          isLoading={isLoading || isLoadingPlaceNames}
-        />
+        <main className="relative z-10">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-2 md:py-6">
+            {/* Simplified SearchSection placement */}
+            <SearchSection
+              fromText={fromText || ''}
+              toText={toText || ''}
+              isResultsPage={!isSearchMode}
+              isSearchMode={isSearchMode}
+              isLoading={isLoading || isLoadingPlaceNames}
+            />
 
-        {isInitialized && !isSearchMode && (
-          <RouteResultsView
-            isLoading={isLoading}
-            loadingProgress={loadingProgress}
-            routes={routes}
-            error={error}
-            fromText={fromText}
-            toText={toText}
-          />
-        )}
+            {/* Results view with consistent styling */}
+            {isInitialized && !isSearchMode && (
+              <div className="animate-fade-in">
+                <RouteResultsView
+                  isLoading={isLoading}
+                  loadingProgress={loadingProgress}
+                  routes={routes}
+                  error={error}
+                  fromText={fromText}
+                  toText={toText}
+                />
+              </div>
+            )}
 
-        {isSearchMode && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <PopularDestinations />
-            <JourneyTips />
+            {/* Popular destinations and tips in grid layout matching Routes patterns */}
+            {isSearchMode && (
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <PopularDestinations />
+                <JourneyTips />
+              </div>
+            )}
           </div>
-        )}
+        </main>
       </div>
     </div>
   );

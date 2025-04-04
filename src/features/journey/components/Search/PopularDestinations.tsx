@@ -29,9 +29,9 @@ const ISLAMABAD_DESTINATIONS = [
 
 export function PopularDestinations() {
   return (
-    <Card className="bg-white rounded-xl p-5 h-full">
+    <Card className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 h-full">
       <div className="flex items-center mb-4">
-        <Star size={18} className="text-amber-500 mr-2" />
+        <Star size={18} className="text-emerald-500 mr-2" />
         <h2 className="text-lg font-semibold text-gray-800">
           Popular Destinations in Islamabad
         </h2>
@@ -41,20 +41,20 @@ export function PopularDestinations() {
         {ISLAMABAD_DESTINATIONS.map((destination) => (
           <div
             key={destination.id}
-            className="p-3 border border-gray-100 rounded-lg flex items-center"
+            className="p-3 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors flex items-center"
           >
             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mr-3">
-              <MapPin className="text-[var(--color-accent)] w-4 h-4" />
+              <MapPin className="text-emerald-600 w-4 h-4" />
             </div>
             <div>
               <p className="font-medium text-gray-800">{destination.name}</p>
-              <p className="text-xs text-gray-500">{destination.type}</p>
+              <p className="text-xs text-gray-600">{destination.type}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <p className="text-xs text-gray-500 mt-4">
+      <p className="text-xs text-gray-600 mt-4">
         These are popular destinations in Islamabad. Use the search form above
         to plan your journey.
       </p>

@@ -128,6 +128,21 @@
     @apply bg-white min-h-screen;
   }
 
+  .page-content {
+    padding-top: 4rem; /* 64px for mobile */
+  }
+
+  @media (min-width: 768px) {
+    .page-content {
+      padding-top: 5rem; /* 80px for desktop */
+    }
+  }
+
+  /* Ensure proper scroll behavior for anchor links */
+  html {
+    scroll-padding-top: 5rem;
+  }
+
   .hero-content-wrapper {
     @apply flex flex-col items-center justify-center;
     padding-block: clamp(3rem, 8vh, 7rem);
@@ -242,9 +257,11 @@
 
   .route-header {
     @apply p-4 text-white flex justify-between items-center;
-    background: linear-gradient(135deg,
-        var(--color-primary),
-        var(--color-primary-light));
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-primary-light)
+    );
     position: relative;
     overflow: hidden;
   }
@@ -676,6 +693,60 @@
   }
 }
 
+/* Mobile menu override to ensure visibility and proper background */
+#mobile-menu {
+  z-index: 1000 !important;
+  background-color: #ffffff !important;
+}
+
+#mobile-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: white;
+  z-index: 5;
+}
+
+#mobile-menu .flex-grow {
+  position: relative;
+  z-index: 10;
+  visibility: visible !important;
+  display: block !important;
+  background-color: white !important;
+}
+
+#mobile-menu ul li,
+#mobile-menu ul li a {
+  visibility: visible;
+  display: flex !important;
+  position: relative;
+  z-index: 10;
+}
+
+#mobile-menu div.flex-col {
+  background-color: white !important;
+}
+
+/* Mobile menu override to ensure visibility */
+#mobile-menu {
+  z-index: 1000 !important;
+}
+
+#mobile-menu .flex-grow {
+  position: relative;
+  z-index: 10;
+  visibility: visible !important;
+  display: block !important;
+}
+
+#mobile-menu ul li,
+#mobile-menu ul li a {
+  visibility: visible;
+  display: flex !important;
+  position: relative;
+  z-index: 10;
+}
+
 .dropdown-portal {
   position: fixed !important;
   z-index: 9999 !important;
@@ -787,7 +858,6 @@ body.search-section-editing .dropdown-portal {
 }
 
 @keyframes pulseSlow {
-
   0%,
   100% {
     opacity: 0.7;
@@ -799,7 +869,6 @@ body.search-section-editing .dropdown-portal {
 }
 
 @keyframes slowFloat {
-
   0%,
   100% {
     transform: translateY(0) scale(1.5);
@@ -811,7 +880,6 @@ body.search-section-editing .dropdown-portal {
 }
 
 @keyframes waveEffect {
-
   0%,
   100% {
     transform: scaleY(1);
@@ -907,11 +975,11 @@ body.search-section-editing .dropdown-portal {
     @apply flex-col items-start;
   }
 
-  .results-header>div {
+  .results-header > div {
     @apply w-full;
   }
 
-  .results-header>div:last-child {
+  .results-header > div:last-child {
     @apply mt-3;
   }
 
