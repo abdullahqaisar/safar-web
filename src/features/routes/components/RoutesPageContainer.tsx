@@ -9,7 +9,8 @@ import { getLineColor } from '@/lib/utils/route';
 import { TransitLine } from '@/core/types/graph';
 
 // Import components
-import MapLayout from './MapLayout';
+import PageLayout from './MapLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import MapSidebar from './MapSidebar';
 import MapContentArea from './MapContentArea';
 import MobileLineSelector from './MobileLineSelector';
@@ -83,23 +84,14 @@ export default function RoutesPageContainer() {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-50 rounded-full blur-3xl opacity-40 translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-        {/* Page Header with consistent styling */}
-        <div className="py-8 mb-4 page-header">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8">
-            <div className="flex items-center mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-emerald-700">
-                Transit Network Map
-              </h1>
-            </div>
-            <p className="text-sm md:text-base text-gray-600 max-w-3xl leading-relaxed">
-              Explore Pakistan&apos;s modern transit network with our
-              interactive map
-            </p>
-          </div>
-        </div>
+        {/* Page Header with PageHeader component */}
+        <PageHeader
+          title="Transit Network Map"
+          description="Explore Pakistan's modern transit network with our interactive map"
+        />
 
         <main className="relative z-10">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-2 md:py-6">
+          <div className="px-4 sm:px-6 py-2 md:py-6">
             {/* Metro line selector dropdown (mobile only) */}
             <MobileLineSelector
               metroLines={enhancedMetroLines}
@@ -108,7 +100,7 @@ export default function RoutesPageContainer() {
             />
 
             {/* Map Layout */}
-            <MapLayout
+            <PageLayout
               sidebar={
                 <MapSidebar
                   metroLines={enhancedMetroLines}
