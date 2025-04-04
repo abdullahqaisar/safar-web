@@ -1,9 +1,9 @@
 import React from 'react';
 import { TransitLine } from '@/core/types/graph';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import MapContainer from '../../map-view/MapContainer';
-import LineDetails from './StationInfo/LineDetails';
-import { formatScheduleTimes } from '../utils/station-helpers';
+import { formatScheduleTimes } from '../../utils/station-helpers';
+import LineDetails from '../StationInfo/LineDetails';
+import MapContainer from './MapContainer';
 
 interface MapContentAreaProps {
   filteredLines: TransitLine[];

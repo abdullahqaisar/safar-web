@@ -4,7 +4,7 @@ import L from 'leaflet';
 import {
   getStationCoordinates,
   getStationNameById,
-} from '../../routes/utils/station-helpers';
+} from '../../utils/station-helpers';
 
 // Update Line interface to match
 interface Line {

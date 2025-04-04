@@ -1,4 +1,6 @@
+import { metroLines } from '@/core/data/metro-data';
 import { TransitLine } from '@/core/types/graph';
+import { getLineColor } from '@/lib/utils/route';
 
 export interface StationData {
   stationId: string;
@@ -71,3 +73,8 @@ export const organizeLinesToDraw = (
 
   return lines;
 };
+
+export const enhancedMetroLines: TransitLine[] = metroLines.map((line) => ({
+  ...line,
+  color: getLineColor(line.id),
+}));

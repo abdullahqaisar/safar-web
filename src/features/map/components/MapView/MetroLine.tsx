@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Polyline } from 'react-leaflet';
 import { PathOptions } from 'leaflet';
-import { getStationCoordinates } from '../../routes/utils/station-helpers';
-import { calculateLineOffset } from '../utils/parallelLineHelper';
+import { getStationCoordinates } from '../../utils/station-helpers';
+import { calculateLineOffset } from '../../utils/parallelLineHelper';
 import LineLabel from './LineLabel';
 
 interface MetroLineProps {

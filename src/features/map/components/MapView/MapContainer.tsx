@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { TransitLine } from '@/core/types/graph';
 import dynamic from 'next/dynamic';
-import MapSkeleton from './components/MapSkeleton';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import MapControls from './components/MapControls';
-import MapLegend from '../routes/components/MapLegend';
+import MapControls from './MapControls';
+import MapLegend from './MapLegend';
 import type { Map as LeafletMap } from 'leaflet';
+import MapSkeleton from './MapSkeleton';
 
 // Load the TransitMap component with improved loading strategy
 // The 'ssr: false' is critical for Leaflet which requires browser APIs

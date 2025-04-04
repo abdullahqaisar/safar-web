@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import RoutesPageContainer from '@/features/routes/components/RoutesPageContainer';
+import RoutesPageContainer from '@/features/map/components/MapPageContainer';
 import { Metadata } from 'next';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 

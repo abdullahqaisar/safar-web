@@ -10,21 +10,21 @@ import React, {
 import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { getStationCoordinates } from '../routes/utils/station-helpers';
+import { getStationCoordinates } from '../../utils/station-helpers';
 import {
   groupStationsByIds,
   isFeederLine,
   organizeLinesToDraw,
-} from '../routes/utils/map-helpers';
-import { buildParallelLineGroups } from './utils/parallelLineHelper';
+} from '../../utils/map-helpers';
+import { buildParallelLineGroups } from '../../utils/parallelLineHelper';
 
 // Import all the extracted components
-import MapController from './components/MapController';
-import MapResizeHandler from './components/MapResizeHandler';
-import TileLoadTracker from './components/TileLoadTracker';
-import ZoomListener from './components/ZoomListener';
-import MetroLine from './components/MetroLine';
-import StationMarkerList from './components/StationMarkerList';
+import MapController from './MapController';
+import MapResizeHandler from './MapResizeHandler';
+import TileLoadTracker from './TileLoadTracker';
+import ZoomListener from './ZoomListener';
+import MetroLine from './MetroLine';
+import StationMarkerList from './StationMarkerList';
 import { RotateCcw, ZoomIn } from 'lucide-react';
 
 const DefaultIcon = L.icon({

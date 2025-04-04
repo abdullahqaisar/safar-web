@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet'; // Import Leaflet
-import { getStationCoordinates } from '../../routes/utils/station-helpers';
+import { getStationCoordinates } from '../../utils/station-helpers';
 
 interface MapControllerProps {
   selectedLine?: string;

@@ -1,27 +1,16 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { metroLines } from '@/core/data/metro-data';
 import { useMapControls } from '@/hooks/useMapControls';
 import { useLineSelection } from '@/hooks/useLineSelection';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { getLineColor } from '@/lib/utils/route';
-import { TransitLine } from '@/core/types/graph';
-
-// Import components
-import PageLayout from './MapLayout';
+import PageLayout from './MapView/MapLayout';
 import PageHeader from '../../../components/common/PageHeader';
 import MapSidebar from './MapSidebar';
-import MapContentArea from './MapContentArea';
-import MobileLineSelector from './MobileLineSelector';
-import MobileFilterPanel from './MobileFilterPanel';
-
-// Cache enhanced metro lines data outside component to prevent recalculation
-// This data is static and doesn't need to be recreated on each render
-const enhancedMetroLines: TransitLine[] = metroLines.map((line) => ({
-  ...line,
-  color: getLineColor(line.id),
-}));
+import MobileLineSelector from './StationInfo/MobileLineSelector';
+import MobileFilterPanel from './StationInfo/MobileFilterPanel';
+import MapContentArea from './MapView/MapContentArea';
+import { enhancedMetroLines } from '../utils/map-helpers';
 
 export default function RoutesPageContainer() {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
@@ -41,7 +30,6 @@ export default function RoutesPageContainer() {
   // Function to track analytics
   const trackEvent = (eventName: string) => {
     console.log(`Event tracked: ${eventName}`);
-    // Implement actual analytics tracking here
   };
 
   // Track page view on component mount
