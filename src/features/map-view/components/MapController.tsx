@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet'; // Import Leaflet
 import { getStationCoordinates } from '../../routes/utils/station-helpers';
@@ -13,25 +13,31 @@ interface MapControllerProps {
   }>;
 }
 
+/**
+ * Controller component for map view management
+ * Handles map view changes based on selections without causing unnecessary re-renders
+ */
 const MapController: React.FC<MapControllerProps> = ({
   selectedLine,
   metroLines,
 }) => {
   const map = useMap();
+  const lastSelectedLineRef = useRef<string | undefined>(selectedLine);
 
-  // Force resize when component mounts
+  // Force resize when component mounts - only once
   useEffect(() => {
-    if (map) {
-      // Force map to recalculate size - helps with tile display issues
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
-    }
+    map.invalidateSize();
   }, [map]);
 
-  // Handle view changes based on selection
+  // Handle view changes based on selection - only when selection changes
   useEffect(() => {
-    if (!map) return; // Guard against undefined map
+    // Skip if selection hasn't changed
+    if (selectedLine === lastSelectedLineRef.current) {
+      return;
+    }
+
+    // Update the ref to track the current selection
+    lastSelectedLineRef.current = selectedLine;
 
     try {
       if (selectedLine) {
@@ -45,25 +51,30 @@ const MapController: React.FC<MapControllerProps> = ({
             getStationCoordinates(stationId)
           );
 
-          // Create a bounds object - FIX: Start with empty bounds instead of current map bounds
-          // This prevents the progressive zooming out with each line selection
+          // Create a bounds object - empty bounds as starting point prevents progressive zooming out
           const bounds =
             coordinates.length > 0
               ? coordinates.reduce(
                   (bounds, coord) => bounds.extend(coord),
-                  L.latLngBounds([]) // Empty bounds as starting point
+                  L.latLngBounds([])
                 )
               : null;
 
           // Only call fitBounds if we have valid bounds
           if (bounds && bounds.isValid()) {
             // Add reasonable padding to make all stations visible
-            map.fitBounds(bounds, { padding: [50, 50] });
+            map.flyTo(bounds.getCenter(), 13, {
+              animate: true,
+              duration: 1,
+            });
           }
         }
       } else {
         // Reset view to show all lines
-        map.setView([33.6861871107659, 73.048283867797], 12);
+        map.flyTo([33.6861871107659, 73.048283867797], 12, {
+          animate: true,
+          duration: 1,
+        });
       }
     } catch (error) {
       console.error('Error adjusting map view:', error);

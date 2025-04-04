@@ -7,9 +7,10 @@ import MapControls from './components/MapControls';
 import MapLegend from '../routes/components/MapLegend';
 import type { Map as LeafletMap } from 'leaflet';
 
-// Load the TransitMap component dynamically to reduce initial bundle size
+// Load the TransitMap component with improved loading strategy
+// The 'ssr: false' is critical for Leaflet which requires browser APIs
 const TransitMap = dynamic(() => import('./TransitMap'), {
-  loading: () => null, // Don't show anything during code splitting load
+  loading: () => <MapSkeleton loadingPhase="loading" loadingProgress={30} />,
   ssr: false,
 });
 
@@ -46,73 +47,20 @@ export default function MapContainer({
     ? '100vh'
     : '600px';
 
-  const [mapLoadingState, setMapLoadingState] = useState<
-    'initial' | 'loading' | 'ready'
-  >('initial');
-  const [loadingProgress, setLoadingProgress] = useState(10);
+  // Simplified loading state management
+  const [isMapReady, setIsMapReady] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
 
-  // Track if the map has been fully initialized to prevent reloading states
-  const hasInitializedMapRef = useRef(false);
-  // Track the highest loading progress value to prevent going backward
-  const highestProgressRef = useRef(10);
-
-  // Smooth progress handler to prevent flickering
-  const handleProgressChange = useCallback((progress: number) => {
-    // Only update if the new progress is higher than what we've seen before
-    if (progress > highestProgressRef.current || progress >= 100) {
-      highestProgressRef.current = progress;
-      setLoadingProgress(progress);
-    }
+  // Handle map ready state
+  const handleMapReady = useCallback(() => {
+    setIsMapReady(true);
   }, []);
 
-  // Unified loading state handler with protection against re-initialization
-  const handleMapLoadingChange = useCallback(
-    (state: 'initial' | 'loading' | 'ready') => {
-      // Skip loading state changes if we've already initialized the map once
-      if (hasInitializedMapRef.current) {
-        return;
-      }
-
-      // If transitioning to ready state, mark as initialized
-      if (state === 'ready') {
-        hasInitializedMapRef.current = true;
-
-        // Add a small delay before showing the map to ensure smooth transition
-        setTimeout(() => {
-          setMapLoadingState('ready');
-          handleProgressChange(100);
-        }, 500);
-        return;
-      }
-
-      setMapLoadingState(state);
-
-      // Safety fallback - force ready state after a maximum wait time
-      if (state === 'loading') {
-        const fallbackTimer = setTimeout(() => {
-          if (!hasInitializedMapRef.current) {
-            hasInitializedMapRef.current = true;
-            setMapLoadingState('ready');
-            handleProgressChange(100);
-          }
-        }, 10000); // 10 second maximum timeout
-
-        return () => clearTimeout(fallbackTimer);
-      }
-    },
-    [handleProgressChange]
-  );
-
-  // Ensure map resize on orientation change
+  // Resize handler with cleanup
   useEffect(() => {
     const handleResize = () => {
-      if (
-        mapRef.current &&
-        mapLoadingState === 'ready' &&
-        mapInstanceRef.current
-      ) {
+      if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
       }
     };
@@ -124,17 +72,15 @@ export default function MapContainer({
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [mapLoadingState]);
+  }, []);
 
   // Create a stabilized callback for station selection
-  const handleStationSelect = useRef((stationId: string | null) => {
-    onStationSelect(stationId);
-  });
-
-  // Update the handler ref if the parent handler changes
-  useEffect(() => {
-    handleStationSelect.current = onStationSelect;
-  }, [onStationSelect]);
+  const handleStationSelect = useCallback(
+    (stationId: string | null) => {
+      onStationSelect(stationId);
+    },
+    [onStationSelect]
+  );
 
   // Function to handle fullscreen mode
   const enterFullScreen = useCallback(() => {
@@ -187,60 +133,34 @@ export default function MapContainer({
         ref={mapRef}
         style={{ height: mapHeight, minHeight: '450px' }}
       >
-        {/* Container for map and loading UI with proper z-stacking */}
-        <div className="relative w-full h-full">
-          {/* Always render TransitMap but keep it invisible until ready */}
-          <div
-            className={`absolute inset-0 transition-opacity duration-500 ${
-              mapLoadingState === 'ready' ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <TransitMap
-              metroLines={metroLines}
-              selectedLine={selectedLine}
-              className="w-full h-full"
-              selectedStation={selectedStation}
-              onStationSelect={(stationId) =>
-                handleStationSelect.current(stationId)
-              }
-              onLoadingChange={handleMapLoadingChange}
-              onProgressChange={handleProgressChange}
-              onMapInstance={handleMapInstance}
-              onResetFilters={onResetFilters}
-            />
-          </div>
+        {/* TransitMap - we no longer need multiple visible/invisible divs */}
+        <TransitMap
+          metroLines={metroLines}
+          selectedLine={selectedLine}
+          className="w-full h-full"
+          selectedStation={selectedStation}
+          onStationSelect={handleStationSelect}
+          onMapReady={handleMapReady}
+          onMapInstance={handleMapInstance}
+          onResetFilters={onResetFilters}
+        />
 
-          {/* Show skeleton until map is fully ready */}
-          <div
-            className={`absolute inset-0 z-10 transition-opacity duration-500 ease-in-out ${
-              mapLoadingState === 'ready'
-                ? 'opacity-0 pointer-events-none'
-                : 'opacity-100'
-            }`}
-          >
-            <MapSkeleton
-              loadingPhase={mapLoadingState}
-              loadingProgress={loadingProgress}
-            />
-          </div>
+        {/* Map controls - only shown when map is ready */}
+        {isMapReady && (
+          <MapControls
+            isFullscreen={isFullscreen}
+            toggleFullscreen={enterFullScreen}
+            toggleFiltersPanel={toggleFiltersPanel}
+            showMobileControls={isMobile}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+          />
+        )}
 
-          {/* Map controls */}
-          {mapLoadingState === 'ready' && (
-            <MapControls
-              isFullscreen={isFullscreen}
-              toggleFullscreen={enterFullScreen}
-              toggleFiltersPanel={toggleFiltersPanel}
-              showMobileControls={isMobile}
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-            />
-          )}
-
-          {/* Map legend */}
-          {mapLoadingState === 'ready' && (
-            <MapLegend visibleLines={metroLines} isMobile={isMobile} />
-          )}
-        </div>
+        {/* Map legend - only shown when map is ready */}
+        {isMapReady && (
+          <MapLegend visibleLines={metroLines} isMobile={isMobile} />
+        )}
       </div>
     </div>
   );

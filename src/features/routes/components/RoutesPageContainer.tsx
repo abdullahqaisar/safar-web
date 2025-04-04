@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { metroLines } from '@/core/data/metro-data';
 import { useMapControls } from '@/hooks/useMapControls';
 import { useLineSelection } from '@/hooks/useLineSelection';
@@ -16,7 +16,8 @@ import MapContentArea from './MapContentArea';
 import MobileLineSelector from './MobileLineSelector';
 import MobileFilterPanel from './MobileFilterPanel';
 
-// Enhance metro lines data with UI-specific defaults
+// Cache enhanced metro lines data outside component to prevent recalculation
+// This data is static and doesn't need to be recreated on each render
 const enhancedMetroLines: TransitLine[] = metroLines.map((line) => ({
   ...line,
   color: getLineColor(line.id),
@@ -28,9 +29,14 @@ export default function RoutesPageContainer() {
   const [showMobileFilterPanel, setShowMobileFilterPanel] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Use custom hooks
+  // Use custom hooks with memoized data
   const mapControls = useMapControls();
   const lineSelection = useLineSelection(enhancedMetroLines);
+
+  // Memoize filtered lines for MapContentArea to prevent unnecessary recalculations
+  const filteredLines = useMemo(() => {
+    return lineSelection.filteredLines;
+  }, [lineSelection.filteredLines]);
 
   // Function to track analytics
   const trackEvent = (eventName: string) => {
@@ -44,6 +50,9 @@ export default function RoutesPageContainer() {
   }, []);
 
   const handleStationSelect = (stationId: string | null) => {
+    // Skip if the same station is already selected
+    if (stationId === selectedStation) return;
+
     setSelectedStation(stationId);
 
     // On mobile, scroll the map into view when station is selected
@@ -116,7 +125,7 @@ export default function RoutesPageContainer() {
               }
               content={
                 <MapContentArea
-                  filteredLines={lineSelection.filteredLines}
+                  filteredLines={filteredLines}
                   selectedLineId={lineSelection.selectedLineId}
                   selectedLineData={lineSelection.selectedLineData}
                   isFullscreen={mapControls.isFullscreen}

@@ -60,8 +60,7 @@ interface TransitMapProps {
   className?: string;
   selectedStation?: string | null;
   onStationSelect?: (stationId: string | null) => void;
-  onLoadingChange?: (state: 'initial' | 'loading' | 'ready') => void;
-  onProgressChange?: (progress: number) => void;
+  onMapReady?: () => void;
   onMapInstance?: (map: L.Map) => void;
 }
 
@@ -123,8 +122,7 @@ const TransitMap: React.FC<
   className = 'h-[600px]',
   selectedStation = null,
   onStationSelect = () => {},
-  onLoadingChange = () => {},
-  onProgressChange = () => {},
+  onMapReady = () => {},
   onMapInstance = () => {},
   onResetFilters,
 }) => {
@@ -132,52 +130,17 @@ const TransitMap: React.FC<
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [tilesLoaded, setTilesLoaded] = useState(false);
-  const [mapInitialized, setMapInitialized] = useState(false);
 
-  // Flag to track initial load vs subsequent interactions
+  // Use a single ref to track initialization instead of multiple state variables
   const hasInitializedRef = useRef(false);
 
-  // Store stable reference to callback to prevent unnecessary re-renders
-  const stationSelectRef = useRef(onStationSelect);
-
-  // Update callback reference without causing re-renders
+  // Notify parent about map ready state - only once when both map and tiles are loaded
   useEffect(() => {
-    stationSelectRef.current = onStationSelect;
-  }, [onStationSelect]);
-
-  // Notify parent about loading state changes (only on initial mount)
-  useEffect(() => {
-    // Skip if we've already initialized
-    if (hasInitializedRef.current) return;
-
-    onLoadingChange('loading');
-
-    // Fallback mechanism to prevent infinite loading
-    const fallbackTimer = setTimeout(() => {
-      if (!tilesLoaded || !mapInitialized) {
-        console.log('Fallback: forcing map to ready state');
-        setTilesLoaded(true);
-        setMapInitialized(true);
-        onProgressChange(100);
-        hasInitializedRef.current = true;
-      }
-    }, 10000); // 10 second safety timeout
-
-    return () => clearTimeout(fallbackTimer);
-  }, [onLoadingChange, onProgressChange, mapInitialized, tilesLoaded]);
-
-  // Determine when the map is fully ready (only for initial load)
-  useEffect(() => {
-    if (mapInitialized && tilesLoaded && !hasInitializedRef.current) {
-      console.log('Map is fully ready - transitioning to ready state');
-      // Give a small delay for any final rendering to complete
-      setTimeout(() => {
-        onLoadingChange('ready');
-        onProgressChange(100);
-        hasInitializedRef.current = true;
-      }, 300);
+    if (tilesLoaded && mapRef.current && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      onMapReady();
     }
-  }, [mapInitialized, tilesLoaded, onLoadingChange, onProgressChange]);
+  }, [tilesLoaded, onMapReady]);
 
   // Force map refresh when window loads fully
   useEffect(() => {
@@ -198,35 +161,26 @@ const TransitMap: React.FC<
 
   // Handle tiles loaded callback with debounce to avoid multiple calls
   const handleTilesLoaded = useCallback(() => {
-    console.log('Tiles loaded');
     setTilesLoaded(true);
   }, []);
 
   // Handle map fully initialized
   const handleMapReady = useCallback(() => {
-    console.log('Map initialized');
-    setMapInitialized(true);
+    if (mapRef.current) {
+      // Force immediate size recomputation
+      mapRef.current.invalidateSize();
+    }
   }, []);
-
-  // Handle progress updates from tile loader (only during initial load)
-  const handleProgressChange = useCallback(
-    (progress: number) => {
-      if (!hasInitializedRef.current) {
-        onProgressChange(progress);
-      }
-    },
-    [onProgressChange]
-  );
 
   // Reset the view
   const handleReset = useCallback(() => {
-    if (stationSelectRef.current) {
-      stationSelectRef.current(null);
+    if (onStationSelect) {
+      onStationSelect(null);
     }
     if (mapRef.current) {
       mapRef.current.setView([33.6861871107659, 73.048283867797], 12);
     }
-  }, []);
+  }, [onStationSelect]);
 
   // Handle zoom change
   const handleZoomChange = useCallback((zoom: number) => {
@@ -292,29 +246,25 @@ const TransitMap: React.FC<
   );
 
   // Handle station selection without triggering loading states
-  const handleStationSelect = useCallback((stationId: string | null) => {
-    // Execute callback directly without changing loading state
-    stationSelectRef.current(stationId);
+  const handleStationSelect = useCallback(
+    (stationId: string | null) => {
+      // Execute callback directly without changing loading state
+      onStationSelect(stationId);
 
-    // If we want to pan to the selected station
-    if (stationId && mapRef.current) {
-      const coordinates = getStationCoordinates(stationId);
-      mapRef.current.panTo(coordinates, { animate: true });
-    }
-  }, []);
+      // If we want to pan to the selected station
+      if (stationId && mapRef.current) {
+        const coordinates = getStationCoordinates(stationId);
+        mapRef.current.panTo(coordinates, { animate: true });
+      }
+    },
+    [onStationSelect]
+  );
 
   // Calculate parallel line groups for proper offsetting
   const parallelLineGroups = useMemo(
     () => buildParallelLineGroups(metroLines),
     [metroLines]
   );
-
-  // Update the map reference and pass it to the parent component
-  useEffect(() => {
-    if (mapRef.current) {
-      onMapInstance(mapRef.current);
-    }
-  }, [onMapInstance]);
 
   return (
     <div
@@ -326,13 +276,10 @@ const TransitMap: React.FC<
     >
       <div className="map-container-wrapper relative">
         <MapContainer
-          key={`map-${className}`}
           center={getMapCenter()}
           zoom={zoomLevel}
           className="transit-map-leaflet"
-          whenReady={() => {
-            setTimeout(() => handleMapReady(), 100);
-          }}
+          whenReady={handleMapReady}
           zoomControl={false} // Disable default zoom control as we're using our custom one
           attributionControl={false} // We'll add our own for better positioning
           style={{ height: '100%', width: '100%' }}
@@ -352,10 +299,7 @@ const TransitMap: React.FC<
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          <TileLoadTracker
-            onTilesLoaded={handleTilesLoaded}
-            onProgressChange={handleProgressChange}
-          />
+          <TileLoadTracker onTilesLoaded={handleTilesLoaded} />
           <ZoomListener onZoomChange={handleZoomChange} />
           <MapResizeHandler
             setMapRef={(map) => {
