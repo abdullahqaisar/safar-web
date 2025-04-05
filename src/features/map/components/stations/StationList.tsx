@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils/formatters';
 import {
   getStationNameById,
@@ -24,40 +24,7 @@ export default function StationList({
   onStationSelect,
   maxHeight = '280px',
 }: StationListProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const connectorLineRef = useRef<HTMLDivElement>(null);
   const [activeStationId, setActiveStationId] = useState<string | null>(null);
-
-  // Effect to adjust connector line
-  useEffect(() => {
-    const adjustConnectorLine = () => {
-      if (!containerRef.current || !connectorLineRef.current) return;
-
-      // Find the first station marker to calculate its center position
-      const stationMarker =
-        containerRef.current.querySelector('.station-marker');
-      if (stationMarker) {
-        const markerRect = stationMarker.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
-
-        // Calculate center position relative to container
-        const centerX =
-          markerRect.left + markerRect.width / 2 - containerRect.left;
-
-        // Apply the calculated position to connector line
-        connectorLineRef.current.style.left = `${centerX}px`;
-      }
-    };
-
-    adjustConnectorLine();
-    const timeoutId = setTimeout(adjustConnectorLine, 100);
-    window.addEventListener('resize', adjustConnectorLine);
-
-    return () => {
-      window.removeEventListener('resize', adjustConnectorLine);
-      clearTimeout(timeoutId);
-    };
-  }, [stations]);
 
   const handleStationClick = (stationId: string) => {
     setActiveStationId(stationId);
@@ -107,7 +74,6 @@ export default function StationList({
 
       {/* Scrollable content area */}
       <div
-        ref={containerRef}
         className="h-full overflow-y-auto p-3 pr-1 stations-scroll-container"
         style={{
           scrollbarWidth: 'thin',
@@ -116,27 +82,21 @@ export default function StationList({
         }}
       >
         <div className="relative">
-          {/* Connector line - with segments to distinguish sections */}
+          {/* Connector line */}
           <div
-            ref={connectorLineRef}
             className="absolute top-0 bottom-0"
             style={{
               left: '12.5px',
+              width: '2px',
               zIndex: 1,
+              background: `linear-gradient(to bottom, 
+                ${lineColor}80 0%, 
+                ${lineColor} 10%, 
+                ${lineColor} 90%, 
+                ${lineColor}80 100%
+              )`,
             }}
-          >
-            <div
-              className="w-0.5 h-full"
-              style={{
-                background: `linear-gradient(to bottom, 
-                  ${lineColor}80 0%, 
-                  ${lineColor} 10%, 
-                  ${lineColor} 90%, 
-                  ${lineColor}80 100%
-                )`,
-              }}
-            />
-          </div>
+          />
 
           {/* Station list items */}
           <ul className="relative space-y-1 z-2">
@@ -198,74 +158,52 @@ export default function StationList({
                       </div>
 
                       {/* Station details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center flex-wrap">
-                          <div
-                            className={cn(
-                              'text-sm font-medium transition-colors',
-                              isActive
-                                ? 'text-emerald-600'
-                                : 'text-gray-800 group-hover:text-emerald-600'
-                            )}
-                          >
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium text-gray-900 text-sm">
                             {stationName}
                           </div>
-
-                          {/* Station badges */}
-                          {isFirst && (
-                            <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 font-medium">
-                              Origin
-                            </span>
-                          )}
-                          {isLast && (
-                            <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 font-medium">
-                              Destination
-                            </span>
-                          )}
-                          {isTransfer && !isFirst && !isLast && (
-                            <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">
+                          {isTransfer && (
+                            <div className="text-xs text-gray-500 px-1.5 py-0.5 bg-gray-100 rounded-full">
                               Transfer
-                            </span>
+                            </div>
                           )}
                         </div>
 
-                        {/* Transfer station connections */}
-                        {isTransfer && connectingLines.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1.5">
-                            {connectingLines.map((lineId) => {
-                              const lineColor = getLineColor(lineId);
-                              const lineName = getLineNameById(lineId);
-
+                        {/* Connection details */}
+                        {connectingLines.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {connectingLines.map((connectingLineId) => {
+                              const lineName =
+                                getLineNameById(connectingLineId);
+                              const lineColor = getLineColor(connectingLineId);
                               return (
                                 <div
-                                  key={lineId}
-                                  className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs"
-                                  style={{
-                                    backgroundColor: `${lineColor}15`,
-                                    color: lineColor,
-                                    boxShadow: `inset 0 0 0 1px ${lineColor}30`,
-                                  }}
+                                  key={connectingLineId}
+                                  className="flex items-center text-xs"
                                 >
-                                  <div
-                                    className="w-2 h-2 rounded-full mr-1"
+                                  <span
+                                    className="w-2 h-2 rounded-full mr-1 flex-shrink-0"
                                     style={{ backgroundColor: lineColor }}
-                                  />
-                                  {lineName}
+                                  ></span>
+                                  <span className="text-gray-600 truncate">
+                                    {lineName}
+                                  </span>
                                 </div>
                               );
                             })}
                           </div>
                         )}
+
+                        {/* Next station timing (if not the last station) */}
+                        {timeToNext && (
+                          <div className="flex items-center text-xs text-gray-500 mt-1">
+                            <ArrowRight className="w-3 h-3 mr-1" />
+                            <span>{timeToNext} min</span>
+                          </div>
+                        )}
                       </div>
                     </button>
-
-                    {/* Time to next station indicator */}
-                    {timeToNext && !isLast && (
-                      <div className="ml-[24px] mt-0.5 mb-0.5 flex items-center text-xs text-gray-400 pl-3 py-0.5">
-                        <ArrowRight className="h-3 w-3 mr-1 opacity-70" />
-                        <span>{timeToNext} min</span>
-                      </div>
-                    )}
                   </div>
                 </li>
               );
@@ -273,23 +211,6 @@ export default function StationList({
           </ul>
         </div>
       </div>
-
-      {/* Custom scrollbar styles */}
-      <style jsx>{`
-        .stations-scroll-container::-webkit-scrollbar {
-          width: 6px;
-        }
-        .stations-scroll-container::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .stations-scroll-container::-webkit-scrollbar-thumb {
-          background-color: #cbd5e0;
-          border-radius: 3px;
-        }
-        .stations-scroll-container::-webkit-scrollbar-thumb:hover {
-          background-color: #a0aec0;
-        }
-      `}</style>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   Clock,
   Ticket,
 } from 'lucide-react';
-import StationList from './StationList';
+import StationList from '../stations/StationList';
 
 interface ScheduleType {
   firstTrain?: string;

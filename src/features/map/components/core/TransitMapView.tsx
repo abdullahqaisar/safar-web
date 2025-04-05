@@ -1,12 +1,6 @@
 'use client';
 
-import React, {
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,13 +13,13 @@ import {
 import { buildParallelLineGroups } from '../../utils/parallelLineHelper';
 
 // Import all the extracted components
-import MapController from './MapController';
-import MapResizeHandler from './MapResizeHandler';
+import ViewController from '../controls/ViewController';
+import ResizeHandler from '../controls/ResizeHandler';
 import TileLoadTracker from './TileLoadTracker';
-import ZoomListener from './ZoomListener';
-import MetroLine from './MetroLine';
-import StationMarkerList from './StationMarkerList';
+import ZoomListener from '../controls/ZoomListener';
+import TransitRoute from '../route/TransitRoute';
 import { RotateCcw, ZoomIn } from 'lucide-react';
+import StationMarkerList from '../stations/StationMarkerList';
 
 const DefaultIcon = L.icon({
   iconUrl: '/images/icons/marker-icon.png',
@@ -36,20 +30,7 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Create a memoized version of MetroLine for better performance
-const MemoizedMetroLine = React.memo(MetroLine, (prevProps, nextProps) => {
-  return (
-    prevProps.stations === nextProps.stations &&
-    prevProps.color === nextProps.color &&
-    prevProps.isFeeder === nextProps.isFeeder &&
-    prevProps.zoomLevel === nextProps.zoomLevel &&
-    prevProps.isSelectedLine === nextProps.isSelectedLine &&
-    prevProps.lineId === nextProps.lineId &&
-    prevProps.parallelLineGroups === nextProps.parallelLineGroups
-  );
-});
-
-interface TransitMapProps {
+interface TransitMapViewProps {
   metroLines: Array<{
     id: string;
     name: string;
@@ -64,8 +45,7 @@ interface TransitMapProps {
   onMapInstance?: (map: L.Map) => void;
 }
 
-// Updated MapControls component to show in top-left corner without keyboard controls
-const MapControls: React.FC<{
+const ControlPanel: React.FC<{
   zoomLevel: number;
   isSelectionActive: boolean;
   onReset: () => void;
@@ -112,8 +92,8 @@ const MapControls: React.FC<{
   );
 };
 
-const TransitMap: React.FC<
-  TransitMapProps & {
+const TransitMapView: React.FC<
+  TransitMapViewProps & {
     onResetFilters?: () => void;
   }
 > = ({
@@ -130,8 +110,6 @@ const TransitMap: React.FC<
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [tilesLoaded, setTilesLoaded] = useState(false);
-
-  // Use a single ref to track initialization instead of multiple state variables
   const hasInitializedRef = useRef(false);
 
   // Notify parent about map ready state - only once when both map and tiles are loaded
@@ -159,15 +137,14 @@ const TransitMap: React.FC<
     }
   }, []);
 
-  // Handle tiles loaded callback with debounce to avoid multiple calls
+  // Handle tiles loaded
   const handleTilesLoaded = useCallback(() => {
     setTilesLoaded(true);
   }, []);
 
-  // Handle map fully initialized
+  // Handle map initialization
   const handleMapReady = useCallback(() => {
     if (mapRef.current) {
-      // Force immediate size recomputation
       mapRef.current.invalidateSize();
     }
   }, []);
@@ -187,11 +164,10 @@ const TransitMap: React.FC<
     setZoomLevel(zoom);
   }, []);
 
-  // Find center of the map based on selected station or default center
-  const getMapCenter = useCallback((): [number, number] => {
-    const defaultCenter: [number, number] = [33.6861871107659, 73.048283867797]; // Kashmir Highway
+  // Get map center based on selection
+  const getMapCenter = (): [number, number] => {
+    const defaultCenter: [number, number] = [33.6861871107659, 73.048283867797];
 
-    // If a station is selected, center on it
     if (selectedStation) {
       return getStationCoordinates(selectedStation);
     }
@@ -199,21 +175,17 @@ const TransitMap: React.FC<
     if (selectedLine) {
       const line = metroLines.find((l) => l.id === selectedLine);
       if (line && line.stations.length > 0) {
-        // Get coordinates of all stations in the selected line
         const coords = line.stations.map(getStationCoordinates);
-
-        // Calculate average lat and lng for the center
         const totalLat = coords.reduce((sum, coord) => sum + coord[0], 0);
         const totalLng = coords.reduce((sum, coord) => sum + coord[1], 0);
-
         return [totalLat / coords.length, totalLng / coords.length];
       }
     }
 
     return defaultCenter;
-  }, [metroLines, selectedLine, selectedStation]);
+  };
 
-  // Zoom to details with smooth animation
+  // Zoom to details
   const handleZoomToDetails = useCallback(() => {
     if (mapRef.current) {
       mapRef.current.flyTo(getMapCenter(), Math.min(14, zoomLevel + 2), {
@@ -221,57 +193,34 @@ const TransitMap: React.FC<
         animate: true,
       });
     }
-    setZoomLevel(Math.min(14, zoomLevel + 2));
-  }, [zoomLevel, getMapCenter]);
+  }, [zoomLevel]);
 
-  // Get the organized lines - memoize to prevent unnecessary recalculations
-  const linesToDraw = useMemo(
-    () => organizeLinesToDraw(metroLines, selectedLine),
-    [metroLines, selectedLine]
-  );
+  // Prepare data for rendering
+  const linesToDraw = organizeLinesToDraw(metroLines, selectedLine);
+  const stationsToDisplay = groupStationsByIds(linesToDraw);
+  const parallelLineGroups = buildParallelLineGroups(metroLines);
 
-  // Get all stations that should be displayed with their corresponding lines - memoize
-  const stationsToDisplay = useMemo(
-    () => groupStationsByIds(linesToDraw),
-    [linesToDraw]
-  );
+  // Get line name lookup
+  const getLineName = (lineId: string): string => {
+    const line = metroLines.find((l) => l.id === lineId);
+    return line ? line.name : lineId;
+  };
 
-  // Memoize station line name lookup function to avoid recreating functions
-  const getLineName = useCallback(
-    (lineId: string): string => {
-      const line = metroLines.find((l) => l.id === lineId);
-      return line ? line.name : lineId;
-    },
-    [metroLines]
-  );
-
-  // Handle station selection without triggering loading states
-  const handleStationSelect = useCallback(
-    (stationId: string | null) => {
-      // Execute callback directly without changing loading state
-      onStationSelect(stationId);
-
-      // If we want to pan to the selected station
-      if (stationId && mapRef.current) {
-        const coordinates = getStationCoordinates(stationId);
-        mapRef.current.panTo(coordinates, { animate: true });
-      }
-    },
-    [onStationSelect]
-  );
-
-  // Calculate parallel line groups for proper offsetting
-  const parallelLineGroups = useMemo(
-    () => buildParallelLineGroups(metroLines),
-    [metroLines]
-  );
+  // Handle station selection
+  const handleStationSelect = (stationId: string | null) => {
+    onStationSelect(stationId);
+    if (stationId && mapRef.current) {
+      const coordinates = getStationCoordinates(stationId);
+      mapRef.current.panTo(coordinates, { animate: true });
+    }
+  };
 
   return (
     <div
       className={`transit-map-container ${className}`}
       style={{ minHeight: '400px', position: 'relative' }}
       ref={mapContainerRef}
-      tabIndex={0} // Make container focusable for keyboard navigation
+      tabIndex={0}
       aria-label="Interactive transit map"
     >
       <div className="map-container-wrapper relative">
@@ -280,10 +229,9 @@ const TransitMap: React.FC<
           zoom={zoomLevel}
           className="transit-map-leaflet"
           whenReady={handleMapReady}
-          zoomControl={false} // Disable default zoom control as we're using our custom one
-          attributionControl={false} // We'll add our own for better positioning
+          zoomControl={false}
+          attributionControl={false}
           style={{ height: '100%', width: '100%' }}
-          // Add improved map options for better UX
           maxBoundsViscosity={1.0}
           minZoom={9}
           maxZoom={18}
@@ -301,7 +249,7 @@ const TransitMap: React.FC<
 
           <TileLoadTracker onTilesLoaded={handleTilesLoaded} />
           <ZoomListener onZoomChange={handleZoomChange} />
-          <MapResizeHandler
+          <ResizeHandler
             setMapRef={(map) => {
               mapRef.current = map;
               if (map) {
@@ -310,11 +258,11 @@ const TransitMap: React.FC<
             }}
             onMapReady={handleMapReady}
           />
-          <MapController selectedLine={selectedLine} metroLines={metroLines} />
+          <ViewController selectedLine={selectedLine} metroLines={metroLines} />
 
-          {/* Add metro lines as polylines with proper parallel line handling */}
+          {/* Add metro lines as polylines */}
           {linesToDraw.map((line) => (
-            <MemoizedMetroLine
+            <TransitRoute
               key={line.id}
               stations={line.stations}
               color={line.color || '#4A5568'}
@@ -327,7 +275,7 @@ const TransitMap: React.FC<
             />
           ))}
 
-          {/* Use optimized station marker list for better performance */}
+          {/* Station markers */}
           <StationMarkerList
             stations={stationsToDisplay}
             selectedStation={selectedStation || null}
@@ -339,7 +287,7 @@ const TransitMap: React.FC<
       </div>
 
       {/* Action buttons in top-left corner */}
-      <MapControls
+      <ControlPanel
         zoomLevel={zoomLevel}
         isSelectionActive={Boolean(selectedLine || selectedStation)}
         onReset={handleReset}
@@ -350,4 +298,4 @@ const TransitMap: React.FC<
   );
 };
 
-export default TransitMap;
+export default TransitMapView;

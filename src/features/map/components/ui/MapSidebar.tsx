@@ -1,6 +1,6 @@
 import React from 'react';
 import { TransitLine } from '@/core/types/graph';
-import LineSelector from './StationInfo/LineSelector';
+import LineSelector from '../route/LineSelector';
 
 interface MapSidebarProps {
   metroLines: TransitLine[];
@@ -12,7 +12,7 @@ interface MapSidebarProps {
   onHideAll: () => void;
 }
 
-const MapSidebar: React.FC<MapSidebarProps> = ({
+const MapSidebar = ({
   metroLines,
   selectedLineId,
   visibleLines,
@@ -20,20 +20,16 @@ const MapSidebar: React.FC<MapSidebarProps> = ({
   onToggleLineVisibility,
   onShowAll,
   onHideAll,
-}) => {
-  return (
-    <div className="space-y-4">
-      <LineSelector
-        lines={metroLines}
-        selectedLine={selectedLineId}
-        visibleLines={visibleLines}
-        onLineSelect={onSelectLine}
-        onToggleLineVisibility={onToggleLineVisibility}
-        onShowAll={onShowAll}
-        onHideAll={onHideAll}
-      />
-    </div>
-  );
-};
+}: MapSidebarProps) => (
+  <LineSelector
+    lines={metroLines}
+    selectedLine={selectedLineId}
+    visibleLines={visibleLines}
+    onLineSelect={onSelectLine}
+    onToggleLineVisibility={onToggleLineVisibility}
+    onShowAll={onShowAll}
+    onHideAll={onHideAll}
+  />
+);
 
 export default MapSidebar;

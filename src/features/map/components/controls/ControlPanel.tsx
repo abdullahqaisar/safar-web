@@ -1,19 +1,18 @@
 import React from 'react';
-import { Maximize2, Minimize2, Filter, ZoomIn, ZoomOut } from 'lucide-react';
+import { Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-react';
 
-interface MapControlsProps {
+interface ControlPanelProps {
   isFullscreen: boolean;
   toggleFullscreen: () => void;
-  toggleFiltersPanel: () => void;
+  toggleFiltersPanel?: () => void;
   showMobileControls?: boolean;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
 }
 
-const MapControls: React.FC<MapControlsProps> = ({
+const ControlPanel: React.FC<ControlPanelProps> = ({
   isFullscreen,
   toggleFullscreen,
-  toggleFiltersPanel,
   showMobileControls = false,
   onZoomIn = () => {},
   onZoomOut = () => {},
@@ -48,7 +47,7 @@ const MapControls: React.FC<MapControlsProps> = ({
 
         {/* Fullscreen Button */}
         <button
-          className={`${buttonClass} h-9 w-9 mr-1`}
+          className={`${buttonClass} h-9 w-9`}
           onClick={toggleFullscreen}
           title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
@@ -58,16 +57,6 @@ const MapControls: React.FC<MapControlsProps> = ({
           ) : (
             <Maximize2 className="h-4 w-4 text-gray-700" />
           )}
-        </button>
-
-        {/* Filter Button */}
-        <button
-          className={`${buttonClass} h-9 w-9`}
-          onClick={toggleFiltersPanel}
-          title="Line visibility options"
-          aria-label="Line visibility options"
-        >
-          <Filter className="h-4 w-4 text-gray-700" />
         </button>
       </div>
     );
@@ -116,4 +105,4 @@ const MapControls: React.FC<MapControlsProps> = ({
   );
 };
 
-export default MapControls;
+export default ControlPanel;

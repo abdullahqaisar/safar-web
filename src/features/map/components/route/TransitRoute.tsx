@@ -5,7 +5,7 @@ import { getStationCoordinates } from '../../utils/station-helpers';
 import { calculateLineOffset } from '../../utils/parallelLineHelper';
 import LineLabel from './LineLabel';
 
-interface MetroLineProps {
+interface TransitRouteProps {
   stations: string[];
   color: string;
   isFeeder?: boolean;
@@ -16,7 +16,7 @@ interface MetroLineProps {
   parallelLineGroups?: Record<string, string[]>;
 }
 
-const MetroLine: React.FC<MetroLineProps> = ({
+const TransitRoute: React.FC<TransitRouteProps> = ({
   stations,
   color,
   isFeeder = false,
@@ -173,18 +173,21 @@ const MetroLine: React.FC<MetroLineProps> = ({
 };
 
 // More aggressive memoization to prevent unnecessary recalculations
-const MemoizedMetroLine = React.memo(MetroLine, (prevProps, nextProps) => {
-  // Only re-render if anything relevant changes
-  return (
-    prevProps.stations.join() === nextProps.stations.join() &&
-    prevProps.color === nextProps.color &&
-    prevProps.isFeeder === nextProps.isFeeder &&
-    prevProps.zoomLevel === nextProps.zoomLevel &&
-    prevProps.isSelectedLine === nextProps.isSelectedLine &&
-    prevProps.lineId === nextProps.lineId
-    // We intentionally don't compare parallelLineGroups since it's an object
-    // and would cause unnecessary re-renders even when the content is the same
-  );
-});
+const MemoizedTransitRoute = React.memo(
+  TransitRoute,
+  (prevProps, nextProps) => {
+    // Only re-render if anything relevant changes
+    return (
+      prevProps.stations.join() === nextProps.stations.join() &&
+      prevProps.color === nextProps.color &&
+      prevProps.isFeeder === nextProps.isFeeder &&
+      prevProps.zoomLevel === nextProps.zoomLevel &&
+      prevProps.isSelectedLine === nextProps.isSelectedLine &&
+      prevProps.lineId === nextProps.lineId
+      // We intentionally don't compare parallelLineGroups since it's an object
+      // and would cause unnecessary re-renders even when the content is the same
+    );
+  }
+);
 
-export default MemoizedMetroLine;
+export default MemoizedTransitRoute;

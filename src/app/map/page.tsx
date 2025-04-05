@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import RoutesPageContainer from '@/features/map/components/MapPageContainer';
+import MapPage from '@/features/map/components/page/MapPage';
 import { Metadata } from 'next';
 import { SearchParamsFallback } from '@/components/common/loaders/SearchParamsFallback';
 
@@ -26,7 +26,7 @@ export default function RoutesPage() {
   return (
     <main>
       <Suspense fallback={<SearchParamsFallback />}>
-        <RoutesPageContainer />
+        <MapPage />
       </Suspense>
     </main>
   );

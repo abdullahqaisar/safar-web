@@ -5,11 +5,12 @@ interface ZoomListenerProps {
 }
 
 const ZoomListener = ({ onZoomChange }: ZoomListenerProps) => {
-  const map = useMapEvents({
-    zoomend: () => {
-      onZoomChange(map.getZoom());
+  useMapEvents({
+    zoomend: (e) => {
+      onZoomChange(e.target.getZoom());
     },
   });
+
   return null;
 };
 

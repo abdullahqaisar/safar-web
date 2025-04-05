@@ -2,15 +2,16 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { TransitLine } from '@/core/types/graph';
 import dynamic from 'next/dynamic';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import MapControls from './MapControls';
-import MapLegend from './MapLegend';
+import ControlPanel from '../controls/ControlPanel';
 import type { Map as LeafletMap } from 'leaflet';
-import MapSkeleton from './MapSkeleton';
+import LoadingSkeleton from './LoadingSkeleton';
 
-// Load the TransitMap component with improved loading strategy
+// Load the TransitMapView component with improved loading strategy
 // The 'ssr: false' is critical for Leaflet which requires browser APIs
-const TransitMap = dynamic(() => import('./TransitMap'), {
-  loading: () => <MapSkeleton loadingPhase="loading" loadingProgress={30} />,
+const TransitMapView = dynamic(() => import('./TransitMapView'), {
+  loading: () => (
+    <LoadingSkeleton loadingPhase="loading" loadingProgress={30} />
+  ),
   ssr: false,
 });
 
@@ -21,7 +22,6 @@ interface MapContainerProps {
   onStationSelect: (stationId: string | null) => void;
   isFullscreen?: boolean;
   toggleFullscreen?: () => void;
-  toggleFiltersPanel?: () => void;
   onResetFilters?: () => void;
 }
 
@@ -32,7 +32,6 @@ export default function MapContainer({
   onStationSelect,
   isFullscreen = false,
   toggleFullscreen = () => {},
-  toggleFiltersPanel = () => {},
   onResetFilters,
 }: MapContainerProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -47,17 +46,16 @@ export default function MapContainer({
     ? '100vh'
     : '600px';
 
-  // Simplified loading state management
   const [isMapReady, setIsMapReady] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
 
-  // Handle map ready state
+  // Map event handlers
   const handleMapReady = useCallback(() => {
     setIsMapReady(true);
   }, []);
 
-  // Resize handler with cleanup
+  // Handle window resize events
   useEffect(() => {
     const handleResize = () => {
       if (mapInstanceRef.current) {
@@ -74,14 +72,6 @@ export default function MapContainer({
     };
   }, []);
 
-  // Create a stabilized callback for station selection
-  const handleStationSelect = useCallback(
-    (stationId: string | null) => {
-      onStationSelect(stationId);
-    },
-    [onStationSelect]
-  );
-
   // Function to handle fullscreen mode
   const enterFullScreen = useCallback(() => {
     if (mapRef.current) {
@@ -94,34 +84,19 @@ export default function MapContainer({
     }
   }, [toggleFullscreen]);
 
-  // Zoom handler functions
+  // Zoom handlers
   const handleZoomIn = useCallback(() => {
-    if (mapInstanceRef.current) {
-      try {
-        const map = mapInstanceRef.current;
-        const currentZoom = map.getZoom();
-        map.setZoom(currentZoom + 1);
-      } catch (error) {
-        console.error('Error zooming in:', error);
-      }
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.setZoom(map.getZoom() + 1);
     }
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    if (mapInstanceRef.current) {
-      try {
-        const map = mapInstanceRef.current;
-        const currentZoom = map.getZoom();
-        map.setZoom(currentZoom - 1);
-      } catch (error) {
-        console.error('Error zooming out:', error);
-      }
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.setZoom(map.getZoom() - 1);
     }
-  }, []);
-
-  // Store map instance reference
-  const handleMapInstance = useCallback((mapInstance: LeafletMap) => {
-    mapInstanceRef.current = mapInstance;
   }, []);
 
   return (
@@ -133,33 +108,28 @@ export default function MapContainer({
         ref={mapRef}
         style={{ height: mapHeight, minHeight: '450px' }}
       >
-        {/* TransitMap - we no longer need multiple visible/invisible divs */}
-        <TransitMap
+        <TransitMapView
           metroLines={metroLines}
           selectedLine={selectedLine}
           className="w-full h-full"
           selectedStation={selectedStation}
-          onStationSelect={handleStationSelect}
+          onStationSelect={onStationSelect}
           onMapReady={handleMapReady}
-          onMapInstance={handleMapInstance}
+          onMapInstance={(map) => {
+            mapInstanceRef.current = map;
+          }}
           onResetFilters={onResetFilters}
         />
 
-        {/* Map controls - only shown when map is ready */}
+        {/* Map controls */}
         {isMapReady && (
-          <MapControls
+          <ControlPanel
             isFullscreen={isFullscreen}
             toggleFullscreen={enterFullScreen}
-            toggleFiltersPanel={toggleFiltersPanel}
             showMobileControls={isMobile}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
           />
-        )}
-
-        {/* Map legend - only shown when map is ready */}
-        {isMapReady && (
-          <MapLegend visibleLines={metroLines} isMobile={isMobile} />
         )}
       </div>
     </div>

@@ -12,7 +12,7 @@ import { getCachedLocationName } from '@/features/search/services/geocoding.serv
 import { PopularDestinations } from './Search/PopularDestinations';
 import { JourneyTips } from './Search/JourneyTips';
 import PageHeader from '@/components/common/PageHeader';
-import PageLayout from '@/features/map/components/MapView/MapLayout';
+import PageLayout from '@/features/map/components/page/PageLayout';
 
 /**
  * JourneyHeader component renders the page header immediately
