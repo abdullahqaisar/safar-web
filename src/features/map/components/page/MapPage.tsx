@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLineSelection } from '@/hooks/useLineSelection';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import PageLayout from './PageLayout';
+import PageLayout from '../../../../components/layouts/PageLayout';
 import PageHeader from '../../../../components/common/PageHeader';
 import MapSidebar from '../ui/MapSidebar';
 import MapContentArea from '../ui/MapContentArea';
@@ -29,10 +29,8 @@ export default function MapPage() {
       setTimeout(() => {
         const element = mapContentRef.current;
         if (element) {
-          // Calculate position, accounting for the navbar height
-          // We use different offsets for mobile vs desktop based on the padding
-          const navbarOffset = isMobile ? 140 : 80; // Increased for mobile to account for dropdown
-          const yOffset = -20; // Additional offset to show some details
+          const navbarOffset = isMobile ? 140 : 80;
+          const yOffset = -20;
 
           // Calculate position in the viewport
           const rect = element.getBoundingClientRect();

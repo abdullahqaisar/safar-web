@@ -1,23 +1,28 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useTransition,
+} from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useJourney } from '@/features/journey/hooks/useJourney';
 import { JourneyErrorFallback } from '@/components/common/errors/JourneyErrorFallback';
 import { showError } from '@/lib/utils/toast';
 import { ErrorBoundary } from '@/components/layouts/ErrorBoundary';
-import { Button } from '@/components/common/Button';
-import { useRouter } from 'next/navigation';
 import { SearchSection } from '@/features/journey/components/Search/SearchSection';
 import { RouteResultsView } from './Results/RouteResultsView';
-import { ArrowLeft } from 'lucide-react';
 import { getCachedLocationName } from '@/features/search/services/geocoding.service';
 import { PopularDestinations } from './Search/PopularDestinations';
 import { JourneyTips } from './Search/JourneyTips';
 
 function JourneyContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+
+  // Use React useTransition for smoother UI transitions
+  const [isPending, startTransition] = useTransition();
 
   const {
     routes,
@@ -42,7 +47,6 @@ function JourneyContent() {
 
   // States
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isDeterminingMode, setIsDeterminingMode] = useState(true);
   const [currentUrlParams, setCurrentUrlParams] = useState('');
   const [shouldSearch, setShouldSearch] = useState(false);
   const [fromText, setFromText] = useState<string | null>(null);
@@ -78,23 +82,22 @@ function JourneyContent() {
 
       try {
         // Load place names in parallel
-        // Pass the isFromSharedUrl flag to determine if we should prefer user selections
-        // When from a shared URL, we'll still check user selections first (in case this user
-        // previously selected these points) but will fall back to reverse geocoding
         const [fromPlaceName, toPlaceName] = await Promise.all([
           getCachedLocationName(fromLat, fromLng, true),
           getCachedLocationName(toLat, toLng, true),
         ]);
 
-        setFromText(fromPlaceName);
-        setToText(toPlaceName);
+        startTransition(() => {
+          setFromText(fromPlaceName);
+          setToText(toPlaceName);
+        });
       } catch (error) {
         console.error('Error fetching place names:', error);
       } finally {
         setIsLoadingPlaceNames(false);
       }
     },
-    []
+    [startTransition]
   );
 
   // Initialize component based on URL parameters
@@ -102,7 +105,6 @@ function JourneyContent() {
     if (!searchParams) {
       setIsInitialized(true);
       setIsSearchMode(true);
-      setIsDeterminingMode(false);
       return;
     }
 
@@ -112,7 +114,6 @@ function JourneyContent() {
     if (paramsString === '') {
       setIsInitialized(true);
       setIsSearchMode(true);
-      setIsDeterminingMode(false);
       return;
     }
 
@@ -135,14 +136,17 @@ function JourneyContent() {
 
       // Enter search mode if any required params are missing
       if (!hasValidFrom || !hasValidTo) {
-        setIsSearchMode(true);
-        setIsInitialized(true);
-        setIsDeterminingMode(false);
+        startTransition(() => {
+          setIsSearchMode(true);
+          setIsInitialized(true);
+        });
         return;
       }
 
       // We have valid parameters, exit search mode
-      setIsSearchMode(false);
+      startTransition(() => {
+        setIsSearchMode(false);
+      });
 
       if (hasValidFrom) {
         const [fromLat, fromLng] = from!.split(',').map(parseFloat);
@@ -155,10 +159,14 @@ function JourneyContent() {
 
           if (fromTextParam) {
             // If text is in URL, use it directly
-            setFromText(decodeURIComponent(fromTextParam));
+            startTransition(() => {
+              setFromText(decodeURIComponent(fromTextParam));
+            });
           } else {
             // Set a placeholder until we get the real name
-            setFromText('Loading origin...');
+            startTransition(() => {
+              setFromText('Loading origin...');
+            });
             needsPlaceNames = true;
           }
 
@@ -177,10 +185,14 @@ function JourneyContent() {
 
           if (toTextParam) {
             // If text is in URL, use it directly
-            setToText(decodeURIComponent(toTextParam));
+            startTransition(() => {
+              setToText(decodeURIComponent(toTextParam));
+            });
           } else {
             // Set a placeholder until we get the real name
-            setToText('Loading destination...');
+            startTransition(() => {
+              setToText('Loading destination...');
+            });
             needsPlaceNames = true;
           }
 
@@ -202,19 +214,19 @@ function JourneyContent() {
               : [undefined, undefined];
 
             fetchMissingPlaceNames(fromLat, fromLng, toLat, toLng);
-          }, 1000);
+          }, 500);
         }
       }
     }
 
     setIsInitialized(true);
-    setIsDeterminingMode(false);
   }, [
     searchParams,
     currentUrlParams,
     setFromLocation,
     setToLocation,
     fetchMissingPlaceNames,
+    startTransition,
   ]);
 
   // Handle route searching
@@ -254,68 +266,15 @@ function JourneyContent() {
     }
   }, [error]);
 
-  // Show loading state when determining mode to prevent flicker
-  if (isDeterminingMode) {
-    return (
-      <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
-        <div className="px-0 sm:px-2">
-          <div className="flex items-center mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
-              disabled
-              leftIcon={<ArrowLeft size={16} />}
-              data-variant="ghost"
-            >
-              Back
-            </Button>
-          </div>
-          <div className="animate-pulse">
-            <div className="h-[250px] bg-gray-200 rounded-xl mb-6"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full max-w-[1200px] mx-auto rounded-lg relative">
-      <div className="px-0 sm:px-2">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[color:var(--color-primary)] hover:bg-transparent hover:text-[color:var(--color-accent)]"
-            onClick={() => router.push('/')}
-            leftIcon={<ArrowLeft size={16} />}
-            data-variant="ghost"
-          >
-            Back
-          </Button>
-          {isSearchMode && (
-            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 ml-2">
-              Plan Your Journey
-            </h1>
-          )}
-        </div>
-
-        {isSearchMode && (
-          <div className="mb-8">
-            <p className="text-gray-600 max-w-2xl">
-              Find the best transit routes to get you where you need to go.
-              Enter your starting point and destination to see available
-              options, estimated travel times, and more.
-            </p>
-          </div>
-        )}
-
+    <div className="relative z-10 animate-fade-in">
+      <div className="py-4">
         <SearchSection
           fromText={fromText || ''}
           toText={toText || ''}
           isResultsPage={!isSearchMode}
           isSearchMode={isSearchMode}
-          isLoading={isLoading || isLoadingPlaceNames}
+          isLoading={isLoading || isLoadingPlaceNames || isPending}
         />
 
         {isInitialized && !isSearchMode && (
