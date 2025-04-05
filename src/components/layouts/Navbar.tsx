@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
-import { Menu, X, Map, Route, Navigation, HelpCircle } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, Home, Route, Map, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/formatters';
 import { useOnClickOutside } from '@/hooks/use-click-outside';
 import { useLockBodyScroll } from '@/hooks/use-lock-body-scroll';
 
 // Navigation links configuration
 const navigationLinks = [
-  { href: '/', label: 'Home', icon: Map },
+  { href: '/', label: 'Home', icon: Home },
   { href: '/route', label: 'Find Routes', icon: Route },
-  { href: '/map', label: 'Network Map', icon: Navigation },
+  { href: '/map', label: 'Network Map', icon: Map },
   { href: '/help', label: 'Help', icon: HelpCircle },
 ];
 
@@ -20,6 +20,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const firstFocusableRef = useRef<HTMLAnchorElement>(null);
@@ -98,6 +99,34 @@ export function Navbar() {
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
+
+  // Direct navigation without scroll jumps - follows best UX practices
+  const handleDirectNavigation = useCallback(
+    (href: string, e: React.MouseEvent) => {
+      e.preventDefault();
+
+      // Close menu immediately
+      setIsMobileMenuOpen(false);
+
+      // Use a very small timeout to allow the UI to update first
+      // This prevents any scroll jump by ensuring the menu is closed
+      // before navigation starts
+      setTimeout(() => {
+        // Reset body styles immediately before navigation
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        document.body.style.paddingRight = '';
+        document.body.classList.remove('menu-open');
+
+        // Navigate programmatically
+        router.push(href);
+      }, 10); // Minimal delay just to separate UI update from navigation
+    },
+    [router]
+  );
 
   return (
     <>
@@ -235,7 +264,7 @@ export function Navbar() {
                   <ul className="space-y-1">
                     {navigationLinks.map((item, index) => (
                       <li key={item.href}>
-                        <Link
+                        <a
                           ref={index === 0 ? firstFocusableRef : null}
                           href={item.href}
                           className={cn(
@@ -244,7 +273,7 @@ export function Navbar() {
                               ? 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)]'
                               : 'hover:bg-gray-50'
                           )}
-                          onClick={() => setIsMobileMenuOpen(false)}
+                          onClick={(e) => handleDirectNavigation(item.href, e)}
                           aria-current={
                             isActive(item.href) ? 'page' : undefined
                           }
@@ -261,7 +290,7 @@ export function Navbar() {
                             />
                           </span>
                           <span className="font-medium">{item.label}</span>
-                        </Link>
+                        </a>
                       </li>
                     ))}
                   </ul>
