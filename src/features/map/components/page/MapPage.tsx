@@ -6,10 +6,10 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import PageLayout from './PageLayout';
 import PageHeader from '../../../../components/common/PageHeader';
 import MapSidebar from '../ui/MapSidebar';
-import UnifiedMobileMenu from '../mobile/UnifiedMobileMenu';
 import MapContentArea from '../ui/MapContentArea';
 import { enhancedMetroLines } from '../../utils/map-helpers';
 import { useControlPanel } from '@/hooks/useMapControls';
+import MobileMenu from '../route/MobileMenu';
 
 export default function MapPage() {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
@@ -105,7 +105,7 @@ export default function MapPage() {
           <div className="px-4 sm:px-6 py-2 md:py-6">
             {/* Unified Mobile Menu (dropdown for line selection and visibility) */}
             <div ref={mobileMenuRef} className="md:hidden">
-              <UnifiedMobileMenu
+              <MobileMenu
                 metroLines={enhancedMetroLines}
                 selectedLine={lineSelection.selectedLineId || undefined}
                 visibleLines={lineSelection.visibleLines}
