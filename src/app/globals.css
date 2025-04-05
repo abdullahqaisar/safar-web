@@ -17,6 +17,32 @@
   }
 }
 
+/* Mobile menu animation and fixes */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Ensure mobile menu is always on top */
+#mobile-menu {
+  z-index: 9999 !important;
+  transform-origin: right;
+  animation: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 /* Base Themes and Variables */
 :root {
   /* Base colors */
@@ -129,12 +155,14 @@
   }
 
   .page-content {
-    padding-top: 4rem; /* 64px for mobile */
+    padding-top: 4rem;
+    /* 64px for mobile */
   }
 
   @media (min-width: 768px) {
     .page-content {
-      padding-top: 5rem; /* 80px for desktop */
+      padding-top: 5rem;
+      /* 80px for desktop */
     }
   }
 
@@ -257,11 +285,9 @@
 
   .route-header {
     @apply p-4 text-white flex justify-between items-center;
-    background: linear-gradient(
-      135deg,
-      var(--color-primary),
-      var(--color-primary-light)
-    );
+    background: linear-gradient(135deg,
+        var(--color-primary),
+        var(--color-primary-light));
     position: relative;
     overflow: hidden;
   }
@@ -693,273 +719,41 @@
   }
 }
 
-/* Mobile menu override to ensure visibility and proper background */
+/* Mobile menu animations and fixes */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fix z-index stacking for mobile menu */
 #mobile-menu {
-  z-index: 1000 !important;
-  background-color: #ffffff !important;
-}
-
-#mobile-menu::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: white;
-  z-index: 5;
-}
-
-#mobile-menu .flex-grow {
-  position: relative;
-  z-index: 10;
-  visibility: visible !important;
-  display: block !important;
-  background-color: white !important;
-}
-
-#mobile-menu ul li,
-#mobile-menu ul li a {
-  visibility: visible;
-  display: flex !important;
-  position: relative;
-  z-index: 10;
-}
-
-#mobile-menu div.flex-col {
-  background-color: white !important;
-}
-
-/* Mobile menu override to ensure visibility */
-#mobile-menu {
-  z-index: 1000 !important;
-}
-
-#mobile-menu .flex-grow {
-  position: relative;
-  z-index: 10;
-  visibility: visible !important;
-  display: block !important;
-}
-
-#mobile-menu ul li,
-#mobile-menu ul li a {
-  visibility: visible;
-  display: flex !important;
-  position: relative;
-  z-index: 10;
-}
-
-.dropdown-portal {
-  position: fixed !important;
   z-index: 9999 !important;
-  pointer-events: auto !important;
+  /* Above all other elements */
 }
 
-.search-form-container,
-form,
-.relative {
-  position: relative;
-  overflow: visible !important;
-}
-
-body.search-section-editing .dropdown-portal {
-  z-index: 9999 !important;
-}
-
-.dropdown-portal {
-  position: fixed !important;
-  z-index: 9999 !important;
-  pointer-events: auto !important;
-}
-
-.stats-bar-section {
-  position: relative;
-  z-index: 5;
-}
-
-.search-form-container {
-  position: relative;
-  z-index: 50 !important;
-}
-
-.places-dropdown,
-.places-dropdown-content,
-.places-dropdown-overlay {
-  z-index: 100 !important;
-}
-
-/* Fix for search section editing z-index issues */
-body.search-section-editing {
-  overflow: visible !important;
-}
-
-body.search-section-editing .dropdown-portal {
-  z-index: 9999 !important;
-}
-
-/* Better visibility for location summary in search form */
-.route-summary-location {
+/* Ensure proper mobile menu behavior when scrolled */
+body {
+  height: 100%;
   position: relative;
 }
 
-.route-summary-location:hover .route-summary-location-edit {
-  opacity: 1;
+/* Remove conflicting styles */
+.animate-in,
+.slide-in-from-right {
+  /* These are replaced by our custom animation */
+  animation: none;
 }
 
-.route-summary-location-edit {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-/* Journey search form mobile optimizations */
-@media (max-width: 640px) {
-  .search-section-edit-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    z-index: 5;
-  }
-
-  .journey-details-summary {
-    padding-right: 60px;
-  }
-}
-
-/* Animations */
-@keyframes scaleIn {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.3;
-  }
-
-  50% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 0;
-  }
-}
-
-@keyframes pulseSlow {
-  0%,
-  100% {
-    opacity: 0.7;
-  }
-
-  50% {
-    opacity: 0.4;
-  }
-}
-
-@keyframes slowFloat {
-  0%,
-  100% {
-    transform: translateY(0) scale(1.5);
-  }
-
-  50% {
-    transform: translateY(-5px) scale(1.55);
-  }
-}
-
-@keyframes waveEffect {
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
-
-  50% {
-    transform: scaleY(1.3);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Animation for form transitions */
-@keyframes fadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-slide-up {
-  animation: fadeSlideUp 0.3s ease forwards;
-}
-
-.fade-slide-down {
-  animation: fadeSlideDown 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 166, 126, 0.1),
-    0 8px 10px -6px rgba(0, 166, 126, 0.1);
-}
-
-/* Media Queries */
+/* Media queries remain unchanged */
 @media (min-width: 640px) {
   .hero-decoration-line {
     margin: 1rem auto;
@@ -975,11 +769,11 @@ body.search-section-editing .dropdown-portal {
     @apply flex-col items-start;
   }
 
-  .results-header > div {
+  .results-header>div {
     @apply w-full;
   }
 
-  .results-header > div:last-child {
+  .results-header>div:last-child {
     @apply mt-3;
   }
 
@@ -1076,5 +870,20 @@ body.search-section-editing .dropdown-portal {
   .hero-decoration-line {
     width: 90px;
     margin: 1.25rem auto;
+  }
+}
+
+/* Fix for mobile devices to prevent scrolling issues */
+@media (max-width: 768px) {
+  body.menu-open {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Improve tap targets */
+  #mobile-menu a {
+    -webkit-tap-highlight-color: transparent;
   }
 }

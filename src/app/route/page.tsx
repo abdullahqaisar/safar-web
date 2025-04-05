@@ -39,18 +39,8 @@ export default function JourneyPage() {
 
         {/* Wrap content in container with controlled width */}
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-          {/* 
-            Use Suspense with a fallback that matches the final layout dimensions 
-            to prevent layout shifts. Set suspense to true on the SearchParamsFallback 
-            component to ensure it's loaded ahead of time.
-          */}
-          <Suspense
-            fallback={
-              <div className="journey-container-fallback">
-                <SearchParamsFallback />
-              </div>
-            }
-          >
+          {/* Content is loaded progressively with Suspense */}
+          <Suspense fallback={<SearchParamsFallback />}>
             <JourneyContainer />
           </Suspense>
         </div>

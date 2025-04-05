@@ -165,7 +165,7 @@ const TransitMapView: React.FC<
   }, []);
 
   // Get map center based on selection
-  const getMapCenter = (): [number, number] => {
+  const getMapCenter = useCallback((): [number, number] => {
     const defaultCenter: [number, number] = [33.6861871107659, 73.048283867797];
 
     if (selectedStation) {
@@ -183,7 +183,7 @@ const TransitMapView: React.FC<
     }
 
     return defaultCenter;
-  };
+  }, [selectedStation, selectedLine, metroLines]);
 
   // Zoom to details
   const handleZoomToDetails = useCallback(() => {
@@ -193,7 +193,7 @@ const TransitMapView: React.FC<
         animate: true,
       });
     }
-  }, [zoomLevel]);
+  }, [getMapCenter, zoomLevel]);
 
   // Prepare data for rendering
   const linesToDraw = organizeLinesToDraw(metroLines, selectedLine);

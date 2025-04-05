@@ -1,12 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import {
-  Mail,
-  Facebook,
-  Instagram,
-  Linkedin,
-  ChevronRight,
-} from 'lucide-react';
+import { Mail, Facebook, Instagram, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
 const Footer = () => {
@@ -18,16 +12,17 @@ const Footer = () => {
       role="contentinfo"
       aria-label="Site footer"
     >
-      {/* Top divider shape */}
-      <div className="absolute top-0 left-0 right-0 h-8 overflow-hidden">
+      {/* Top divider shape - fixed for consistent appearance */}
+      <div className="absolute top-0 left-0 right-0 w-full h-12 sm:h-16 -translate-y-[99%] overflow-hidden">
         <svg
           viewBox="0 0 1200 120"
           preserveAspectRatio="none"
           className="absolute bottom-0 left-0 w-full h-full"
+          aria-hidden="true"
         >
           <path
             d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
-            className="fill-white dark:fill-[var(--color-primary)]/95"
+            className="fill-[#FEF6EC]"
           />
         </svg>
       </div>
@@ -56,9 +51,14 @@ const Footer = () => {
               stress-free.
             </p>
             <div className="flex space-x-3">
-              <SocialLink href="#" icon={<Facebook size={18} />} />
-              <SocialLink href="#" icon={<Instagram size={18} />} />
-              <SocialLink href="#" icon={<Linkedin size={18} />} />
+              <SocialLink
+                href="https://www.facebook.com/safar.fyi"
+                icon={<Facebook size={18} />}
+              />
+              <SocialLink
+                href="https://www.instagram.com/safar.fyi"
+                icon={<Instagram size={18} />}
+              />
             </div>
           </div>
 
