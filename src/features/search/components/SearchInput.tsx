@@ -24,7 +24,7 @@ export default function SearchInput({
   placeholder,
   value,
   onValueChange,
-  icon: Icon, // Rename to Icon for direct usage
+  icon: Icon,
   lightMode = false,
 }: SearchInputProps) {
   const [isFocused, setIsFocused] = useState(false);

@@ -37,9 +37,9 @@ const NetworkMapSection = () => {
       <div className="bg-[color:var(--color-bg-cream)] relative overflow-hidden py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <Container className="relative z-10">
           {/* For mobile, display the map first as a separate element */}
-          <div className="md:hidden mb-10 flex justify-center">
+          <div className="block md:hidden mb-10">
             <NetworkMapPreview
-              imageSrc="/images/placeholder.svg"
+              imageSrc="/images/map-placeholder.webp"
               alt="Safar Network Map"
             />
           </div>
@@ -84,7 +84,7 @@ const NetworkMapSection = () => {
             {/* Right Column - Map View (hidden on mobile since we show it separately above) */}
             <div className="hidden md:flex justify-center md:justify-end">
               <NetworkMapPreview
-                imageSrc="/images/placeholder.svg"
+                imageSrc="/images/map-placeholder.webp"
                 alt="Safar Network Map"
               />
             </div>

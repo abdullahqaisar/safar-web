@@ -2,7 +2,7 @@
 
 @plugin 'tailwindcss-animate';
 
-/* Animation utility */
+/* ===== ANIMATIONS ===== */
 @layer utilities {
   .animate-slow-float {
     animation: slowFloat 30s ease-in-out infinite;
@@ -17,43 +17,130 @@
   }
 }
 
-/* Mobile menu animation and fixes */
-@keyframes slide-in {
+@keyframes fadeIn {
   from {
-    transform: translateX(100%);
+    opacity: 0;
   }
 
   to {
-    transform: translateX(0);
+    opacity: 1;
   }
 }
 
-.animate-slide-in {
-  animation: slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Ensure mobile menu is always on top */
-#mobile-menu {
-  z-index: 9999 !important;
-  transform-origin: right;
-  animation: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  height: 100vh !important;
-  max-height: 100vh !important;
-  overflow: hidden;
-  overscroll-behavior: contain;
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Base Themes and Variables */
+@keyframes pulseSlow {
+
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slowFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1.5);
+  }
+
+  50% {
+    transform: translateY(-5px) scale(1.55);
+  }
+}
+
+@keyframes waveEffect {
+
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  50% {
+    transform: scaleY(1.3);
+  }
+}
+
+/* ===== THEME VARIABLES ===== */
 :root {
-  /* Base colors */
+  /* Fonts */
   --font-sans: var(--font-ubuntu);
   --font-mono: monospace;
 
+  /* Base colors */
   --color-white: #ffffff;
   --color-black: #171717;
   --color-dark-black: #0a0a0a;
   --color-light-white: #f9fafb;
 
+  /* Brand colors */
   --color-primary: #004036;
   --color-primary-rgb: 0, 64, 54;
   --color-primary-dark: #00332b;
@@ -92,6 +179,7 @@
   --color-info: #3b82f6;
   --color-info-rgb: 59, 130, 246;
 
+  /* UI Theme */
   --background: #ffffff;
   --foreground: hsl(222.2 84% 4.9%);
 
@@ -119,37 +207,56 @@
   --border: hsl(214.3 31.8% 91.4%);
   --input: hsl(214.3 31.8% 91.4%);
   --ring: hsl(222.2 84% 4.9%);
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: rgba(var(--color-primary-rgb), 0.4);
-    border-radius: 9999px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(var(--color-primary-rgb), 0.6);
-  }
 }
 
-/* Base styles */
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--color-primary-rgb), 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.6);
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: rgba(209, 213, 219, 0.5);
+  border-radius: 20px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(209, 213, 219, 0.8);
+}
+
+/* ===== BASE STYLES ===== */
 @layer base {
   body {
     min-height: 100vh;
     padding: 0;
   }
+
+  * {
+    scroll-behavior: smooth;
+  }
+
+  html {
+    scroll-padding-top: 5rem;
+  }
 }
 
-/* Component styles */
+/* ===== COMPONENT STYLES ===== */
 @layer components {
+
+  /* Layout containers */
   .app-container {
     @apply bg-white min-h-screen;
   }
@@ -159,18 +266,20 @@
     /* 64px for mobile */
   }
 
-  @media (min-width: 768px) {
-    .page-content {
-      padding-top: 5rem;
-      /* 80px for desktop */
-    }
+  /* Animation utility classes */
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
   }
 
-  /* Ensure proper scroll behavior for anchor links */
-  html {
-    scroll-padding-top: 5rem;
+  .fade-slide-up {
+    animation: fadeSlideUp 0.3s ease forwards;
   }
 
+  .fade-slide-down {
+    animation: fadeSlideDown 0.3s ease forwards;
+  }
+
+  /* Hero section */
   .hero-content-wrapper {
     @apply flex flex-col items-center justify-center;
     padding-block: clamp(3rem, 8vh, 7rem);
@@ -242,7 +351,7 @@
     transition: width 0.3s ease;
   }
 
-  /* Glass effect from Safar */
+  /* Glass effect */
   .glass-effect {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
@@ -250,22 +359,22 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* Hover effects */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
-  .animate-fade-in {
-    animation: fade-in 0.4s ease-out forwards;
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 166, 126, 0.1),
+      0 8px 10px -6px rgba(0, 166, 126, 0.1);
   }
 
+  .clip-path-slant {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  }
+
+  /* Route sections */
   .results-header {
     @apply flex justify-between items-center;
   }
@@ -290,22 +399,6 @@
         var(--color-primary-light));
     position: relative;
     overflow: hidden;
-  }
-
-  /* Additional Safar-specific styles */
-  .clip-path-slant {
-    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
-  }
-
-  /* Hover lift effect from Safar */
-  .hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 166, 126, 0.1),
-      0 8px 10px -6px rgba(0, 166, 126, 0.1);
   }
 
   .route-time {
@@ -430,7 +523,7 @@
     overscroll-behavior: contain;
   }
 
-  /* Stats Bar Styling */
+  /* Stats Bar */
   .stats-item {
     @apply flex flex-col items-center justify-center;
     transition: transform 0.2s ease;
@@ -452,80 +545,45 @@
     color: var(--color-gray-600);
   }
 
-  .scrollbar-custom::-webkit-scrollbar-thumb {
-    background-color: rgba(209, 213, 219, 0.5);
-    border-radius: 20px;
-  }
-
-  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(209, 213, 219, 0.8);
-  }
-
-  /* Add smooth scrolling to all elements */
-  * {
-    scroll-behavior: smooth;
-  }
-
-  /* Mobile optimizations for search form */
+  /* Search form */
   .search-form-container {
     @apply px-0 sm:px-2 mx-auto;
+    position: relative;
+    z-index: 50 !important;
   }
 
-  @media (max-width: 640px) {
-    .search-form-container {
-      @apply px-0 mx-0;
-      width: 100%;
-    }
-
-    .search-form {
-      @apply px-2 sm:px-4;
-    }
+  .search-form-container,
+  form,
+  .relative {
+    position: relative;
+    overflow: visible !important;
   }
 
-  /* Button Hover Effects - Standardized for consistency */
+  /* Route summary location */
+  .route-summary-location {
+    position: relative;
+  }
+
+  .route-summary-location:hover .route-summary-location-edit {
+    opacity: 1;
+  }
+
+  .route-summary-location-edit {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  /* Button styles */
   .btn,
   button {
-    @apply transition-all duration-200;
-  }
-
-  /* Secondary Button Hover Effects */
-  .btn-secondary {
-    @apply transition-colors duration-200;
-  }
-
-  .btn-secondary:hover,
-  button[data-variant='secondary']:hover {
-    @apply bg-emerald-50 border-emerald-200;
-  }
-
-  .btn-secondary:active,
-  button[data-variant='secondary']:active {
-    @apply scale-[0.98] bg-emerald-100;
-  }
-
-  /* Ghost Button Hover Effects */
-  .btn-ghost:hover,
-  button[data-variant='ghost']:hover {
-    @apply text-gray-900 bg-emerald-50;
-  }
-
-  .btn-ghost:active,
-  button[data-variant='ghost']:active {
-    @apply scale-[0.98] bg-emerald-100;
-  }
-
-  /* Focus Styles for Accessibility */
-  button:focus-visible,
-  .btn:focus-visible {
-    @apply outline-none ring-2 ring-emerald-500 ring-offset-2;
-  }
-
-  button,
-  .btn {
     @apply transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
   }
 
-  /* Primary Button Style */
+  /* Primary Button */
   .btn-primary,
   button[data-variant='primary'] {
     @apply bg-emerald-500 text-white;
@@ -541,7 +599,33 @@
     @apply scale-[0.98] bg-emerald-700;
   }
 
-  /* Outline Button Style */
+  /* Secondary Button */
+  .btn-secondary {
+    @apply transition-colors duration-200;
+  }
+
+  .btn-secondary:hover,
+  button[data-variant='secondary']:hover {
+    @apply bg-emerald-50 border-emerald-200;
+  }
+
+  .btn-secondary:active,
+  button[data-variant='secondary']:active {
+    @apply scale-[0.98] bg-emerald-100;
+  }
+
+  /* Ghost Button */
+  .btn-ghost:hover,
+  button[data-variant='ghost']:hover {
+    @apply text-gray-900 bg-emerald-50;
+  }
+
+  .btn-ghost:active,
+  button[data-variant='ghost']:active {
+    @apply scale-[0.98] bg-emerald-100;
+  }
+
+  /* Outline Button */
   .btn-outline,
   button[data-variant='outline'] {
     @apply bg-white border border-gray-200 text-gray-600;
@@ -557,7 +641,7 @@
     @apply scale-[0.98] bg-emerald-100;
   }
 
-  /* Shared Action Button Styles for Journey section */
+  /* Journey action button */
   .journey-action-button {
     @apply flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-emerald-500 text-emerald-600 hover:bg-gray-50 hover:shadow-sm transition-all duration-200;
   }
@@ -575,24 +659,6 @@
   }
 
   /* Transit Map Styles */
-  .station-popup .leaflet-popup-content-wrapper {
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .leaflet-container {
-    font-family: inherit;
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 1;
-  }
-
   .transit-map-container {
     min-height: 300px;
     position: relative;
@@ -611,7 +677,25 @@
     width: 100%;
   }
 
-  /* Enhanced popup styling for better UX */
+  .leaflet-container {
+    font-family: inherit;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1;
+  }
+
+  /* Leaflet popup styling */
+  .station-popup .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0;
+    overflow: hidden;
+  }
+
   .modern-popup.leaflet-popup {
     margin-bottom: 20px;
   }
@@ -635,12 +719,10 @@
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
   }
 
-  /* Hide the default close button since we have our custom one */
   .modern-popup .leaflet-popup-close-button {
     display: none;
   }
 
-  /* Improve zoom control visibility */
   .leaflet-control-zoom {
     margin-bottom: 70px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
@@ -657,103 +739,84 @@
     color: #111827 !important;
   }
 
-  /* Custom station marker visibility transitions */
   .custom-station-marker {
     transition: opacity 0.2s ease;
   }
 
-  /* Add padding around map to avoid controls being too close to edge */
   .transit-map-leaflet .leaflet-control-container .leaflet-top,
   .transit-map-leaflet .leaflet-control-container .leaflet-bottom {
     padding: 12px;
   }
 
-  /* Better mobile touch target sizes for map controls */
-  @media (max-width: 768px) {
-    .leaflet-touch .leaflet-control-zoom a {
-      width: 36px !important;
-      height: 36px !important;
-      line-height: 36px !important;
-    }
-
-    .leaflet-control-zoom {
-      margin-bottom: 80px !important;
-    }
+  /* Mobile menu */
+  #mobile-menu {
+    z-index: 1000 !important;
+    background-color: #ffffff !important;
   }
 
-  /* Transit Map Styles */
-  .station-popup .leaflet-popup-content-wrapper {
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 0;
-    overflow: hidden;
+  #mobile-menu::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: white;
+    z-index: 5;
   }
 
-  .leaflet-container {
-    font-family: inherit;
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 1;
-  }
-
-  .transit-map-container {
-    min-height: 300px;
+  #mobile-menu .flex-grow {
     position: relative;
-    overflow: hidden;
+    z-index: 10;
+    visibility: visible !important;
+    display: block !important;
+    background-color: white !important;
   }
 
-  .map-container-wrapper {
-    height: 100%;
-    width: 100%;
+  #mobile-menu ul li,
+  #mobile-menu ul li a {
+    visibility: visible;
+    display: flex !important;
     position: relative;
     z-index: 10;
   }
 
-  .transit-map-leaflet {
-    height: 100%;
-    width: 100%;
+  #mobile-menu div.flex-col {
+    background-color: white !important;
+  }
+
+  /* Dropdown and z-index handling */
+  .dropdown-portal {
+    position: fixed !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+
+  .places-dropdown,
+  .places-dropdown-content,
+  .places-dropdown-overlay {
+    z-index: 100 !important;
+  }
+
+  .stats-bar-section {
+    position: relative;
+    z-index: 5;
+  }
+
+  body.search-section-editing {
+    overflow: visible !important;
+  }
+
+  body.search-section-editing .dropdown-portal {
+    z-index: 9999 !important;
   }
 }
 
-/* Mobile menu animations and fixes */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
+/* ===== MEDIA QUERIES ===== */
+@media (min-width: 768px) {
+  .page-content {
+    padding-top: 5rem;
+    /* 80px for desktop */
   }
 }
 
-.animate-slide-in {
-  animation: slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Fix z-index stacking for mobile menu */
-#mobile-menu {
-  z-index: 9999 !important;
-  /* Above all other elements */
-}
-
-/* Ensure proper mobile menu behavior when scrolled */
-body {
-  height: 100%;
-  position: relative;
-}
-
-/* Remove conflicting styles */
-.animate-in,
-.slide-in-from-right {
-  /* These are replaced by our custom animation */
-  animation: none;
-}
-
-/* Media queries remain unchanged */
 @media (min-width: 640px) {
   .hero-decoration-line {
     margin: 1rem auto;
@@ -761,6 +824,18 @@ body {
 
   .hero-content-wrapper {
     padding-block: clamp(3.5rem, 10vh, 8rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .leaflet-touch .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+  }
+
+  .leaflet-control-zoom {
+    margin-bottom: 80px !important;
   }
 }
 
@@ -801,6 +876,33 @@ body {
   .stats-label {
     font-size: 0.7rem;
   }
+
+  .search-section-edit-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 5;
+  }
+
+  .journey-details-summary {
+    padding-right: 60px;
+  }
+
+  .search-form {
+    @apply px-2 sm:px-4;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-form-container {
+    margin-top: 0.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero-badge {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.7rem;
+  }
 }
 
 @media (max-width: 360px) {
@@ -837,18 +939,6 @@ body {
   }
 }
 
-@media (min-width: 361px) and (max-width: 480px) {
-  .search-form-container {
-    margin-top: 0.375rem;
-    margin-bottom: 1rem;
-  }
-
-  .hero-badge {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.7rem;
-  }
-}
-
 @media (min-width: 481px) and (max-width: 640px) {
   .search-form-container {
     margin-top: 0.5rem;
@@ -870,20 +960,5 @@ body {
   .hero-decoration-line {
     width: 90px;
     margin: 1.25rem auto;
-  }
-}
-
-/* Fix for mobile devices to prevent scrolling issues */
-@media (max-width: 768px) {
-  body.menu-open {
-    overflow: hidden !important;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Improve tap targets */
-  #mobile-menu a {
-    -webkit-tap-highlight-color: transparent;
   }
 }
