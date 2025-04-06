@@ -35,6 +35,7 @@ export class TransitGraph {
   connectivityMatrix: Record<string, Record<string, boolean>> = {};
   spatialIndex: SpatialIndex = new Map();
   stationLines: Record<string, string[]> = {}; // Track which lines each station belongs to
+  transferStations: Map<string, string[]> = new Map(); // NEW: Track stations that serve as transfer points
 
   constructor() {
     this.graph = new Graph({ multi: true, type: 'directed' });
@@ -49,6 +50,7 @@ export class TransitGraph {
     this.connectivityMatrix = {};
     this.spatialIndex = new Map();
     this.stationLines = {};
+    this.transferStations = new Map(); // Reset transfer stations
 
     // Add stations to the graph
     stations.forEach((station) => {
@@ -61,6 +63,7 @@ export class TransitGraph {
 
       // Initialize empty array for station lines
       this.stationLines[station.id] = [];
+      this.transferStations.set(station.id, []); // Initialize empty array for transfer stations
     });
 
     // Process lines and track which stations belong to which lines
@@ -71,6 +74,14 @@ export class TransitGraph {
       line.stations.forEach((stationId) => {
         if (this.stationLines[stationId]) {
           this.stationLines[stationId].push(line.id);
+        }
+
+        // Track transfer stations
+        if (this.transferStations.has(stationId)) {
+          const lineArray = this.transferStations.get(stationId)!;
+          if (!lineArray.includes(line.id)) {
+            lineArray.push(line.id);
+          }
         }
       });
 
@@ -282,7 +293,17 @@ export class TransitGraph {
   }
 
   /**
-   * Get the lines that a station serves
+   * Check if a station serves as a transfer point between lines
+   */
+  isTransferStation(stationId: string): boolean {
+    return (
+      this.transferStations.has(stationId) &&
+      this.transferStations.get(stationId)!.length > 1
+    );
+  }
+
+  /**
+   * Get lines that a particular station serves
    */
   getStationLines(stationId: string): string[] {
     return this.stationLines[stationId] || [];

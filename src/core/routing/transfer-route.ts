@@ -11,6 +11,7 @@ interface TransferState {
   transferCount: number;
   visitedStations: Set<string>;
   visitedLines: Set<string>;
+  visitedStationLinePairs: Set<string>;
   path: {
     stationId: string;
     lineId: string;
@@ -39,7 +40,7 @@ export function findTransferRoutes(
       graph,
       originId,
       destinationId,
-      Math.min(maxTransfers, MAX_TRANSFERS), // Never exceed MAX_TRANSFERS
+      maxTransfers, // Use the provided maxTransfers directly
       durationThreshold
     );
 
@@ -215,6 +216,7 @@ function findMultiTransferRoutes(
       transferCount: 0,
       visitedStations: new Set([originId]),
       visitedLines: new Set([lineId]),
+      visitedStationLinePairs: new Set([`${originId}|${lineId}`]),
       path: [
         {
           stationId: originId,
@@ -228,8 +230,14 @@ function findMultiTransferRoutes(
   // BFS loop
   while (queue.length > 0) {
     const currentState = queue.shift()!;
-    const { stationId, lineId, transferCount, visitedStations, path } =
-      currentState;
+    const {
+      stationId,
+      lineId,
+      transferCount,
+      visitedStations,
+      visitedStationLinePairs,
+      path,
+    } = currentState;
 
     // Skip if we've exceeded the maximum transfer count
     if (transferCount > maxTransfers) continue;
@@ -269,9 +277,14 @@ function findMultiTransferRoutes(
       // Forward direction
       if (currentIdx < stationsOnLine.length - 1) {
         const nextStationId = stationsOnLine[currentIdx + 1];
-        if (!visitedStations.has(nextStationId)) {
+        const nextStationPair = `${nextStationId}|${lineId}`;
+
+        if (!visitedStationLinePairs.has(nextStationPair)) {
           const newVisitedStations = new Set(visitedStations);
           newVisitedStations.add(nextStationId);
+
+          const newVisitedPairs = new Set(visitedStationLinePairs);
+          newVisitedPairs.add(nextStationPair);
 
           queue.push({
             stationId: nextStationId,
@@ -279,6 +292,7 @@ function findMultiTransferRoutes(
             transferCount: transferCount,
             visitedStations: newVisitedStations,
             visitedLines: currentState.visitedLines,
+            visitedStationLinePairs: newVisitedPairs,
             path: [
               ...path,
               {
@@ -294,9 +308,14 @@ function findMultiTransferRoutes(
       // Backward direction
       if (currentIdx > 0) {
         const prevStationId = stationsOnLine[currentIdx - 1];
-        if (!visitedStations.has(prevStationId)) {
+        const prevStationPair = `${prevStationId}|${lineId}`;
+
+        if (!visitedStationLinePairs.has(prevStationPair)) {
           const newVisitedStations = new Set(visitedStations);
           newVisitedStations.add(prevStationId);
+
+          const newVisitedPairs = new Set(visitedStationLinePairs);
+          newVisitedPairs.add(prevStationPair);
 
           queue.push({
             stationId: prevStationId,
@@ -304,6 +323,7 @@ function findMultiTransferRoutes(
             transferCount: transferCount,
             visitedStations: newVisitedStations,
             visitedLines: currentState.visitedLines,
+            visitedStationLinePairs: newVisitedPairs,
             path: [
               ...path,
               {
@@ -322,19 +342,18 @@ function findMultiTransferRoutes(
       const stationLines = graph.getStationLines(stationId);
 
       // First check: Are we at an interchange point?
-      if (
-        !graph.stations[stationId].isInterchange &&
-        stationLines.length <= 1
-      ) {
-        continue; // Skip if not an interchange
+      if (!graph.isTransferStation(stationId)) {
+        continue; // Skip if not a transfer station
       }
 
       stationLines.forEach((nextLineId) => {
         // Skip if it's the current line (no transfer needed)
         if (nextLineId === lineId) return;
 
-        // Skip if we've already used this line
-        if (currentState.visitedLines.has(nextLineId)) return;
+        // We can revisit lines in some cases for complex routes
+        // but only if the transfer count allows it
+        const nextStationLinePair = `${stationId}|${nextLineId}`;
+        if (visitedStationLinePairs.has(nextStationLinePair)) return;
 
         const nextLine = graph.lines[nextLineId];
         if (!nextLine) return;
@@ -352,9 +371,7 @@ function findMultiTransferRoutes(
         if (!isTransferValuable) return;
 
         // 2. Can this transfer get us closer to the destination?
-        // Only allow transfers that are either:
-        // - To a line that contains the destination
-        // - To a line that intersects with a line containing the destination
+        // Consider both direct connections and indirect ones through other lines
         const destinationLines = graph.getStationLines(destinationId);
         const canReachDestination =
           destinationLines.includes(nextLineId) ||
@@ -366,6 +383,10 @@ function findMultiTransferRoutes(
         const newVisitedLines = new Set(currentState.visitedLines);
         newVisitedLines.add(nextLineId);
 
+        // Create new set of visited station-line pairs
+        const newVisitedPairs = new Set(visitedStationLinePairs);
+        newVisitedPairs.add(nextStationLinePair);
+
         // Enqueue the transfer state
         queue.push({
           stationId: stationId,
@@ -373,6 +394,7 @@ function findMultiTransferRoutes(
           transferCount: transferCount + 1,
           visitedStations: new Set(visitedStations),
           visitedLines: newVisitedLines,
+          visitedStationLinePairs: newVisitedPairs,
           path: [
             ...path,
             {
@@ -442,17 +464,45 @@ function hasCommonInterchange(
   otherLineIds: string[],
   graph: TransitGraph
 ): boolean {
-  // Get all interchanges for the line
+  // Use the transferStations data structure to check for common stations
   const lineStations = graph.lines[lineId]?.stations || [];
 
   for (const stationId of lineStations) {
-    if (graph.stations[stationId]?.isInterchange) {
-      // Check if this interchange connects to any of the target lines
+    // Look only at transfer stations
+    if (graph.isTransferStation(stationId)) {
+      // Get all lines serviced by this station
       const stationLines = graph.getStationLines(stationId);
 
+      // Check if any of the target lines intersect with this station
       for (const otherLineId of otherLineIds) {
         if (stationLines.includes(otherLineId)) {
           return true;
+        }
+      }
+    }
+  }
+
+  // If no direct interchange found, check for multi-hop connection via a third line
+  for (const stationId of lineStations) {
+    if (graph.isTransferStation(stationId)) {
+      const connectingLines = graph.getStationLines(stationId);
+
+      for (const connectingLine of connectingLines) {
+        if (connectingLine === lineId) continue; // Skip self
+
+        // Check if this connecting line intersects with any target line
+        const connectingLineStations =
+          graph.lines[connectingLine]?.stations || [];
+        for (const transferStation of connectingLineStations) {
+          if (graph.isTransferStation(transferStation)) {
+            const transferStationLines = graph.getStationLines(transferStation);
+
+            for (const otherLineId of otherLineIds) {
+              if (transferStationLines.includes(otherLineId)) {
+                return true;
+              }
+            }
+          }
         }
       }
     }
@@ -480,52 +530,42 @@ function hasNewReachableStations(
   const destinationStation = graph.stations[destinationId];
   if (!destinationStation) return false;
 
-  // Option 1: Check for new stations (existing functionality)
-  let hasUnvisitedStations = false;
-  let closerToDestination = false;
-  let currentDistance = Number.MAX_SAFE_INTEGER;
-
-  // Get current station coordinates for distance comparison
-  const currentStation = graph.stations[currentStationId];
-  if (currentStation) {
-    currentDistance = calculateDistance(
-      currentStation.coordinates,
-      destinationStation.coordinates
-    );
+  // Special case: If the destination is on this line, it's always valuable
+  if (line.stations.includes(destinationId)) {
+    return true;
   }
 
-  // Check forward direction
-  for (let i = stationIndex + 1; i < line.stations.length; i++) {
-    const stationId = line.stations[i];
-
-    // Check if station is unvisited
-    if (!visitedStations.has(stationId)) {
-      hasUnvisitedStations = true;
-    }
-
-    // Check if station is closer to destination
-    const station = graph.stations[stationId];
-    if (station) {
-      const stationDistance = calculateDistance(
-        station.coordinates,
-        destinationStation.coordinates
-      );
-
-      // If this station is significantly closer to destination (at least 10% closer)
-      if (stationDistance < currentDistance * 0.9) {
-        closerToDestination = true;
-      }
-    }
-
-    // Early return if we've found both benefits
-    if (hasUnvisitedStations && closerToDestination) {
+  // Check for connection to destination through this line
+  const destinationLines = graph.getStationLines(destinationId);
+  for (const lineId of destinationLines) {
+    if (
+      graph.lines[lineId]?.stations.some(
+        (stationId) =>
+          line.stations.includes(stationId) &&
+          graph.isTransferStation(stationId)
+      )
+    ) {
       return true;
     }
   }
 
-  // Check backward direction
-  for (let i = stationIndex - 1; i >= 0; i--) {
-    const stationId = line.stations[i];
+  // Get current station coordinates for distance comparison
+  const currentStation = graph.stations[currentStationId];
+  if (!currentStation) return false;
+
+  const currentDistance = calculateDistance(
+    currentStation.coordinates,
+    destinationStation.coordinates
+  );
+
+  // Check if this line has unvisited stations
+  let hasUnvisitedStations = false;
+  let closerToDestination = false;
+
+  // Check all stations on this line (combine forward/backward checks)
+  for (const stationId of line.stations) {
+    // Skip the current station
+    if (stationId === currentStationId) continue;
 
     // Check if station is unvisited
     if (!visitedStations.has(stationId)) {
@@ -559,26 +599,28 @@ function hasNewReachableStations(
 }
 
 /**
- * Find stations that connect multiple lines
+ * Find stations that serve as transfer points between two or more lines
  */
 function findCommonStations(lineIds: string[], graph: TransitGraph): Station[] {
   const commonStations: Station[] = [];
 
-  // Look at all interchange points in the graph
-  for (const stationId of graph.interchangePoints) {
+  // Check all stations for these lines
+  for (const stationId of Object.keys(graph.stations)) {
     const station = graph.stations[stationId];
     if (!station) continue;
 
-    // Get the lines that pass through this station
-    const stationLines = graph.getStationLines(stationId);
+    // Use the transferStations map to find stations that serve multiple lines
+    if (graph.isTransferStation(stationId)) {
+      const stationLines = graph.getStationLines(stationId);
 
-    // Check if this station serves all the lines we're interested in
-    const hasAllLines = lineIds.every((lineId) =>
-      stationLines.includes(lineId)
-    );
+      // Check if this station serves all the requested lines
+      const servesAllLines = lineIds.every((lineId) =>
+        stationLines.includes(lineId)
+      );
 
-    if (hasAllLines) {
-      commonStations.push(station);
+      if (servesAllLines) {
+        commonStations.push(station);
+      }
     }
   }
 
@@ -647,14 +689,32 @@ function constructRouteFromPath(
       // Get station IDs for this segment
       const stationIds = segmentPath.map((p) => p.stationId);
 
-      // NEW CODE: Validate segment - ensure start and end stations are different
+      // Skip invalid segments - ensure we have at least 2 distinct stations
+      if (stationIds.length < 2) continue;
+
+      // Check for duplicate consecutive stations and remove them
+      const uniqueStationIds = [];
+      for (let j = 0; j < stationIds.length; j++) {
+        if (j === 0 || stationIds[j] !== stationIds[j - 1]) {
+          uniqueStationIds.push(stationIds[j]);
+        }
+      }
+
+      // Skip if after deduplication we don't have at least 2 stations
+      if (uniqueStationIds.length < 2) continue;
+
+      // Validate segment - ensure start and end stations are different
       if (
-        stationIds.length >= 2 &&
-        stationIds[0] !== stationIds[stationIds.length - 1]
+        uniqueStationIds[0] !== uniqueStationIds[uniqueStationIds.length - 1]
       ) {
-        // Create segment only if it's a valid segment (no self-loops)
-        const segment = createTransitSegment(graph, line, stationIds);
-        segments.push(segment);
+        try {
+          // Create segment only if it's a valid segment (no self-loops)
+          const segment = createTransitSegment(graph, line, uniqueStationIds);
+          segments.push(segment);
+        } catch (error) {
+          console.warn(`Failed to create segment: ${error}`);
+          continue;
+        }
       }
 
       // If this was a transfer, make it the start of the next segment
@@ -664,9 +724,9 @@ function constructRouteFromPath(
     }
   }
 
-  // NEW CODE: Filter out segments with only one station
+  // Filter out segments with only one station or other invalid segments
   const validSegments = segments.filter(
-    (segment) => segment.stations.length > 1
+    (segment) => segment.stations.length >= 2
   );
 
   // Only create a route if we have valid segments
@@ -677,6 +737,12 @@ function constructRouteFromPath(
     validSegments[i].duration += INTERCHANGE_WALKING_TIME;
   }
 
-  // Create the route
-  return createRoute(validSegments);
+  // Create and validate the route
+  try {
+    const route = createRoute(validSegments);
+    return route;
+  } catch (error) {
+    console.error('Error creating route from path:', error);
+    return null;
+  }
 }
