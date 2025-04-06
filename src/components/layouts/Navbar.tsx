@@ -7,6 +7,7 @@ import { Menu, X, Home, Route, Map, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/formatters';
 import { useOnClickOutside } from '@/hooks/use-click-outside';
 import { useLockBodyScroll } from '@/hooks/use-lock-body-scroll';
+import Image from 'next/image';
 
 // Navigation links configuration
 const navigationLinks = [
@@ -147,21 +148,14 @@ export function Navbar() {
               className="flex items-center space-x-2 relative group transition-transform hover:scale-105 focus-visible:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] focus-visible:ring-offset-2 rounded-md"
               aria-label="Safar - Home"
             >
-              <div className="h-10 w-10 flex items-center justify-center bg-[color:var(--color-accent)]/10 rounded-lg transition-colors group-hover:bg-[color:var(--color-accent)]/15">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-[color:var(--color-accent)] transition-transform group-hover:scale-110"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
+              <div className="h-10 w-10 relative overflow-hidden rounded-lg">
+                <Image
+                  src="/images/icons/safar-logo.svg"
+                  alt="Safar Logo"
+                  width={40}
+                  height={40}
+                  className="transition-transform group-hover:scale-110"
+                />
               </div>
               <span className="font-semibold text-xl tracking-tight text-gray-800">
                 Safar

@@ -33,13 +33,13 @@ const Footer = () => {
           {/* Column 1: About */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 relative">
+              <div className="h-10 w-10 relative overflow-hidden rounded-lg">
                 <Image
-                  src="/lovable-uploads/1e41c855-044c-48d3-9d14-109b0b044d53.png"
+                  src="/images/icons/safar-logo.svg"
                   alt="Safar Logo"
-                  fill
+                  width={40}
+                  height={40}
                   className="object-contain"
-                  sizes="40px"
                 />
               </div>
               <span className="font-semibold text-xl tracking-tight">
