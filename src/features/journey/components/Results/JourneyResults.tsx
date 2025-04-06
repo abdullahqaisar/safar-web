@@ -14,6 +14,10 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
     ? routes.find((route) => route.id === selectedRouteId)
     : null;
 
+  // Determine if selected route is the recommended (first) route
+  const isSelectedRouteRecommended =
+    !!selectedRoute && routes.indexOf(selectedRoute) === 0;
+
   return (
     <section className="animate-fade-in mt-2" aria-label="Route Results">
       <AnimatePresence mode="wait">
@@ -54,6 +58,7 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
                     onSelect={() =>
                       setSelectedRouteId(route.id || `route-${index}`)
                     }
+                    isRecommended={index === 0}
                   />
                 </motion.div>
               ))}
@@ -70,6 +75,7 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
             <JourneyDetails
               route={selectedRoute}
               onBack={() => setSelectedRouteId(null)}
+              isRecommended={isSelectedRouteRecommended}
             />
           </motion.div>
         )}

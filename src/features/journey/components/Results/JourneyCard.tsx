@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   ChevronRight,
   Footprints,
+  Star,
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { Button } from '@/components/common/Button';
@@ -13,9 +14,14 @@ import { Button } from '@/components/common/Button';
 interface JourneyCardProps {
   route: Route;
   onSelect: () => void;
+  isRecommended?: boolean;
 }
 
-export function JourneyCard({ route, onSelect }: JourneyCardProps) {
+export function JourneyCard({
+  route,
+  onSelect,
+  isRecommended = false,
+}: JourneyCardProps) {
   // Get transit segments for line badges
   const transitSegments = route.segments.filter(
     (segment): segment is TransitSegment => segment.type === 'transit'
@@ -28,7 +34,7 @@ export function JourneyCard({ route, onSelect }: JourneyCardProps) {
 
   return (
     <div
-      className="bg-white border border-gray-200 hover:border-[rgba(var(--color-accent-rgb),0.4)] hover:shadow-md transition-all rounded-xl overflow-hidden hover-lift focus-within:ring-2 focus-within:ring-[var(--color-accent)] focus-within:ring-offset-2"
+      className="bg-white border border-gray-200 hover:border-[rgba(var(--color-accent-rgb),0.4)] hover:shadow-md transition-all rounded-xl overflow-hidden hover-lift focus-within:ring-2 focus-within:ring-[var(--color-accent)] focus-within:ring-offset-2 relative"
       role="button"
       tabIndex={0}
       onClick={onSelect}
@@ -40,8 +46,16 @@ export function JourneyCard({ route, onSelect }: JourneyCardProps) {
       }}
       aria-label={`Journey taking ${formatDuration(route.totalDuration)} with ${
         route.totalStops
-      } stops and ${route.transfers} transfers`}
+      } stops and ${route.transfers} transfers${
+        isRecommended ? ', recommended route' : ''
+      }`}
     >
+      {isRecommended && (
+        <div className="absolute top-0 right-0 bg-[var(--color-accent)] text-white py-1 px-3 rounded-bl-lg rounded-tr-lg flex items-center gap-1 shadow-sm z-10">
+          <Star className="w-3.5 h-3.5 fill-white" />
+          <span className="text-xs font-medium">Recommended</span>
+        </div>
+      )}
       <div className="p-4 sm:p-5">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">

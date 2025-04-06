@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   Share2,
   Footprints,
+  Star,
 } from 'lucide-react';
 import { RouteSegment } from './RouteSegment';
 import { Button } from '@/components/common/Button';
@@ -15,9 +16,14 @@ import { formatDuration } from '../../utils';
 interface JourneyDetailsProps {
   route: Route;
   onBack: () => void;
+  isRecommended?: boolean;
 }
 
-export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
+export function JourneyDetails({
+  route,
+  onBack,
+  isRecommended = false,
+}: JourneyDetailsProps) {
   const [expandedStations, setExpandedStations] = useState<
     Record<string, boolean>
   >({});
@@ -143,7 +149,14 @@ export function JourneyDetails({ route, onBack }: JourneyDetailsProps) {
           </div>
 
           {/* Journey summary card */}
-          <div className="bg-emerald-50 rounded-xl border border-emerald-100 p-5 mb-6">
+          <div className="bg-emerald-50 rounded-xl border border-emerald-100 p-5 mb-6 relative">
+            {isRecommended && (
+              <div className="absolute top-0 right-0 bg-emerald-600 text-white py-1 px-3 rounded-bl-lg rounded-tr-lg flex items-center gap-1.5 shadow-sm">
+                <Star className="w-3.5 h-3.5 fill-white" />
+                <span className="text-xs font-medium">Recommended Route</span>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm">
