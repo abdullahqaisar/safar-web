@@ -37,16 +37,32 @@ export function RouteResultsView({
 
   // Check local storage for banner dismissal on mount
   useEffect(() => {
-    const bannerDismissed = localStorage.getItem('safar_beta_banner_dismissed');
-    if (bannerDismissed === 'true') {
-      setIsBetaBannerVisible(false);
+    const bannerDismissedTimestamp = localStorage.getItem(
+      'safar_beta_banner_dismissed_timestamp'
+    );
+    if (bannerDismissedTimestamp) {
+      const dismissedTime = parseInt(bannerDismissedTimestamp, 10);
+      const currentTime = new Date().getTime();
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+
+      // Only hide the banner if less than one day has passed since dismissal
+      if (currentTime - dismissedTime < oneDayInMs) {
+        setIsBetaBannerVisible(false);
+      } else {
+        // Clear the old timestamp if more than a day has passed
+        localStorage.removeItem('safar_beta_banner_dismissed_timestamp');
+      }
     }
   }, []);
 
   // Handle dismissing the banner
   const dismissBetaBanner = () => {
     setIsBetaBannerVisible(false);
-    localStorage.setItem('safar_beta_banner_dismissed', 'true');
+    // Store the current timestamp instead of a boolean
+    localStorage.setItem(
+      'safar_beta_banner_dismissed_timestamp',
+      new Date().getTime().toString()
+    );
   };
 
   return (
