@@ -42,8 +42,8 @@ export default function LineLabel({
 
   const textColor = getTextColor();
 
-  // Style differently for feeder routes - use brighter teal for better distinction
-  const feederColor = '#00D1D1'; // Bright vibrant teal
+  // Style differently for feeder routes - use light teal for better distinction
+  const feederColor = '#4FD1C5'; // Light teal color matching TransitRoute
   const displayColor = isFeeder ? feederColor : color;
   const backgroundColor = isFeeder ? 'white' : displayColor;
   const labelTextColor = isFeeder ? feederColor : textColor;

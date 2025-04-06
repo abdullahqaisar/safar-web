@@ -48,20 +48,46 @@ const createStationIcon = (
     });
   }
 
+  // Group feeder routes into a single representation
+  const consolidatedLines: Line[] = [];
+  const feederLines: Line[] = [];
+
+  // Find all feeder routes and non-feeder routes
+  lines.forEach((line) => {
+    if (
+      line.id.startsWith('fr_') ||
+      line.id.startsWith('F') ||
+      line.id.toLowerCase().includes('feeder')
+    ) {
+      feederLines.push(line);
+    } else {
+      consolidatedLines.push(line);
+    }
+  });
+
+  // If there are feeder lines, add a single consolidated feeder line
+  if (feederLines.length > 0) {
+    consolidatedLines.push({
+      id: 'feeder_consolidated',
+      color: '#4FD1C5', // Light teal color for all feeder routes
+      name: 'Feeder Routes',
+    });
+  }
+
   // For multi-line stations, use the pill design with dots
   const dotSize = Math.max(5, baseSize / 4);
   const dotSpacing = 2;
   const pillPadding = 4;
   const pillHeight = dotSize + pillPadding * 2;
 
-  // Calculate pill width based on number of lines
+  // Calculate pill width based on consolidated number of lines
   const pillWidth =
     pillPadding * 2 + // Left and right padding
-    lines.length * dotSize + // All dots
-    (lines.length - 1) * dotSpacing; // Spacing between dots
+    consolidatedLines.length * dotSize + // All dots
+    (consolidatedLines.length - 1) * dotSpacing; // Spacing between dots
 
-  // Create dots for each line
-  const dots = lines
+  // Create dots for each line in the consolidated list
+  const dots = consolidatedLines
     .map((line, index) => {
       const leftPosition = pillPadding + index * (dotSize + dotSpacing);
       return `
@@ -116,7 +142,23 @@ function StationMarker({
   // Create icon based on station characteristics
   const icon = createStationIcon(isTransferPoint, lines, isSelected, isHovered);
 
-  // Create popup content
+  // Group feeder routes for display in popup
+  const feederLines = lines.filter(
+    (line) =>
+      line.id.startsWith('fr_') ||
+      line.id.startsWith('F') ||
+      line.id.toLowerCase().includes('feeder')
+  );
+  const regularLines = lines.filter(
+    (line) =>
+      !(
+        line.id.startsWith('fr_') ||
+        line.id.startsWith('F') ||
+        line.id.toLowerCase().includes('feeder')
+      )
+  );
+
+  // Create popup content with feeder routes grouped in UI but individually listed
   const popupContent = `
     <div class="text-xs py-1">
       <strong class="font-medium block mb-1">${stationName}</strong>
@@ -124,7 +166,7 @@ function StationMarker({
         ${isTransferPoint ? 'Transfer Station' : 'Regular Station'}
       </div>
       <div class="space-y-0.5">
-        ${lines
+        ${regularLines
           .map(
             (line) => `
           <div class="flex items-center gap-1.5">
@@ -139,6 +181,34 @@ function StationMarker({
         `
           )
           .join('')}
+          
+        ${
+          feederLines.length > 0
+            ? `<div class="pt-1 mt-1 border-t border-gray-100"></div>
+             <div class="flex items-center gap-1.5 font-medium text-gray-700">
+               <div 
+                 class="w-2 h-2 rounded-full flex-shrink-0"
+                 style="background-color: #4FD1C5"
+               ></div>
+               <span>Feeder Routes (${feederLines.length})</span>
+             </div>
+             ${feederLines
+               .map(
+                 (line) => `
+               <div class="flex items-center gap-1.5 pl-4">
+                 <div 
+                   class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                   style="background-color: #4FD1C5"
+                 ></div>
+                 <span class="text-gray-600 truncate max-w-[180px]">
+                   ${line.name || line.id}
+                 </span>
+               </div>
+             `
+               )
+               .join('')}`
+            : ''
+        }
       </div>
     </div>
   `;

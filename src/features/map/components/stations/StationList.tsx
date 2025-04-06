@@ -7,7 +7,6 @@ import {
   getLineNameById,
 } from '../../utils/station-helpers';
 import { getLineColor } from '@/lib/utils/route';
-import { ArrowRight } from 'lucide-react';
 
 interface StationListProps {
   stations: string[];
@@ -107,12 +106,6 @@ export default function StationList({
               const isTransfer = isTransferStation(stationId);
               const isActive = activeStationId === stationId;
 
-              // Travel time estimation (would be from actual data in production)
-              const timeToNext =
-                index < stations.length - 1
-                  ? Math.floor(Math.random() * 5) + 2
-                  : null; // 2-7 min
-
               const connectingLines = isTransfer
                 ? getLinesForStation(stationId).filter(
                     (line) => line !== lineId
@@ -176,7 +169,16 @@ export default function StationList({
                             {connectingLines.map((connectingLineId) => {
                               const lineName =
                                 getLineNameById(connectingLineId);
-                              const lineColor = getLineColor(connectingLineId);
+                              // Use light teal color for feeder routes
+                              const isFeeder =
+                                connectingLineId.startsWith('fr_') ||
+                                connectingLineId.startsWith('F') ||
+                                connectingLineId
+                                  .toLowerCase()
+                                  .includes('feeder');
+                              const lineColor = isFeeder
+                                ? '#4FD1C5'
+                                : getLineColor(connectingLineId);
                               return (
                                 <div
                                   key={connectingLineId}
@@ -192,14 +194,6 @@ export default function StationList({
                                 </div>
                               );
                             })}
-                          </div>
-                        )}
-
-                        {/* Next station timing (if not the last station) */}
-                        {timeToNext && (
-                          <div className="flex items-center text-xs text-gray-500 mt-1">
-                            <ArrowRight className="w-3 h-3 mr-1" />
-                            <span>{timeToNext} min</span>
                           </div>
                         )}
                       </div>

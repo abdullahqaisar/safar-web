@@ -105,12 +105,13 @@ const TransitRoute: React.FC<TransitRouteProps> = ({
     // Higher opacity for selected lines
     const opacity = isSelectedLine ? 1 : isFeeder ? 0.85 : 0.9;
 
-    // Use a much brighter teal color for feeder lines - more distinctive from blue
-    // Using a vibrant teal color (#00D1D1) for maximum visibility
-    const lineColor = isFeeder ? '#00D1D1' : color;
+    // Use a light teal color (#4FD1C5) for feeder lines
+    // This is a more accessible teal that follows best practices for readability
+    const feederColor = '#4FD1C5'; // Light teal color for feeder routes
+    const lineColor = isFeeder ? feederColor : color;
 
-    // Add improved dash pattern for feeder routes
-    const dashArray = isFeeder ? '6, 8' : undefined;
+    // Use dotted line for feeder routes
+    const dashArray = isFeeder ? '5, 8' : undefined;
 
     return {
       color: lineColor,
@@ -161,7 +162,7 @@ const TransitRoute: React.FC<TransitRouteProps> = ({
         <LineLabel
           position={labelData.position}
           rotation={labelData.angle}
-          color={color}
+          color={isFeeder ? '#4FD1C5' : color}
           text={lineName}
           isHighlighted={isSelectedLine}
           shouldFade={false}

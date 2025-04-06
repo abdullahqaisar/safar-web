@@ -218,7 +218,7 @@ export default async function StationDetailPage({ params }: Props) {
                             className="p-4 text-white font-medium"
                             style={{
                               backgroundColor: line.id.startsWith('fr_') // Example custom styling
-                                ? '#00D1D1' // Assuming a color for 'feeder routes'
+                                ? '#4FD1C5' // Light teal color for feeder routes
                                 : line.color || '#4A5568', // Use line color or fallback
                             }}
                           >

@@ -45,10 +45,19 @@ function StationMarkerList({
         <StationMarker
           key={station.stationId}
           stationId={station.stationId}
-          lines={station.lines.map((line) => ({
-            ...line,
-            name: line.name || getLineName(line.id),
-          }))}
+          lines={station.lines.map((line) => {
+            // For consistent styling, ensure feeder routes have the right color
+            const isFeeder =
+              line.id.startsWith('fr_') ||
+              line.id.startsWith('F') ||
+              (line.name && line.name.toLowerCase().includes('feeder'));
+
+            return {
+              ...line,
+              name: line.name || getLineName(line.id),
+              color: isFeeder ? '#4FD1C5' : line.color,
+            };
+          })}
           selectedStation={selectedStation}
           onStationSelect={onStationSelect}
         />

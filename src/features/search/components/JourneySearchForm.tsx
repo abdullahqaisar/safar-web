@@ -98,7 +98,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
             <SearchInput
               id="from-location"
               onSelectPlace={handleFromLocationSelect}
-              placeholder="From (e.g., Khanna Pul)"
+              placeholder="Enter starting point"
               value={pickupValue}
               onValueChange={handleFromValueChange}
               icon={LocateIcon}
@@ -119,7 +119,7 @@ const JourneySearchForm: React.FC<JourneySearchFormProps> = ({
             <SearchInput
               id="to-location"
               onSelectPlace={handleToLocationSelect}
-              placeholder="To (e.g., Air University)"
+              placeholder="Enter destination"
               value={destinationValue}
               onValueChange={handleToValueChange}
               icon={MapPin}

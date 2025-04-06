@@ -173,12 +173,12 @@ export const NetworkMapPreview = () => {
               {/* Simplified feeder route */}
               <path
                 d="M70,250 L130,250 Q180,250 220,260 Q250,270 270,280 Q300,300 340,320 L400,340"
-                stroke="#0d9488"
+                stroke="#4FD1C5"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
-                strokeDasharray="1,3"
+                strokeDasharray="5,8"
                 opacity="0.85"
               >
                 <title>Feeder Routes - Bus Connections</title>
