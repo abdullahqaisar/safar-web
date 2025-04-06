@@ -20,8 +20,8 @@ const NetworkMapSection = () => {
     },
     {
       icon: Clock,
-      title: 'Real-time Updates',
-      description: 'Get live schedule information for all transit options',
+      title: 'Bus Schedules',
+      description: 'Get schedule information for all transit options',
     },
     {
       icon: Ticket,

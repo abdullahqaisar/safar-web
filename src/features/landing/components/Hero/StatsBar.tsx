@@ -6,7 +6,7 @@ export function StatsBarSection() {
       <div className="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-bold text-[color:var(--color-accent)]">
-            50+
+            150+
           </p>
           <p className="text-sm text-[color:var(--color-gray-600)]">
             Metro Stations
