@@ -31,7 +31,7 @@ export async function sendContactEmail(data: ContactFormData) {
 
     // Send email with Resend
     const { data: emailData, error } = await resend.emails.send({
-      from: 'Safar Contact <contact@resend.dev>',
+      from: 'Safar Contact <info@safar.fyi>',
       to: 'info@safar.fyi',
       subject: subjectText,
       replyTo: data.email,
