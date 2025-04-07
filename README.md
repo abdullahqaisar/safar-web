@@ -10,6 +10,7 @@ A user-friendly web application designed to help commuters navigate Islamabad's 
 - Support for route planning with up to 2 line changes
 - Interactive map interface for location selection
 - Optimized routes based on minimal transfers and distance
+- Newsletter subscription for transit updates
 
 ## Usage
 
@@ -34,9 +35,34 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
+## Resend Email Integration
+
+This application uses Resend for sending emails and managing newsletter subscriptions:
+
+1. Create a [Resend](https://resend.com) account
+2. Generate an API key in the Resend dashboard
+3. Create an audience for subscribers in Resend
+4. Copy `.env.local.example` to `.env.local` and add your API key and audience ID:
+   ```
+   RESEND_API_KEY=re_xxxxxxxxx
+   RESEND_AUDIENCE_ID=aud_xxxxxxxxxxx
+   ```
+
+Subscribers will automatically be added to your Resend audience when they sign up through the newsletter form.
+
+### Email Template Details
+
+The application implements two approaches for email templates:
+
+1. **React Email Template**: Uses a React component for structured emails
+2. **HTML Fallback**: If the React template fails, falls back to HTML with inline SVG
+
+The email logo is implemented as an inline SVG directly in the email, which prevents issues with external image loading and ensures the logo is always displayed correctly across email clients.
+
 ## Technology Stack
 
 - Next.js
 - TypeScript
 - Tailwind CSS
 - Google Maps API
+- Resend for email services
