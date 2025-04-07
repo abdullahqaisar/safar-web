@@ -51,7 +51,7 @@ export async function subscribeToNewsletter(data: SubscriptionData) {
     try {
       // Send confirmation email to the subscriber using React template
       const { data: emailData, error } = await resend.emails.send({
-        from: 'Safar Updates <updates@resend.dev>',
+        from: 'Safar Updates <hello@safar.fyi>>',
         to: data.email,
         subject: 'Welcome to Safar Updates',
         react: React.createElement(SubscriptionConfirmation, {
@@ -74,7 +74,7 @@ export async function subscribeToNewsletter(data: SubscriptionData) {
 
       // Fallback to HTML email
       const { data: emailData, error } = await resend.emails.send({
-        from: 'Safar Updates <updates@resend.dev>',
+        from: 'Safar Updates <hello@safar.fyi>>',
         to: data.email,
         subject: 'Welcome to Safar Updates',
         html: `
