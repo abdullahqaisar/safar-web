@@ -33,7 +33,7 @@ export async function sendContributionEmail(data: ContributionData) {
     // Send email with Resend
     const { data: emailData, error } = await resend.emails.send({
       from: 'Safar Contributions <contributions@resend.dev>',
-      to: 'abdullahqaisarr@gmail.com',
+      to: 'info@safar.fyi',
       subject: `New Contribution: ${data.contributionType}`,
       react: ContributionEmailTemplate({ data }) as React.ReactElement,
     });

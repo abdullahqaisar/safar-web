@@ -1,11 +1,8 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import {
-  initEmailJS,
-  sendContactEmail,
-} from '@/features/contribute/services/contactEmailService';
+import { sendContactEmail } from '@/features/contribute/services/contactEmailService';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -19,11 +16,6 @@ export default function ContactForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
-
-  // Initialize EmailJS when the component mounts
-  useEffect(() => {
-    initEmailJS();
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -51,18 +43,19 @@ export default function ContactForm() {
     setIsSubmitting(true);
     setError(null);
 
-    // Validate form
-    if (!formData.name || !formData.email || !formData.message) {
-      setError('Please fill out all required fields');
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // Send the email using EmailJS
-      await sendContactEmail(formData);
-      setIsSuccess(true);
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      // Send the email using the Resend-based contactEmailService
+      const result = await sendContactEmail(formData);
+
+      if (result.success) {
+        setIsSuccess(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setError(
+          result.message ||
+            'Failed to send your message. Please try again later.'
+        );
+      }
     } catch (err) {
       console.error('Email sending failed:', err);
       setError('Failed to send your message. Please try again later.');
@@ -256,8 +249,8 @@ export default function ContactForm() {
                 'Send Message'
               )}
             </button>
-            <p className="text-xs text-center text-gray-500 mt-3">
-              We typically respond within 24-48 hours on business days
+            <p className="text-xs text-gray-500 text-center mt-3">
+              We respect your privacy and will never share your information.
             </p>
           </div>
         </div>

@@ -44,18 +44,19 @@ export function ContactSection() {
     setIsSubmitting(true);
     setError(null);
 
-    // Validate form
-    if (!formData.name || !formData.email || !formData.message) {
-      setError('Please fill out all required fields');
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // Send the email using the contactEmailService
-      await sendContactEmail(formData);
-      setIsSuccess(true);
-      setFormData({ name: '', email: '', subject: '', message: '' });
+      // Send the email using the Resend-based contactEmailService
+      const result = await sendContactEmail(formData);
+
+      if (result.success) {
+        setIsSuccess(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setError(
+          result.message ||
+            'Failed to send your message. Please try again later.'
+        );
+      }
     } catch (err) {
       console.error('Email sending failed:', err);
       setError('Failed to send your message. Please try again later.');
