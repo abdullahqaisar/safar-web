@@ -49,7 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/help`,
+      url: `${baseUrl}/contribute`,
       lastModified: currentDate,
       changeFrequency: 'monthly' as const,
       priority: 0.6,

@@ -30,7 +30,7 @@ export const metroLines: TransitLine[] = [
       'marrirChowk',
       'saddar',
     ],
-    frequency: 'Every 5 minutes',
+    frequency: 'Every 20 seconds',
     schedule: {
       first: '6:30 AM',
       last: '10:00 PM',
@@ -422,7 +422,7 @@ export const metroLines: TransitLine[] = [
     ],
     frequency: 'Every 30 minutes',
     schedule: {
-      first: '7:30 AM',
+      first: '6:00 AM',
       last: '10:00 PM',
     },
     ticketCost: 50,

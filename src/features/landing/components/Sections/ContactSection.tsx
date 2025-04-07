@@ -3,11 +3,8 @@
 import { Container } from '@/components/common/Container';
 import { Loader2, CheckCircle, Mail, MessageSquare } from 'lucide-react';
 import { SectionBadge } from '@/components/common/SectionBadge';
-import { FormEvent, useState, useEffect } from 'react';
-import {
-  initEmailJS,
-  sendContactEmail,
-} from '@/features/help/services/emailService';
+import { FormEvent, useState } from 'react';
+import { sendContactEmail } from '@/features/contribute/services/contactEmailService';
 
 export function ContactSection() {
   const [formData, setFormData] = useState({
@@ -19,19 +16,7 @@ export function ContactSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Initialize EmailJS when the component mounts
-  useEffect(() => {
-    const initEmailJSAsync = async () => {
-      try {
-        await initEmailJS();
-      } catch (error) {
-        console.error('Failed to initialize EmailJS:', error);
-      }
-    };
-
-    initEmailJSAsync();
-  }, []);
+  const [focused, setFocused] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -40,6 +25,18 @@ export function ContactSection() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFocus = (
+    e: React.FocusEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setFocused(e.target.name);
+  };
+
+  const handleBlur = () => {
+    setFocused(null);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -55,7 +52,7 @@ export function ContactSection() {
     }
 
     try {
-      // Send the email using EmailJS
+      // Send the email using the contactEmailService
       await sendContactEmail(formData);
       setIsSuccess(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
@@ -66,6 +63,12 @@ export function ContactSection() {
       setIsSubmitting(false);
     }
   };
+
+  const inputClasses = (name: string) => `
+    w-full px-4 py-2 bg-white border border-gray-300 rounded-lg 
+    ${focused === name ? 'ring-2 ring-[color:var(--color-accent)]/30 border-[color:var(--color-accent)]' : ''}
+    focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)]
+  `;
 
   return (
     <section id="contact">
@@ -185,7 +188,9 @@ export function ContactSection() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)]"
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        className={inputClasses('name')}
                         required
                       />
                     </div>
@@ -203,7 +208,9 @@ export function ContactSection() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)]"
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        className={inputClasses('email')}
                         required
                       />
                     </div>
@@ -221,7 +228,9 @@ export function ContactSection() {
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)]"
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                      className={inputClasses('subject')}
                     >
                       <option value="">Select a subject</option>
                       <option value="general">General Inquiry</option>
@@ -245,7 +254,9 @@ export function ContactSection() {
                       rows={4}
                       value={formData.message}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)]"
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                      className={inputClasses('message')}
                       required
                     ></textarea>
                   </div>

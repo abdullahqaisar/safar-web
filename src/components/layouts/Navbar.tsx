@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Home, Route, Map, HelpCircle } from 'lucide-react';
+import { Menu, X, Home, Route, Map, Users, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils/formatters';
 import { useOnClickOutside } from '@/hooks/use-click-outside';
 import { useLockBodyScroll } from '@/hooks/use-lock-body-scroll';
@@ -14,7 +14,8 @@ const navigationLinks = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/route', label: 'Find Routes', icon: Route },
   { href: '/map', label: 'Network Map', icon: Map },
-  { href: '/help', label: 'Help', icon: HelpCircle },
+  { href: '/contribute', label: 'Help & Contribute', icon: HelpCircle },
+  { href: '/collaborators', label: 'Collaborators', icon: Users },
 ];
 
 export function Navbar() {
@@ -91,7 +92,7 @@ export function Navbar() {
       if (path === '/') {
         return pathname === path;
       }
-      return pathname.startsWith(path);
+      return pathname?.startsWith(path) ?? false;
     },
     [pathname]
   );

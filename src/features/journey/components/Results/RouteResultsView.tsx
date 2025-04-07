@@ -105,7 +105,7 @@ export function RouteResultsView({
                       feedback helps us improve!
                     </p>
                     <div className="mt-3">
-                      <Link href="/help" passHref>
+                      <Link href="/contribute" passHref>
                         <Button
                           size="sm"
                           variant="outline"

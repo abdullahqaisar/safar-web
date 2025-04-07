@@ -10,6 +10,7 @@ import MapContentArea from '../ui/MapContentArea';
 import { enhancedMetroLines } from '../../utils/map-helpers';
 import { useControlPanel } from '@/hooks/useMapControls';
 import MobileMenu from '../route/MobileMenu';
+import CommunityBanner from '@/features/map/components/ui/CommunityBanner';
 
 export default function MapPage() {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
@@ -144,6 +145,11 @@ export default function MapPage() {
                   />
                 }
               />
+            </div>
+
+            {/* Community Banner - Placed below the map */}
+            <div className="mt-8">
+              <CommunityBanner />
             </div>
           </div>
         </main>

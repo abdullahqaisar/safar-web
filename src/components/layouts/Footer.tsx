@@ -1,10 +1,47 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Mail, Facebook, Instagram, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import { useState } from 'react';
+import { subscribe } from '@/app/actions/subscribeActions';
+import { Loader2, CheckCircle, XCircle, Bell } from 'lucide-react';
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setStatus('loading');
+
+    const formData = new FormData();
+    formData.append('email', email);
+
+    const result = await subscribe(formData);
+
+    if (result.success) {
+      setStatus('success');
+      setMessage(result.message);
+      setEmail('');
+    } else {
+      setStatus('error');
+      setMessage(result.message || 'Something went wrong. Please try again.');
+    }
+
+    // Reset status after 5 seconds
+    setTimeout(() => {
+      if (status !== 'idle') {
+        setStatus('idle');
+      }
+    }, 5000);
+  };
 
   return (
     <footer
@@ -12,7 +49,7 @@ const Footer = () => {
       role="contentinfo"
       aria-label="Site footer"
     >
-      {/* Top divider shape - fixed for consistent appearance */}
+      {/* Top divider shape */}
       <div className="absolute top-0 left-0 right-0 w-full h-12 sm:h-16 -translate-y-[99%] overflow-hidden">
         <svg
           viewBox="0 0 1200 120"
@@ -28,8 +65,84 @@ const Footer = () => {
       </div>
 
       <div className="max-w-7xl mx-auto pt-16 pb-8 px-4 sm:px-6 lg:px-8">
+        {/* Top section with subscription */}
+        <div className="max-w-4xl mx-auto border-b border-white/20 pb-10 mb-10 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+            Stay Updated on Transit News
+          </h2>
+          <p className="mb-6 text-gray-300 max-w-2xl mx-auto">
+            Get the latest updates on routes, schedules, and improvements to
+            Pakistan&apos;s public transit systems.
+          </p>
+
+          <form
+            onSubmit={handleSubmit}
+            className="max-w-md mx-auto flex flex-col sm:flex-row gap-2"
+          >
+            <div className="relative flex-grow">
+              <input
+                type="email"
+                name="email"
+                placeholder="Your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`w-full py-3 px-4 pr-12 rounded-lg bg-white/10 border border-white/20 
+                  focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] text-white 
+                  placeholder:text-gray-400 text-sm transition-all h-12 ${
+                    status === 'error'
+                      ? 'border-red-400 focus:ring-red-400'
+                      : ''
+                  }`}
+                disabled={status === 'loading' || status === 'success'}
+                required
+              />
+              <span className="absolute right-3 top-3.5 text-gray-400">
+                <Bell className="h-5 w-5" />
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              disabled={status === 'loading' || status === 'success'}
+              className={`h-12 py-3 px-6 rounded-lg transition-all font-medium text-sm whitespace-nowrap
+                ${
+                  status === 'loading'
+                    ? 'bg-[var(--color-accent)]/80 text-white cursor-wait'
+                    : status === 'success'
+                      ? 'bg-green-500 text-white cursor-default'
+                      : 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white'
+                }`}
+            >
+              {status === 'loading' ? (
+                <span className="flex items-center justify-center">
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Subscribing...
+                </span>
+              ) : status === 'success' ? (
+                <span className="flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Subscribed!
+                </span>
+              ) : (
+                'Subscribe Now'
+              )}
+            </button>
+          </form>
+
+          {status === 'error' && (
+            <div className="flex items-center justify-center text-red-400 text-xs mt-2">
+              <XCircle className="h-4 w-4 mr-1.5" />
+              <span>{message}</span>
+            </div>
+          )}
+
+          <p className="text-gray-400 text-xs mt-3">
+            We respect your privacy. Unsubscribe at any time.
+          </p>
+        </div>
+
         {/* Main content grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Column 1: About */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
@@ -63,27 +176,33 @@ const Footer = () => {
           </div>
 
           {/* Column 2: Quick Links */}
-          <nav aria-labelledby="footer-quick-links">
-            <h5
-              id="footer-quick-links"
-              className="font-medium mb-4 text-gray-200"
-            >
-              Quick Links
-            </h5>
-            <ul className="space-y-2">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Navigation</h3>
+            <ul className="space-y-3">
               <FooterLink href="/" label="Home" />
               <FooterLink href="/route" label="Find your Route" />
               <FooterLink href="/map" label="View Routes Map" />
-              <FooterLink href="/help" label="Help Center" />
+              <FooterLink href="/contribute" label="Help and Support" />
+              <FooterLink href="/collaborators" label="Collaborators" />
             </ul>
-          </nav>
+          </div>
 
           {/* Column 3: Contact */}
           <div>
-            <h5 className="font-medium mb-4 text-gray-200">Contact</h5>
+            <h3 className="text-lg font-semibold mb-4">Support</h3>
+            <ul className="space-y-3">
+              <FooterLink href="/contribute?tab=support" label="Contact Us" />
+              <FooterLink href="/contribute" label="Contribute" />
+              <FooterLink href="/collaborators" label="Communities" />
+            </ul>
+          </div>
+
+          {/* Column 4: Contact Info */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <ul className="space-y-4">
-              <li className="flex items-center">
-                <Mail className="h-5 w-5 text-[var(--color-accent)] mr-3 flex-shrink-0" />
+              <li className="flex">
+                <Mail className="h-5 w-5 text-[var(--color-accent)] mt-0.5 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">info@safar.fyi</span>
               </li>
             </ul>
