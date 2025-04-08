@@ -9,6 +9,37 @@ export const metadata: Metadata = {
     "Explore all metro and feeder routes in Pakistan's modern transit network. Find information about Red Line, Green Line, Orange Line, Blue Line and more.",
   keywords:
     'Pakistan transit lines, metro lines, bus routes, public transportation, Islamabad metro, Lahore metro, orange line, red line, green line, blue line',
+  alternates: {
+    canonical: 'https://www.safar.fyi/transit-lines',
+  },
+  openGraph: {
+    title: 'Transit Lines | Safar - Pakistan Transit Network',
+    description:
+      "Explore all metro and feeder routes in Pakistan's modern transit network",
+    url: 'https://www.safar.fyi/transit-lines',
+    siteName: 'Safar',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Transit Lines | Safar - Pakistan Transit Network',
+    description:
+      "Explore all metro and feeder routes in Pakistan's modern transit network",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function TransitLinesPage() {

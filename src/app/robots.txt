@@ -8,5 +8,9 @@ Allow: /transit-lines/*
 Allow: /stations
 Allow: /stations/*
 
+# Disallow index pages
+Disallow: /index.html
+Disallow: /index.php
+
 # Sitemap location
 Sitemap: https://www.safar.fyi/sitemap.xml

@@ -142,7 +142,7 @@ const Footer = () => {
         </div>
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           {/* Column 1: About */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
@@ -194,6 +194,15 @@ const Footer = () => {
               <FooterLink href="/contribute?tab=support" label="Contact Us" />
               <FooterLink href="/contribute" label="Contribute" />
               <FooterLink href="/collaborators" label="Communities" />
+            </ul>
+          </div>
+
+          {/* New Column: Explore Directory (for SEO) */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Explore</h3>
+            <ul className="space-y-3">
+              <FooterLink href="/stations" label="Stations" />
+              <FooterLink href="/transit-lines" label="Transit Lines" />
             </ul>
           </div>
 

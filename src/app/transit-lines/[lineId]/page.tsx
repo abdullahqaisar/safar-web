@@ -26,10 +26,41 @@ export async function generateMetadata({
     line.stations[line.stations.length - 1]
   );
 
+  const canonicalUrl = `https://www.safar.fyi/transit-lines/${lineId}`;
+
   return {
     title: `${line.name} | Transit Lines | Safar Pakistan`,
     description: `Explore the ${line.name} route from ${startStation} to ${endStation}. View all stations, schedule, ticket prices, and connection information.`,
     keywords: `${line.name}, Pakistan transit, metro line, public transportation, ${startStation}, ${endStation}, transit schedule`,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${line.name} | Transit Lines | Safar Pakistan`,
+      description: `Explore the ${line.name} route from ${startStation} to ${endStation}. View all stations, schedule, and connection information.`,
+      url: canonicalUrl,
+      siteName: 'Safar',
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${line.name} | Transit Lines | Safar Pakistan`,
+      description: `Explore the ${line.name} route from ${startStation} to ${endStation}. View all stations, schedule, and connection information.`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      nocache: false,
+      googleBot: {
+        index: true,
+        follow: true,
+        noimageindex: false,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
   };
 }
 
@@ -239,8 +270,8 @@ export default async function LineDetailPage({
                                   backgroundColor: isInterchange
                                     ? 'white'
                                     : isFeeder
-                                    ? '#00D1D1'
-                                    : line.color,
+                                      ? '#00D1D1'
+                                      : line.color,
                                 }}
                               >
                                 {isInterchange && (

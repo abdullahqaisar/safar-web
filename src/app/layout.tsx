@@ -18,20 +18,19 @@ const ubuntu = Ubuntu({
 });
 
 export const metadata: Metadata = {
-  title:
-    'Safar.fyi | Islamabad Metro Route Finder | Rawalpindi Metro Bus Routes',
+  title: 'Safar | Find Islamabad Metro and Feeder Bus Routes',
   description:
-    'Find the best metro and bus routes in Islamabad and Rawalpindi. Plan your journey with our route finder for Metro Bus, Orange Line, Blue Line, Green Line and Feeder routes.',
+    'Find the best metro routes in Islamabad and Rawalpindi. Plan your journey with Metro Bus, Red Line, Orange Line, Blue Line, Green Line, E bus, and Feeder routes.',
   keywords:
-    'islamabad metro, rawalpindi metro, islamabad bus routes, metro bus routes, islamabad public transport, rawalpindi bus service, islamabad green line, islamabad orange line, metro feeder routes',
+    'islamabad metro, rawalpindi metro, islamabad bus routes, metro bus routes, rawalpindi bus service, green line, orange line, blue line, red line, metro feeder routes',
   authors: [{ name: 'Safar' }],
   openGraph: {
-    title: 'Islamabad Metro Route Finder | Rawalpindi Metro Bus Routes',
+    title: 'Islamabad Metro and Feeder Bus Route Finder',
     description:
-      'Find the best metro and bus routes in Islamabad and Rawalpindi',
+      'Find the best metro and feeder E Bus routes in Islamabad and Rawalpindi',
     type: 'website',
     locale: 'en_US',
-    siteName: 'Safar - Islamabad Metro Routes',
+    siteName: 'Safar',
   },
 };
 
