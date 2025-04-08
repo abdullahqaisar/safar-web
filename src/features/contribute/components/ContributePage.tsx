@@ -44,7 +44,7 @@ export default function ContributePage() {
           {/* Header Section */}
           <PageHeader
             title="Contribute & Support"
-            description="Help improve Pakistan's transit mapping by sharing your knowledge or contact us with questions"
+            description="Help improve Islamabad's transit mapping by sharing your knowledge or contact us with questions"
           />
 
           <Container maxWidth="6xl" className="px-4 sm:px-6 py-4">

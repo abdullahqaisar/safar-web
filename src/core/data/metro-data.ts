@@ -175,7 +175,7 @@ export const metroLines: TransitLine[] = [
       'lodgesPark',
       'sukhChaynPark',
       'ministryOfForeignAffairs',
-      'radioPakistan',
+      'radioIslamabad',
       'nationalLibrary',
       'secretariatePoliceStation',
       'diplomaticEnclaveGate4',

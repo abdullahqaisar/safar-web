@@ -521,8 +521,8 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.718315614007295, lng: 73.10377772883629 },
   },
   {
-    id: 'radioPakistan',
-    name: 'Radio Pakistan',
+    id: 'radioIslamabad',
+    name: 'Radio Islamabad',
     coordinates: { lat: 33.72221469102664, lng: 73.10084300000001 },
   },
   {

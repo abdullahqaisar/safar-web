@@ -16,7 +16,7 @@ export async function generateMetadata({
 
   if (!line) {
     return {
-      title: 'Line Not Found | Safar - Pakistan Transit Network',
+      title: 'Line Not Found | Safar - Islamabad Transit Network',
       description: 'The requested transit line could not be found.',
     };
   }
@@ -29,14 +29,14 @@ export async function generateMetadata({
   const canonicalUrl = `https://www.safar.fyi/transit-lines/${lineId}`;
 
   return {
-    title: `${line.name} | Transit Lines | Safar Pakistan`,
+    title: `${line.name} | Transit Lines | Safar Islamabad`,
     description: `Explore the ${line.name} route from ${startStation} to ${endStation}. View all stations, schedule, ticket prices, and connection information.`,
-    keywords: `${line.name}, Pakistan transit, metro line, public transportation, ${startStation}, ${endStation}, transit schedule`,
+    keywords: `${line.name}, Islamabad transit, metro line, public transportation, ${startStation}, ${endStation}, transit schedule`,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${line.name} | Transit Lines | Safar Pakistan`,
+      title: `${line.name} | Transit Lines | Safar Islamabad`,
       description: `Explore the ${line.name} route from ${startStation} to ${endStation}. View all stations, schedule, and connection information.`,
       url: canonicalUrl,
       siteName: 'Safar',
@@ -45,7 +45,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${line.name} | Transit Lines | Safar Pakistan`,
+      title: `${line.name} | Transit Lines | Safar Islamabad`,
       description: `Explore the ${line.name} route from ${startStation} to ${endStation}. View all stations, schedule, and connection information.`,
     },
     robots: {
@@ -122,7 +122,7 @@ export default async function LineDetailPage({
     name: line.name,
     provider: {
       '@type': 'Organization',
-      name: 'Pakistan Transit Authority',
+      name: 'Islamabad Transit Authority',
     },
     itinerary: {
       '@type': 'ItemList',

@@ -11,7 +11,7 @@ const ISLAMABAD_DESTINATIONS = [
   },
   {
     id: 2,
-    name: 'Pakistan Monument',
+    name: 'Islamabad Monument',
     type: 'Landmark',
   },
 

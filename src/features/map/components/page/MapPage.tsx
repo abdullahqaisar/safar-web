@@ -97,7 +97,7 @@ export default function MapPage() {
 
         <PageHeader
           title="Transit Network Map"
-          description="Explore Pakistan's modern transit network with our interactive map"
+          description="Explore Islamabad's modern transit network with our interactive map"
         />
 
         <main className="relative z-10">

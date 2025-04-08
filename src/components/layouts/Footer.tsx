@@ -72,7 +72,7 @@ const Footer = () => {
           </h2>
           <p className="mb-6 text-gray-300 max-w-2xl mx-auto">
             Get the latest updates on routes, schedules, and improvements to
-            Pakistan&apos;s public transit systems.
+            Islamabad&apos;s public transit systems.
           </p>
 
           <form
@@ -160,7 +160,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Making public transportation in Pakistan easier, faster, and
+              Making public transportation in Islamabad easier, faster, and
               stress-free.
             </p>
             <div className="flex space-x-3">
@@ -225,7 +225,7 @@ const Footer = () => {
           </p>
           <div className="flex space-x-4">
             <span className="text-gray-400 text-sm">
-              Made with ❤️ in Pakistan
+              Made with ❤️ in Islamabad
             </span>
           </div>
         </div>

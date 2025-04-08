@@ -4,18 +4,18 @@ import { metroLines } from '@/core/data/metro-data';
 import PageHeader from '@/components/common/PageHeader';
 
 export const metadata: Metadata = {
-  title: 'Transit Lines | Safar - Pakistan Transit Network',
+  title: 'Transit Lines | Safar - Islamabad Transit Network',
   description:
-    "Explore all metro and feeder routes in Pakistan's modern transit network. Find information about Red Line, Green Line, Orange Line, Blue Line and more.",
+    "Explore all metro and feeder routes in Islamabad's modern transit network. Find information about Red Line, Green Line, Orange Line, Blue Line and more.",
   keywords:
-    'Pakistan transit lines, metro lines, bus routes, public transportation, Islamabad metro, Lahore metro, orange line, red line, green line, blue line',
+    'Islamabad transit lines, metro lines, bus routes, public transportation, Islamabad metro, Lahore metro, orange line, red line, green line, blue line',
   alternates: {
     canonical: 'https://www.safar.fyi/transit-lines',
   },
   openGraph: {
-    title: 'Transit Lines | Safar - Pakistan Transit Network',
+    title: 'Transit Lines | Safar - Islamabad Transit Network',
     description:
-      "Explore all metro and feeder routes in Pakistan's modern transit network",
+      "Explore all metro and feeder routes in Islamabad's modern transit network",
     url: 'https://www.safar.fyi/transit-lines',
     siteName: 'Safar',
     locale: 'en_US',
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Transit Lines | Safar - Pakistan Transit Network',
+    title: 'Transit Lines | Safar - Islamabad Transit Network',
     description:
-      "Explore all metro and feeder routes in Pakistan's modern transit network",
+      "Explore all metro and feeder routes in Islamabad's modern transit network",
   },
   robots: {
     index: true,
@@ -57,14 +57,14 @@ export default function TransitLinesPage() {
 
         <PageHeader
           title="Transit Lines"
-          description="Explore Pakistan's modern transit network routes and connections"
+          description="Explore Islamabad's modern transit network routes and connections"
         />
 
         <main className="relative z-10 px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
           <div className="max-w-5xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 mb-8">
               <p className="text-gray-700">
-                Pakistan&apos;s transit network consists of {metroLines.length}{' '}
+                Islamabad&apos;s transit network consists of {metroLines.length}{' '}
                 lines spanning major urban centers, including {mainLines.length}{' '}
                 main metro lines and {feederRoutes.length} feeder routes that
                 connect neighborhoods to major transit corridors.
