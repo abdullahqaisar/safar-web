@@ -99,8 +99,8 @@ const TransitRoute: React.FC<TransitRouteProps> = ({
         ? 3
         : 2.5 // Thinner for feeder routes
       : zoomLevel >= 14
-      ? 5
-      : 4; // Thicker for main routes
+        ? 5
+        : 4; // Thicker for main routes
 
     // Higher opacity for selected lines
     const opacity = isSelectedLine ? 1 : isFeeder ? 0.85 : 0.9;
