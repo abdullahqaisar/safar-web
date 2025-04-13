@@ -112,14 +112,14 @@ export function SearchSection({
   if (isSearchMode) {
     return (
       <Card
-        className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300"
+        className="relative bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-visible transition-all duration-300"
         style={{ overflow: 'visible' }}
       >
         <motion.div
           key="search-form"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 sm:p-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="p-5 sm:p-6"
           style={{ overflow: 'visible' }}
         >
           <form
@@ -130,13 +130,10 @@ export function SearchSection({
           >
             <div className="mb-5">
               <h2 className="text-base sm:text-lg font-medium text-gray-800 flex items-center">
-                <Search
-                  size={18}
-                  className="mr-2 text-[color:var(--color-accent)]"
-                />
+                <Search size={18} className="mr-2 text-emerald-500" />
                 Find Routes
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 Enter your starting point and destination to discover available
                 routes
               </p>
@@ -144,11 +141,7 @@ export function SearchSection({
 
             <div
               className="space-y-4"
-              style={{
-                overflow: 'visible',
-                position: 'relative',
-                zIndex: 50,
-              }}
+              style={{ overflow: 'visible', position: 'relative', zIndex: 50 }}
             >
               <div className="relative z-50" style={{ overflow: 'visible' }}>
                 <JourneySearchForm
@@ -162,17 +155,14 @@ export function SearchSection({
             </div>
 
             {formError && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
+              <div
                 className="mt-4 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600 flex items-start"
                 role="alert"
                 aria-live="polite"
               >
                 <AlertCircle size={16} className="mt-0.5 mr-2 flex-shrink-0" />
                 <span>{formError}</span>
-              </motion.div>
+              </div>
             )}
 
             <div className="mt-5">
@@ -181,7 +171,7 @@ export function SearchSection({
                 variant="primary"
                 isLoading={isLoading || isSearching}
                 disabled={!isFormValid || isLoading || isSearching}
-                className="w-full justify-center bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
+                className="w-full justify-center bg-emerald-600 hover:bg-emerald-700"
                 leftIcon={<Search size={16} />}
                 type="submit"
               >
@@ -202,38 +192,32 @@ export function SearchSection({
   const buttonIsLoading =
     userInitiatedSearchRef.current && (isLoading || isSearching);
 
-  // Results page view with improved edit button
+  // Results page view with improved edit button - simplified animation
   return (
     <Card
-      className="relative bg-white border border-gray-200 rounded-xl mb-6 overflow-visible transition-all duration-300"
+      className="relative bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-visible transition-all duration-300"
       style={{ overflow: 'visible' }}
     >
       {!isModifying && (
-        <div className="absolute right-3 top-3 z-10">
+        <div className="absolute right-5 top-5 z-10">
           <Button
             size="sm"
             variant="outline"
-            className="flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-[color:var(--color-accent)] text-[color:var(--color-accent)] hover:bg-gray-50 hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+            className="flex items-center gap-1.5 py-2 px-3 text-xs bg-white border-emerald-500 text-emerald-600 hover:bg-gray-50"
             onClick={handleStartModifying}
             disabled={isLoading}
             aria-label="Edit journey"
           >
             <Edit size={13} />
-            <span className="pl-2">Edit Journey</span>
+            <span className="pl-1">Edit Journey</span>
           </Button>
         </div>
       )}
 
       <AnimatePresence mode="wait">
         {isModifying ? (
-          <motion.div
-            key="edit-form"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="p-4 sm:p-6"
-            style={{ overflow: 'visible' }}
-          >
+          // Edit form view - simplified animation
+          <div className="p-5 sm:p-6" style={{ overflow: 'visible' }}>
             <form
               ref={formRef}
               onSubmit={handleSearchSubmit}
@@ -242,10 +226,7 @@ export function SearchSection({
             >
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-base sm:text-lg font-medium text-gray-800 flex items-center">
-                  <Search
-                    size={18}
-                    className="mr-2 text-[color:var(--color-accent)]"
-                  />
+                  <Search size={18} className="mr-2 text-emerald-500" />
                   Edit Journey
                 </h2>
                 <Button
@@ -279,10 +260,7 @@ export function SearchSection({
               </div>
 
               {formError && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                <div
                   className="mt-4 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600 flex items-start"
                   role="alert"
                   aria-live="polite"
@@ -292,7 +270,7 @@ export function SearchSection({
                     className="mt-0.5 mr-2 flex-shrink-0"
                   />
                   <span>{formError}</span>
-                </motion.div>
+                </div>
               )}
 
               <div className="mt-5 flex gap-3">
@@ -309,7 +287,7 @@ export function SearchSection({
                   variant="primary"
                   isLoading={buttonIsLoading}
                   disabled={!isFormValid || buttonIsLoading}
-                  className="flex-1 justify-center bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)]"
+                  className="flex-1 justify-center bg-emerald-600 hover:bg-emerald-700"
                   leftIcon={<Search size={16} />}
                   type="submit"
                 >
@@ -317,59 +295,55 @@ export function SearchSection({
                 </Button>
               </div>
             </form>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            key="view-mode"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-4 sm:p-5 group"
-          >
-            <div className="mb-2 flex items-center">
+          // Journey details view - better styling to match map page
+          <div className="p-5 sm:p-6 group">
+            <div className="mb-3 flex items-center">
               <h2 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                <Search size={18} className="mr-2 text-emerald-500" />
                 Journey Details
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 sm:gap-x-6 mt-3 mb-3 pr-20 sm:pr-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-x-6 mt-4 mb-3 pr-16 sm:pr-0">
               {/* From location */}
-              <div className="flex items-center py-1.5">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mr-3">
-                  <MapPin className="text-green-600 w-4 h-4" />
+              <div className="flex items-center py-2">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mr-3 shadow-sm">
+                  <MapPin className="text-green-600 w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">
+                  <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide font-medium">
                     From
                   </p>
-                  <p className="font-medium truncate text-gray-800 text-sm">
+                  <p className="font-medium truncate text-gray-800">
                     {fromText || 'Selected location'}
                   </p>
                 </div>
               </div>
 
-              <div className="sm:hidden flex justify-center my-0.5 text-gray-300">
+              <div className="sm:hidden flex justify-center my-1 text-gray-300">
                 <div className="w-8 h-8 flex items-center justify-center">
                   <ArrowDown size={14} />
                 </div>
               </div>
 
               {/* To location */}
-              <div className="flex items-center py-1.5">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mr-3">
-                  <MapPin className="text-red-600 w-4 h-4" />
+              <div className="flex items-center py-2">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mr-3 shadow-sm">
+                  <MapPin className="text-red-600 w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">
+                  <p className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide font-medium">
                     To
                   </p>
-                  <p className="font-medium truncate text-gray-800 text-sm">
+                  <p className="font-medium truncate text-gray-800">
                     {toText || 'Selected location'}
                   </p>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </Card>

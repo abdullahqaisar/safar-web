@@ -19,10 +19,10 @@ const StatsBarSection = dynamic(
 
 export function HeroSection() {
   return (
-    <section className="relative">
+    <section className="relative pt-16 md:pt-20">
       <div className="absolute inset-0 bg-gradient-radial from-[color:var(--color-accent)]/5 to-transparent opacity-70"></div>
 
-      <div className="bg-gradient-to-br from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative py-18 sm:py-24 md:py-28 lg:py-36 overflow-hidden">
+      <div className="bg-gradient-to-b from-[color:var(--color-accent)]/5 to-[#FEF6EC] relative py-18 sm:py-24 md:py-28 lg:py-36 overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-10 sm:mb-12 md:mb-14 lg:mb-16">
             <SectionBadge className="mb-5 sm:mb-6 md:mb-8">

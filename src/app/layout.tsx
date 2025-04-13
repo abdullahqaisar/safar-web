@@ -3,34 +3,34 @@ import { Ubuntu } from 'next/font/google';
 import Script from 'next/script';
 
 import { Navbar } from '@/components/layouts/Navbar';
-import { Footer } from '@/components/layouts/Footer';
+import Footer from '@/components/layouts/Footer';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { JourneyProvider } from '@/features/journey/context/JourneyContext';
 
-// Initialize Ubuntu font
+// Initialize Ubuntu font with all weights needed
 const ubuntu = Ubuntu({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  weight: ['300', '400', '500', '700'],
+  display: 'swap', // Use 'swap' to ensure text remains visible during font loading
   variable: '--font-ubuntu',
 });
 
 export const metadata: Metadata = {
-  title:
-    'Safar.fyi | Islamabad Metro Route Finder | Rawalpindi Metro Bus Routes',
+  title: 'Safar | Find Islamabad Metro and Feeder Bus Routes',
   description:
-    'Find the best metro and bus routes in Islamabad and Rawalpindi. Plan your journey with our route finder for Metro Bus, Orange Line, Blue Line, Green Line and Feeder routes.',
+    'Find the best metro routes in Islamabad and Rawalpindi. Plan your journey with Metro Bus, Red Line, Orange Line, Blue Line, Green Line, E bus, and Feeder routes.',
   keywords:
-    'islamabad metro, rawalpindi metro, islamabad bus routes, metro bus routes, islamabad public transport, rawalpindi bus service, islamabad green line, islamabad orange line, metro feeder routes',
+    'islamabad metro, rawalpindi metro, islamabad bus routes, metro bus routes, rawalpindi bus service, green line, orange line, blue line, red line, metro feeder routes',
   authors: [{ name: 'Safar' }],
   openGraph: {
-    title: 'Islamabad Metro Route Finder | Rawalpindi Metro Bus Routes',
+    title: 'Islamabad Metro and Feeder Bus Route Finder',
     description:
-      'Find the best metro and bus routes in Islamabad and Rawalpindi',
+      'Find the best metro and feeder E Bus routes in Islamabad and Rawalpindi',
     type: 'website',
     locale: 'en_US',
-    siteName: 'Safar - Islamabad Metro Routes',
+    siteName: 'Safar',
   },
 };
 
@@ -40,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={ubuntu.variable}>
       <head>
         {/* Google Analytics */}
         <Script
@@ -56,7 +56,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${ubuntu.variable} font-sans`}>
+      <body className="font-sans">
         <QueryProvider>
           <JourneyProvider>
             <Navbar />

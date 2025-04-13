@@ -7,6 +7,7 @@ import usePlacesAutocomplete, {
 } from 'use-places-autocomplete';
 import { Coordinates } from '@/types/station';
 import { storeUserSelectedLocation } from '../services/geocoding.service';
+import { MAPS_CONFIG } from '@/lib/constants/maps';
 
 interface UsePlacesSearchProps {
   initialValue: string;
@@ -56,6 +57,12 @@ export default function usePlacesSearch({
     callbackName: 'initMap',
     requestOptions: {
       componentRestrictions: { country: 'pk' },
+      locationRestriction: {
+        south: MAPS_CONFIG.islamabadRawalpindiBounds.south,
+        west: MAPS_CONFIG.islamabadRawalpindiBounds.west,
+        north: MAPS_CONFIG.islamabadRawalpindiBounds.north,
+        east: MAPS_CONFIG.islamabadRawalpindiBounds.east,
+      },
     },
     debounce: 300,
   });

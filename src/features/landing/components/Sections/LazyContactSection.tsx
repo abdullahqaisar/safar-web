@@ -6,13 +6,13 @@ import { Loader2, Mail, MessageSquare } from 'lucide-react';
 import { Container } from '@/components/common/Container';
 import { SectionBadge } from '@/components/common/SectionBadge';
 
-// Dynamically import the ContactSection with lazy loading
+// Lazy load the ContactSection component
 const ContactSection = dynamic(
   () =>
     import('./ContactSection').then((mod) => ({ default: mod.ContactSection })),
   {
     loading: () => <ContactSectionSkeleton />,
-    ssr: false, // Disable server-side rendering for EmailJS dependencies
+    ssr: true, // We can enable SSR now that we're using server actions with Resend
   }
 );
 
@@ -92,7 +92,7 @@ function ContactSectionSkeleton() {
   );
 }
 
-export function LazyContactSection() {
+export default function LazyContactSection() {
   return (
     <Suspense fallback={<ContactSectionSkeleton />}>
       <ContactSection />

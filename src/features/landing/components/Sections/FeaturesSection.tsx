@@ -49,7 +49,7 @@ export function FeaturesSection() {
         <SectionHeading
           tag="Benefits"
           title="Why Choose Safar?"
-          description="Experience the smarter way to navigate public transportation in Pakistan with features designed to make your journey smooth and stress-free."
+          description="Experience the smarter way to navigate public transportation in Islamabad with features designed to make your journey smooth and stress-free."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">

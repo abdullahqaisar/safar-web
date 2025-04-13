@@ -25,7 +25,7 @@ export function ContributeSection() {
     'Earn community points and badges',
     'Help improve routes for everyone',
     'Simple submission process',
-    'Build better transportation for Pakistan',
+    'Build better transportation for Islamabad',
   ];
 
   return (
@@ -47,7 +47,7 @@ export function ContributeSection() {
             <p className="text-base sm:text-lg text-[color:var(--color-gray-600)] max-w-2xl mx-auto leading-relaxed mb-10">
               Help us improve Safar by contributing station data from your area.
               Together we can build the most comprehensive public transportation
-              guide in Pakistan.
+              guide in Islamabad.
             </p>
 
             <div className="w-full max-w-xl mx-auto bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-lg p-8 md:p-10 hover:border-[color:var(--color-accent)]/20">

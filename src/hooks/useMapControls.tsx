@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-export function useMapControls() {
+export function useControlPanel() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showStations, setShowStations] = useState(true);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);

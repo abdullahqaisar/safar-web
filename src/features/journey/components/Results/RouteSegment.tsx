@@ -39,7 +39,7 @@ export function RouteSegment({
   const getSegmentTypeStyles = () => {
     if (segment.type === 'transit') {
       return {
-        bgColor: 'bg-[color:var(--color-accent)] text-white',
+        bgColor: 'bg-emerald-600 text-white',
         icon: <Train className="w-5 h-5" aria-hidden="true" />,
       };
     } else if (segment.type === 'walk') {
@@ -65,7 +65,7 @@ export function RouteSegment({
     const lineName = transitSegment.line?.name || '';
 
     if (lineName.toLowerCase().includes('green')) {
-      return 'bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] border border-[rgba(var(--color-accent-rgb),0.2)]';
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
     } else if (lineName.toLowerCase().includes('blue')) {
       return 'bg-blue-50 text-blue-700 border border-blue-100';
     } else if (lineName.toLowerCase().includes('red')) {
@@ -136,7 +136,7 @@ export function RouteSegment({
                 <p
                   className={cn(
                     'font-medium text-base text-gray-900',
-                    isTransfer && 'text-[color:var(--color-accent-dark)]'
+                    isTransfer && 'text-emerald-700'
                   )}
                 >
                   {getDescription()}
@@ -156,7 +156,7 @@ export function RouteSegment({
                         •
                       </span>
                       <Clock
-                        className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]"
+                        className="w-3.5 h-3.5 mr-1 text-emerald-500"
                         aria-hidden="true"
                       />
                       <span>{duration}</span>
@@ -173,7 +173,7 @@ export function RouteSegment({
                       <div className="flex items-center">
                         <span className="text-sm text-gray-600 flex items-center">
                           <MapPin
-                            className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]"
+                            className="w-3.5 h-3.5 mr-1 text-emerald-500"
                             aria-hidden="true"
                           />
                           {segment.stations.length - 1} stops
@@ -193,7 +193,7 @@ export function RouteSegment({
                           •
                         </span>
                         <Clock
-                          className="w-3.5 h-3.5 mr-1 text-[color:var(--color-accent)]"
+                          className="w-3.5 h-3.5 mr-1 text-emerald-500"
                           aria-hidden="true"
                         />
                         {duration}
@@ -203,7 +203,7 @@ export function RouteSegment({
 
                   {segment.stations && segment.stations.length > 1 && (
                     <button
-                      className="mt-2 inline-flex items-center text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-dark)] hover:bg-[rgba(var(--color-accent-rgb),0.05)] active:bg-[rgba(var(--color-accent-rgb),0.1)] py-1 px-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                      className="mt-2 inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 active:bg-emerald-100 py-1 px-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         onToggleExpand();
@@ -246,7 +246,7 @@ export function RouteSegment({
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
-                <div className="mt-3 ml-1 pl-3 border-l-2 border-[rgba(var(--color-accent-rgb),0.15)] space-y-1">
+                <div className="mt-3 ml-1 pl-3 border-l-2 border-emerald-100 space-y-1">
                   {segment.stations.map((station, idx) => {
                     const isOrigin = idx === 0;
                     const isDestination = idx === segment.stations.length - 1;
@@ -276,9 +276,9 @@ export function RouteSegment({
                         <div
                           className={`w-2 h-2 rounded-full ${
                             isOrigin
-                              ? 'bg-[color:var(--color-accent)]'
+                              ? 'bg-emerald-500'
                               : isDestination
-                              ? 'bg-[color:var(--color-primary)]'
+                              ? 'bg-red-500'
                               : 'bg-gray-300'
                           } mr-2.5 flex-shrink-0`}
                           aria-hidden="true"
@@ -287,9 +287,9 @@ export function RouteSegment({
                           <span
                             className={`text-sm ${
                               isOrigin
-                                ? 'text-[color:var(--color-accent)] font-medium'
+                                ? 'text-emerald-600 font-medium'
                                 : isDestination
-                                ? 'text-[color:var(--color-primary)] font-medium'
+                                ? 'text-red-600 font-medium'
                                 : 'text-gray-500'
                             }`}
                           >
@@ -297,7 +297,7 @@ export function RouteSegment({
                           </span>
                           {isOrigin && (
                             <span
-                              className="px-1.5 py-0.5 bg-[rgba(var(--color-accent-rgb),0.1)] text-[color:var(--color-accent)] text-[10px] rounded-md font-medium border border-[rgba(var(--color-accent-rgb),0.2)]"
+                              className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] rounded-md font-medium border border-emerald-200"
                               aria-label={
                                 isTransfer ? 'Transfer point' : 'Board here'
                               }
@@ -307,7 +307,7 @@ export function RouteSegment({
                           )}
                           {isDestination && (
                             <span
-                              className="px-1.5 py-0.5 bg-[rgba(var(--color-primary-rgb),0.1)] text-[color:var(--color-primary)] text-[10px] rounded-md font-medium border border-[rgba(var(--color-primary-rgb),0.2)]"
+                              className="px-1.5 py-0.5 bg-red-50 text-red-600 text-[10px] rounded-md font-medium border border-red-100"
                               aria-label={
                                 isLastTransitSegment
                                   ? 'Exit here'

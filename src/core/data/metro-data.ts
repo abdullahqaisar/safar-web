@@ -30,12 +30,12 @@ export const metroLines: TransitLine[] = [
       'marrirChowk',
       'saddar',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 20 seconds',
     schedule: {
       first: '6:30 AM',
       last: '10:00 PM',
     },
-    ticketCost: 50,
+    ticketCost: 30,
   },
   {
     id: 'orange',
@@ -85,9 +85,9 @@ export const metroLines: TransitLine[] = [
       'shahdara',
       'bharakau',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 10 minutes',
     schedule: {
-      first: '6:30 AM',
+      first: '6:00 AM',
       last: '10:00 PM',
     },
     ticketCost: 50,
@@ -112,9 +112,9 @@ export const metroLines: TransitLine[] = [
       'koralChowk',
       'gulberg',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 10 minutes',
     schedule: {
-      first: '6:30 AM',
+      first: '6:00 AM',
       last: '10:00 PM',
     },
     ticketCost: 50,
@@ -141,9 +141,9 @@ export const metroLines: TransitLine[] = [
       'shamaPark',
       'metroCashAndCarry',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 60 minutes',
     schedule: {
-      first: '6:30 AM',
+      first: '8:00 AM',
       last: '10:00 PM',
     },
     ticketCost: 50,
@@ -439,7 +439,7 @@ export const metroLines: TransitLine[] = [
     ],
     frequency: 'Every 30 minutes',
     schedule: {
-      first: '7:30 AM',
+      first: '6:00 AM',
       last: '10:00 PM',
     },
     ticketCost: 50,
@@ -469,7 +469,7 @@ export const walkingShortcuts: Array<{
   {
     from: 'pims',
     to: 'pims_gate',
-    priority: 8,
+    priority: 10,
   },
 ];
 
@@ -480,7 +480,7 @@ export const MAJOR_INTERCHANGES = [
   },
   {
     stationId: 'pims_gate',
-    lines: ['green', 'blue'],
+    lines: ['green', 'blue', 'fr_3a', 'fr_4', 'fr_7', 'fr_8a', 'fr_8c'],
   },
   {
     stationId: 'faizabad',
@@ -489,5 +489,57 @@ export const MAJOR_INTERCHANGES = [
   {
     stationId: 'sohan',
     lines: ['blue', 'fr_1', 'fr_9', 'fr_14'],
+  },
+  {
+    stationId: 'pims',
+    lines: ['red', 'fr_3a'],
+  },
+  {
+    stationId: 'chaman',
+    lines: ['red', 'green', 'fr_7'],
+  },
+  {
+    stationId: 'h8Shakarparia',
+    lines: ['blue', 'fr_8c'],
+  },
+  {
+    stationId: 'nust',
+    lines: ['orange', 'fr_7'],
+  },
+  {
+    stationId: 'bharakau',
+    lines: ['green', 'fr_14', 'fr_14a'],
+  },
+  {
+    stationId: 'khannaPul',
+    lines: ['blue', 'fr_9', 'fr_15'],
+  },
+  {
+    stationId: 'aabpara',
+    lines: ['green', 'fr_8a'],
+  },
+  {
+    stationId: 'golraMorr',
+    lines: ['orange', 'fr_9'],
+  },
+  {
+    stationId: 'ijPrincipal',
+    lines: ['red', 'fr_1'],
+  },
+  {
+    stationId: 'g7g8',
+    lines: ['green', 'blue', 'fr_4'],
+  },
+  {
+    stationId: 'bariImam',
+    lines: ['fr_4', 'fr_4a'],
+  },
+  {
+    stationId: 'kashmirChowk',
+    lines: ['fr_8a', 'fr_14'],
+  },
+  {
+    stationId: 'foreignOffice',
+    lines: ['green', 'fr_4'],
   },
 ];

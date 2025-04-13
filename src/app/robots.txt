@@ -1,4 +1,16 @@
+# Allow all web crawlers
 User-agent: *
 Allow: /
+Allow: /map
+Allow: /route
+Allow: /transit-lines
+Allow: /transit-lines/*
+Allow: /stations
+Allow: /stations/*
 
-Sitemap: https://safar.fyi/sitemap.xml
+# Disallow index pages
+Disallow: /index.html
+Disallow: /index.php
+
+# Sitemap location
+Sitemap: https://www.safar.fyi/sitemap.xml

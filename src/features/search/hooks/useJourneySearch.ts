@@ -11,7 +11,7 @@ interface UseJourneySearchOptions {
 
 export function useJourneySearch(options: UseJourneySearchOptions = {}) {
   // Default to NOT including text in URLs for shorter, cleaner URLs
-  const { redirectPath = '/journey', includeTextInUrl = false } = options;
+  const { redirectPath = '/route', includeTextInUrl = false } = options;
   const router = useRouter();
   const { fromLocation, toLocation, isFormValid } = useJourney();
 
@@ -55,11 +55,9 @@ export function useJourneySearch(options: UseJourneySearchOptions = {}) {
 
     const params = new URLSearchParams();
 
-    // Always include the essential coordinate parameters
-    params.set('fromLat', fromLocation.lat.toString());
-    params.set('fromLng', fromLocation.lng.toString());
-    params.set('toLat', toLocation.lat.toString());
-    params.set('toLng', toLocation.lng.toString());
+    // Use the new URL format with comma-separated coordinates
+    params.set('from', `${fromLocation.lat},${fromLocation.lng}`);
+    params.set('to', `${toLocation.lat},${toLocation.lng}`);
 
     if (includeTextInUrl) {
       if (fromValue) {
