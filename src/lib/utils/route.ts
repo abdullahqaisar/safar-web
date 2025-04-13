@@ -9,6 +9,9 @@ export const getLineColor = (lineId: string): string => {
       return '#3182CE';
     case 'orange':
       return '#ED8936';
+    case 'orangeAirportExpress':
+      return '#F59E0B';
+
     default:
       return lineId.startsWith('fr_') ? '#4FD1C5' : '#4A5568';
   }
