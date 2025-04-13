@@ -365,8 +365,8 @@ export const metroLines: TransitLine[] = [
     ],
     frequency: 'Every 14-18 minutes',
     schedule: {
-      first: '7:30 AM',
-      last: '10:00 PM',
+      first: '6:30 AM',
+      last: '9:40 PM',
     },
     ticketCost: 50,
   },
