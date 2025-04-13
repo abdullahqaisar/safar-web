@@ -174,8 +174,23 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.631963701490236, lng: 72.94477006878428 },
   },
   {
+    id: 'badhanaKalan',
+    name: 'Badhana Kalan',
+    coordinates: { lat: 33.6164768798801, lng: 72.91383483433006 },
+  },
+  {
+    id: 'motorwayInterchange',
+    name: 'Motorway Interchange',
+    coordinates: { lat: 33.58997022639415, lng: 72.8702321356004 },
+  },
+  {
+    id: 'rakhPindRanjhan',
+    name: 'Rakh Pind Ranjhan',
+    coordinates: { lat: 33.575581149112296, lng: 72.86038386989927 },
+  },
+  {
     id: 'airport',
-    name: 'Airport',
+    name: 'Islamabad Int. Airport',
     coordinates: { lat: 33.555939595133935, lng: 72.83735610335114 },
   },
   {
@@ -186,7 +201,7 @@ export const stationData: Station[] = [
   {
     id: 'cda',
     name: 'CDA',
-    coordinates: { lat: 33.70026269568505, lng: 73.07816222598147 },
+    coordinates: { lat: 33.70069062293746, lng: 73.07779843850173 },
   },
   {
     id: 'aabpara',
@@ -738,8 +753,8 @@ export const stationData: Station[] = [
   },
   {
     id: 'cdaStop',
-    name: 'CDA Stop',
-    coordinates: { lat: 33.70069062293746, lng: 73.07779843850173 },
+    name: 'CDA Stop, I10',
+    coordinates: { lat: 33.64158453401826, lng: 73.04329454232742 },
   },
   {
     id: 'mandiMorh',

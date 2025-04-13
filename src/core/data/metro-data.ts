@@ -30,7 +30,7 @@ export const metroLines: TransitLine[] = [
       'marrirChowk',
       'saddar',
     ],
-    frequency: 'Every 20 seconds',
+    frequency: 'Every 02–05 Minutes',
     schedule: {
       first: '6:30 AM',
       last: '10:00 PM',
@@ -49,7 +49,7 @@ export const metroLines: TransitLine[] = [
       'g13',
       'golraMorr',
       'n5',
-      'airport',
+      // 'airport',
     ],
     frequency: 'Every 04-08 minutes',
     schedule: {
@@ -59,11 +59,16 @@ export const metroLines: TransitLine[] = [
     ticketCost: 50,
   },
   {
-    id: 'orange',
-    name: 'Orange Line Airport Express',
-    stations: [],
-    frequency:
-      '06:00 AM - 10:00 PM every 30 minutes, 10:01 PM - 05:59 AM every 60 minutes',
+    id: 'orangeAirportExpress',
+    name: 'Orange Line Airport Shuttle',
+    stations: [
+      'n5',
+      'badhanaKalan',
+      'motorwayInterchange',
+      'rakhPindRanjhan',
+      'airport',
+    ],
+    frequency: 'Every 30 mins (6AM-10PM), every 60 mins (10PM-6AM)',
     schedule: {
       first: 'All Day',
       last: '',
@@ -85,7 +90,7 @@ export const metroLines: TransitLine[] = [
       'shahdara',
       'bharakau',
     ],
-    frequency: 'Every 10 minutes',
+    frequency: 'Every 15 minutes',
     schedule: {
       first: '6:00 AM',
       last: '10:00 PM',
@@ -112,7 +117,7 @@ export const metroLines: TransitLine[] = [
       'koralChowk',
       'gulberg',
     ],
-    frequency: 'Every 10 minutes',
+    frequency: 'Every 10-15 minutes',
     schedule: {
       first: '6:00 AM',
       last: '10:00 PM',
@@ -162,7 +167,7 @@ export const metroLines: TransitLine[] = [
       'navalComplex',
       'faisalMasjid',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 20 minutes',
     schedule: {
       first: '6:30 AM',
       last: '10:00 PM',
@@ -199,7 +204,7 @@ export const metroLines: TransitLine[] = [
       'muslimColony',
       'bariImam',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 10-12 minutes',
     schedule: {
       first: '6:30 AM',
       last: '10:00 PM',
@@ -218,7 +223,7 @@ export const metroLines: TransitLine[] = [
       'babulQuaid',
       'qau',
     ],
-    frequency: 'Every 15-20 minutes',
+    frequency: 'Every 30 minutes',
     schedule: {
       first: '6:30 AM',
       last: '10:00 PM',
@@ -250,7 +255,7 @@ export const metroLines: TransitLine[] = [
       'mehrabad',
       'nust',
     ],
-    frequency: 'Every 30 minutes',
+    frequency: 'Every 10-12 minutes',
     schedule: {
       first: '7:30 AM',
       last: '10:00 PM',
@@ -283,7 +288,7 @@ export const metroLines: TransitLine[] = [
       'tammaStop',
       'tramriChowk',
     ],
-    frequency: 'Every 30 minutes',
+    frequency: 'Every 20 minutes',
     schedule: {
       first: '7:30 AM',
       last: '10:00 PM',
@@ -317,7 +322,7 @@ export const metroLines: TransitLine[] = [
       'tammaStop',
       'tramriChowk',
     ],
-    frequency: 'Every 30 minutes',
+    frequency: 'Every 20 minutes',
     schedule: {
       first: '7:30 AM',
       last: '10:00 PM',
@@ -354,7 +359,7 @@ export const metroLines: TransitLine[] = [
       'golraMorhChowk',
       'golraMorr',
     ],
-    frequency: 'Every 30 minutes',
+    frequency: 'Every 14-18 minutes',
     schedule: {
       first: '7:30 AM',
       last: '10:00 PM',
@@ -384,7 +389,7 @@ export const metroLines: TransitLine[] = [
       'pullyStopI10',
       'mandiMorh',
     ],
-    frequency: 'Every 30 minutes',
+    frequency: 'Every 15 minutes',
     schedule: {
       first: '7:30 AM',
       last: '10:00 PM',
@@ -409,7 +414,7 @@ export const metroLines: TransitLine[] = [
       'alwadiColony',
       'satraMeel',
     ],
-    frequency: 'Every 30 minutes',
+    frequency: 'Every 15 minutes',
     schedule: {
       first: '7:30 AM',
       last: '10:00 PM',
