@@ -5,7 +5,7 @@ import { Coordinates } from '@/types/station';
 import { cn } from '@/lib/utils/formatters';
 import usePlacesSearch from '../hooks/usePlacesSearch';
 import SearchDropdown from './SearchDropdown';
-import { LucideIcon, Loader2, X } from 'lucide-react';
+import { LucideIcon, Loader2, X, Search } from 'lucide-react';
 import React from 'react';
 
 interface SearchInputProps {
@@ -32,6 +32,7 @@ export default function SearchInput({
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasSuggestions, setHasSuggestions] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(
@@ -55,6 +56,11 @@ export default function SearchInput({
     onLocationSelect: onSelectPlace,
     onValueChange,
   });
+
+  // Update hasSuggestions state when suggestions change
+  useEffect(() => {
+    setHasSuggestions(suggestions.length > 0);
+  }, [suggestions]);
 
   useEffect(() => {
     return () => {
@@ -108,10 +114,17 @@ export default function SearchInput({
   };
 
   // Select an item from dropdown
-  const selectItem = async (description: string) => {
+  const selectItem = async (description: string, index: number) => {
     try {
       setIsSelectingItem(true);
-      await handleSelectPlace(description);
+      const suggestion = suggestions[index];
+
+      // Check if this is a station selection
+      if (suggestion?.isStation && suggestion?.station) {
+        await handleSelectPlace(description, suggestion.station);
+      } else {
+        await handleSelectPlace(description);
+      }
 
       if (inputRef.current) {
         if (id === 'from-location') {
@@ -162,7 +175,10 @@ export default function SearchInput({
           highlightedIndex >= 0 &&
           suggestions[highlightedIndex]
         ) {
-          selectItem(suggestions[highlightedIndex].description);
+          selectItem(
+            suggestions[highlightedIndex].description,
+            highlightedIndex
+          );
         }
         break;
       case 'Escape':
@@ -196,17 +212,40 @@ export default function SearchInput({
     }
   };
 
+  // Handle search dropdown item selection
+  const handleSelectDropdownItem = (description: string, index?: number) => {
+    if (typeof index === 'number') {
+      void selectItem(description, index);
+    } else if (highlightedIndex >= 0) {
+      void selectItem(description, highlightedIndex);
+    }
+  };
+
   return (
     <div className="relative w-full">
       <div
         className={cn(
-          'absolute left-4 top-3.5',
-          lightMode
-            ? 'text-[color:var(--color-accent)]'
-            : 'text-[color:var(--color-accent-dark)]'
+          'absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 transition-all duration-200 z-10',
+          isFocused
+            ? lightMode
+              ? 'text-[color:var(--color-accent)]'
+              : 'text-[color:var(--color-accent-dark)]'
+            : hasSelectedLocation
+              ? lightMode
+                ? 'text-[color:var(--color-accent)]'
+                : 'text-emerald-600'
+              : lightMode
+                ? 'text-gray-400'
+                : 'text-gray-500'
         )}
       >
-        <Icon size={18} />
+        {isLoading ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : hasSelectedLocation ? (
+          <Icon size={16} />
+        ) : (
+          <Search size={16} />
+        )}
       </div>
 
       <input
@@ -217,18 +256,19 @@ export default function SearchInput({
         onKeyDown={handleKeyDown}
         disabled={!isReady}
         className={cn(
-          'w-full h-12 pl-12 pr-10 rounded-lg border',
+          'w-full h-10 sm:h-11 pl-9 sm:pl-10 pr-8 sm:pr-10 rounded-lg border text-base',
           'transition-all duration-200 ease-in-out',
-          'focus:ring-2 focus:ring-[color:var(--color-accent)] focus:border-transparent focus:outline-none',
+          'focus:ring-2 focus:border-transparent focus:outline-none',
           isFocused
-            ? 'border-[color:var(--color-accent)] bg-white shadow-md'
+            ? 'border-transparent ring-2 ring-[color:var(--color-accent)] bg-white shadow-md'
             : hasSelectedLocation
-            ? lightMode
-              ? 'border-gray-100 bg-white'
-              : 'border-green-200 bg-white'
-            : lightMode
-            ? 'border-gray-100 bg-white'
-            : 'border-gray-200 bg-gray-50'
+              ? lightMode
+                ? 'border-gray-100 bg-white'
+                : 'border-emerald-200 bg-white shadow-sm'
+              : lightMode
+                ? 'border-gray-100 bg-white'
+                : 'border-gray-200 bg-gray-50',
+          'text-sm sm:text-base'
         )}
         placeholder={placeholder}
         onFocus={handleFocus}
@@ -243,21 +283,18 @@ export default function SearchInput({
         }
       />
 
-      {isLoading && inputValue && (
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400">
-          <Loader2 size={16} className="animate-spin" />
-          <span className="sr-only">Loading</span>
-        </div>
-      )}
-
       {inputValue && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded-full hover:bg-gray-100"
+          className={cn(
+            'absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-all',
+            'hover:text-gray-600 p-1 sm:p-1.5 rounded-full hover:bg-gray-100',
+            isFocused ? 'opacity-100 visible' : 'opacity-70'
+          )}
           aria-label="Clear input"
         >
-          <X size={16} />
+          <X size={14} className="sm:w-4 sm:h-4" />
         </button>
       )}
 
@@ -269,10 +306,19 @@ export default function SearchInput({
         status={status}
         suggestions={suggestions}
         highlightedIndex={highlightedIndex}
-        onSelectItem={selectItem}
+        onSelectItem={handleSelectDropdownItem}
         onHighlightItem={setHighlightedIndex}
         dropdownRef={dropdownRef}
       />
+
+      {/* Accessible status indicator for screen readers */}
+      <div className="sr-only" aria-live="polite">
+        {isLoading
+          ? 'Searching...'
+          : hasSuggestions
+            ? `${suggestions.length} suggestions found`
+            : ''}
+      </div>
     </div>
   );
 }

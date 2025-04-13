@@ -8,6 +8,11 @@ import usePlacesAutocomplete, {
 import { Coordinates } from '@/types/station';
 import { storeUserSelectedLocation } from '../services/geocoding.service';
 import { MAPS_CONFIG } from '@/lib/constants/maps';
+import {
+  searchStations,
+  combineSearchResults,
+  StationSearchResult,
+} from '../utils/station-search';
 
 interface UsePlacesSearchProps {
   initialValue: string;
@@ -15,22 +20,30 @@ interface UsePlacesSearchProps {
   onValueChange: (value: string) => void;
 }
 
+// Define a Suggestion type for better type safety
+export interface Suggestion {
+  place_id: string;
+  description: string;
+  structured_formatting: {
+    main_text: string;
+    secondary_text: string;
+  };
+  isStation?: boolean;
+  station?: StationSearchResult;
+}
+
 interface UsePlacesSearchReturn {
   value: string;
   isLoading: boolean;
   isReady: boolean;
-  suggestions: Array<{
-    place_id: string;
-    description: string;
-    structured_formatting: {
-      main_text: string;
-      secondary_text: string;
-    };
-  }>;
+  suggestions: Suggestion[];
   status: string;
   handleInputChange: (value: string) => void;
   handleClear: () => void;
-  handleSelectPlace: (description: string) => Promise<void>;
+  handleSelectPlace: (
+    description: string,
+    station?: StationSearchResult
+  ) => Promise<void>;
   setInputValue: (value: string) => void;
   hasSelectedLocation: boolean;
 }
@@ -44,6 +57,12 @@ export default function usePlacesSearch({
   const [isLoading, setIsLoading] = useState(false);
   const [hasSelectedLocation, setHasSelectedLocation] = useState(
     Boolean(initialValue)
+  );
+  const [stationResults, setStationResults] = useState<StationSearchResult[]>(
+    []
+  );
+  const [combinedSuggestions, setCombinedSuggestions] = useState<Suggestion[]>(
+    []
   );
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const loadingFailsafeRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,6 +85,13 @@ export default function usePlacesSearch({
     },
     debounce: 300,
   });
+
+  // Update combined suggestions when either Google results or station results change
+  useEffect(() => {
+    setCombinedSuggestions(
+      combineSearchResults(stationResults, data) as Suggestion[]
+    );
+  }, [data, stationResults]);
 
   useEffect(() => {
     if (initialValue) {
@@ -104,6 +130,14 @@ export default function usePlacesSearch({
     onValueChange(newValue);
     setPlacesValue(newValue);
 
+    // Search for matching stations
+    if (newValue.length >= 2) {
+      const matchingStations = searchStations(newValue);
+      setStationResults(matchingStations);
+    } else {
+      setStationResults([]);
+    }
+
     if (loadingFailsafeRef.current) clearTimeout(loadingFailsafeRef.current);
 
     if (newValue.length > 0) {
@@ -122,6 +156,7 @@ export default function usePlacesSearch({
     setValue('');
     setPlacesValue('', false);
     setHasSelectedLocation(false);
+    setStationResults([]);
     onValueChange('');
     onLocationSelect(null);
     clearSuggestions();
@@ -133,26 +168,37 @@ export default function usePlacesSearch({
     setPlacesValue(newValue, false);
   };
 
-  const handleSelectPlace = async (description: string) => {
+  const handleSelectPlace = async (
+    description: string,
+    station?: StationSearchResult
+  ) => {
     try {
       setValue(description);
       setPlacesValue(description, false);
       onValueChange(description);
       clearSuggestions();
       setIsLoading(true);
+      setStationResults([]);
 
       if (loadingFailsafeRef.current) clearTimeout(loadingFailsafeRef.current);
       loadingFailsafeRef.current = setTimeout(() => {
         setIsLoading(false);
       }, 5000);
 
-      const results = await getGeocode({ address: description });
-      const { lat, lng } = await getLatLng(results[0]);
-
-      storeUserSelectedLocation(lat, lng, description);
-
-      setHasSelectedLocation(true);
-      onLocationSelect({ lat, lng });
+      // If a station was directly selected, use its coordinates
+      if (station) {
+        const { lat, lng } = station.coordinates;
+        storeUserSelectedLocation(lat, lng, description);
+        setHasSelectedLocation(true);
+        onLocationSelect({ lat, lng });
+      } else {
+        // Otherwise geocode the address using Google
+        const results = await getGeocode({ address: description });
+        const { lat, lng } = await getLatLng(results[0]);
+        storeUserSelectedLocation(lat, lng, description);
+        setHasSelectedLocation(true);
+        onLocationSelect({ lat, lng });
+      }
     } catch (error) {
       console.error('Error geocoding address:', error);
       setHasSelectedLocation(false);
@@ -168,7 +214,7 @@ export default function usePlacesSearch({
     value,
     isLoading,
     isReady: ready,
-    suggestions: data,
+    suggestions: combinedSuggestions,
     status,
     handleInputChange,
     handleClear,
