@@ -73,7 +73,7 @@ export const metroLines: TransitLine[] = [
       first: 'All Day',
       last: '',
     },
-    ticketCost: 50,
+    ticketCost: 90,
   },
   {
     id: 'green',

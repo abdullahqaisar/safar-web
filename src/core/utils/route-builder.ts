@@ -123,6 +123,22 @@ export function createRoute(
   segments: RouteSegment[],
   sourceRoute?: Route
 ): Route {
+  // Validate segment continuity before creating route
+  for (let i = 0; i < segments.length - 1; i++) {
+    const currentSegment = segments[i];
+    const nextSegment = segments[i + 1];
+
+    const lastStationId =
+      currentSegment.stations[currentSegment.stations.length - 1].id;
+    const firstStationId = nextSegment.stations[0].id;
+
+    if (lastStationId !== firstStationId) {
+      throw new Error(
+        `Route segments must connect: the last station of segment ${i} (${lastStationId}) must match the first station of segment ${i + 1} (${firstStationId})`
+      );
+    }
+  }
+
   // Generate unique route ID
   const routeId = generateUniqueId();
 

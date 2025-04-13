@@ -230,7 +230,7 @@ export const stationData: Station[] = [
   },
   {
     id: 'bharakau',
-    name: 'Jillani, Bharakau',
+    name: 'Jillani, Barakahu',
     coordinates: { lat: 33.73545586140734, lng: 73.16561725338322 },
   },
   {
@@ -422,7 +422,7 @@ export const stationData: Station[] = [
   },
   {
     id: 'bharakauBazar',
-    name: 'Bharakau Bazar',
+    name: 'Barakahu Bazar',
     coordinates: { lat: 33.739916429962506, lng: 73.18007871699487 },
   },
   {
