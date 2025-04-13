@@ -101,6 +101,15 @@ export function createInitialWalkingRoutes(
 
     // For each transit route, prepend a walking segment
     for (const transitRoute of transitRoutes) {
+      // Skip routes that don't start from the nearby station we walked to
+      // This ensures continuity between walking and transit segments
+      if (
+        transitRoute.segments.length > 0 &&
+        transitRoute.segments[0].stations[0].id !== nearbyStation.id
+      ) {
+        continue; // Skip invalid routes where transit doesn't start from the walked-to station
+      }
+
       // Calculate walking segment
       const distance = calculateDistance(
         origin.coordinates,
@@ -165,6 +174,18 @@ export function createFinalWalkingRoutes(
 
     // For each transit route, append a walking segment
     for (const transitRoute of transitRoutes) {
+      // Skip routes that don't end at the nearby station where we'll start walking from
+      // This ensures continuity between transit and walking segments
+      if (
+        transitRoute.segments.length > 0 &&
+        transitRoute.segments[transitRoute.segments.length - 1].stations[
+          transitRoute.segments[transitRoute.segments.length - 1].stations
+            .length - 1
+        ].id !== nearbyStation.id
+      ) {
+        continue; // Skip invalid routes where transit doesn't end at the station we'll walk from
+      }
+
       // Calculate walking segment
       const distance = calculateDistance(
         nearbyStation.coordinates,
@@ -231,7 +252,26 @@ export function createWalkingTransferRoutes(
 
     // Combine routes with walking transfer
     for (const routeToStart of routesToShortcutStart) {
+      // Ensure route ends at the walking shortcut start station
+      if (
+        routeToStart.segments.length > 0 &&
+        routeToStart.segments[routeToStart.segments.length - 1].stations[
+          routeToStart.segments[routeToStart.segments.length - 1].stations
+            .length - 1
+        ].id !== shortcut.from
+      ) {
+        continue; // Skip if first route doesn't end at walking shortcut start
+      }
+
       for (const routeFromEnd of routesFromShortcutEnd) {
+        // Ensure route starts from the walking shortcut end station
+        if (
+          routeFromEnd.segments.length > 0 &&
+          routeFromEnd.segments[0].stations[0].id !== shortcut.to
+        ) {
+          continue; // Skip if second route doesn't start at walking shortcut end
+        }
+
         // Create walking segment
         const walkingSegment = createWalkingSegment(
           convertToRouteStation(fromStation),

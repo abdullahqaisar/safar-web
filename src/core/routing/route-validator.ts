@@ -8,6 +8,7 @@ import { createRoute } from '../utils/route-builder';
  * 3. Merges redundant transit segments
  * 4. Detects and fixes complex circular patterns
  * 5. Ensures route starts at the requested origin
+ * 6. Ensures segments properly connect (station continuity)
  */
 export function validateAndOptimizeRoute(route: Route): Route | null {
   try {
@@ -27,6 +28,11 @@ export function validateAndOptimizeRoute(route: Route): Route | null {
     // If no valid segments remain, return null
     if (segments.length === 0) return null;
 
+    // Check that segments form a continuous path
+    if (!validateRouteContinuity(segments)) {
+      return null; // Reject routes with discontinuous segments
+    }
+
     // Second pass: Merge consecutive transit segments on same line
     segments = mergeRedundantSegments(segments);
 
@@ -36,6 +42,11 @@ export function validateAndOptimizeRoute(route: Route): Route | null {
     // Fourth pass: Detect and eliminate complex circular patterns
     segments = eliminateComplexCircularPatterns(segments);
 
+    // Recheck continuity after optimizations
+    if (!validateRouteContinuity(segments)) {
+      return null;
+    }
+
     // Create a new optimized route, preserving the requestedOrigin
     const optimizedRoute = createRoute(segments, route);
     return optimizedRoute;
@@ -44,6 +55,32 @@ export function validateAndOptimizeRoute(route: Route): Route | null {
     // Return original route if validation fails
     return route;
   }
+}
+
+/**
+ * Validates that route segments properly connect
+ * Ensures the last station of one segment is the first station of the next segment
+ */
+function validateRouteContinuity(segments: RouteSegment[]): boolean {
+  // Skip validation if only one segment
+  if (segments.length <= 1) return true;
+
+  // Check that each segment properly connects to the next
+  for (let i = 0; i < segments.length - 1; i++) {
+    const currentSegment = segments[i];
+    const nextSegment = segments[i + 1];
+
+    // Check that the last station of current segment is the first station of next segment
+    const lastStationId =
+      currentSegment.stations[currentSegment.stations.length - 1].id;
+    const firstStationId = nextSegment.stations[0].id;
+
+    if (lastStationId !== firstStationId) {
+      return false; // Discontinuity detected
+    }
+  }
+
+  return true;
 }
 
 /**
