@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Route } from '@/types/route';
+import { Route } from '@/core/types/route';
 import { JourneyCard } from './JourneyCard';
 import { JourneyDetails } from './JourneyDetails';
 import { AnimatePresence, motion } from 'framer-motion';
+import { AccessRecommendations } from '@/core/types/route';
+
 interface JourneyResultsProps {
   routes: Route[];
+  accessRecommendations?: AccessRecommendations;
 }
 
-export function JourneyResults({ routes }: JourneyResultsProps) {
+export function JourneyResults({
+  routes,
+  accessRecommendations,
+}: JourneyResultsProps) {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
 
   const selectedRoute = selectedRouteId
@@ -59,6 +65,7 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
                       setSelectedRouteId(route.id || `route-${index}`)
                     }
                     isRecommended={index === 0}
+                    accessRecommendations={accessRecommendations}
                   />
                 </motion.div>
               ))}
@@ -76,6 +83,7 @@ export function JourneyResults({ routes }: JourneyResultsProps) {
               route={selectedRoute}
               onBack={() => setSelectedRouteId(null)}
               isRecommended={isSelectedRouteRecommended}
+              accessRecommendations={accessRecommendations}
             />
           </motion.div>
         )}

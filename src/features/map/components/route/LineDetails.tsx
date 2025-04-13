@@ -158,18 +158,24 @@ export default function LineDetails({
                 Schedule
               </h5>
               <div className="space-y-1 text-xs text-gray-600">
-                <div className="flex justify-between">
-                  <span>First Train:</span>
-                  <span className="font-medium">
-                    {defaultSchedule.firstTrain}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Last Train:</span>
-                  <span className="font-medium">
-                    {defaultSchedule.lastTrain}
-                  </span>
-                </div>
+                {defaultSchedule.firstTrain === 'All Day' ? (
+                  <span>All Day</span>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span>First Bus:</span>
+                      <span className="font-medium">
+                        {defaultSchedule.firstTrain}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Last Bus:</span>
+                      <span className="font-medium">
+                        {defaultSchedule.lastTrain}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

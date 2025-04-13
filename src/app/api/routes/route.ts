@@ -4,6 +4,7 @@ import { getGraph } from '@/core/cache/graph-cache';
 import {
   findNearestStationID,
   findMultipleNearestStations,
+  getAccessRecommendation,
 } from '@/core/station/station';
 import { ErrorCodes } from '@/types/error';
 import { NearbyStationInfo } from '@/core/types/station';
@@ -142,11 +143,75 @@ export async function GET(request: Request) {
       return NextResponse.json(error, { status: 404 });
     }
 
-    // Success response
+    // Access recommendations for journey beginning and end
+    let accessRecommendations;
+
+    // Only include recommendations if the distances are meaningful (> 50m)
+    const originRecommendation = fromStationCoordinates
+      ? getAccessRecommendation(
+          {
+            lat: parseFloat(fromStationCoordinates.split(',')[0]),
+            lng: parseFloat(fromStationCoordinates.split(',')[1]),
+          },
+          transitGraph,
+          originId
+        )
+      : null;
+
+    const destinationRecommendation = toStationCoordinates
+      ? getAccessRecommendation(
+          {
+            lat: parseFloat(toStationCoordinates.split(',')[0]),
+            lng: parseFloat(toStationCoordinates.split(',')[1]),
+          },
+          transitGraph,
+          destinationId
+        )
+      : null;
+
+    // Only include accessRecommendations in the response if at least one recommendation exists
+    if (originRecommendation || destinationRecommendation) {
+      accessRecommendations = {
+        origin: originRecommendation,
+        destination: destinationRecommendation,
+      };
+
+      // Add Google Maps navigation URLs
+      if (
+        fromStationCoordinates &&
+        originRecommendation &&
+        accessRecommendations.origin
+      ) {
+        const [fromLat, fromLng] = fromStationCoordinates.split(',');
+        const originStation = transitGraph.stations[originId];
+        if (originStation) {
+          const stationLat = originStation.coordinates.lat;
+          const stationLng = originStation.coordinates.lng;
+          accessRecommendations.origin.googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${stationLat},${stationLng}`;
+        }
+      }
+
+      if (
+        toStationCoordinates &&
+        destinationRecommendation &&
+        accessRecommendations.destination
+      ) {
+        const [toLat, toLng] = toStationCoordinates.split(',');
+        const destStation = transitGraph.stations[destinationId];
+        if (destStation) {
+          const stationLat = destStation.coordinates.lat;
+          const stationLng = destStation.coordinates.lng;
+          accessRecommendations.destination.googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${stationLat},${stationLng}&destination=${toLat},${toLng}`;
+        }
+      }
+    }
+
+    // Return response with recommendations only if they exist
     return NextResponse.json({
       routes: routingResult,
       origin: transitGraph.stations[originId],
       destination: transitGraph.stations[destinationId],
+      ...(accessRecommendations && { accessRecommendations }),
     });
   } catch (error) {
     console.error('Route search error:', error);

@@ -103,8 +103,8 @@ export function formatScheduleTimes(
   lastTrain: string;
 } {
   return {
-    firstTrain: schedule?.first || '6:00 AM',
-    lastTrain: schedule?.last || '10:00 PM',
+    firstTrain: schedule?.first || '',
+    lastTrain: schedule?.last || '',
   };
 }
 

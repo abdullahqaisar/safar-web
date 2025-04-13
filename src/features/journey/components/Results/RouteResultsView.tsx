@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { JourneyResults } from './JourneyResults';
 import { RouteResultsLoader } from './RouteResultsLoader';
 import { Button } from '@/components/common/Button';
-import { Route } from '@/types/route';
+import { Route } from '@/core/types/route';
 import {
   Route as RouteIcon,
   AlertTriangle,
@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import Link from 'next/link';
+import { AccessRecommendations } from '@/core/types/route';
 
 export interface RouteResultsViewProps {
   isLoading: boolean;
@@ -22,6 +23,7 @@ export interface RouteResultsViewProps {
   error: Error | null;
   fromText: string | null;
   toText: string | null;
+  accessRecommendations?: AccessRecommendations;
 }
 
 export function RouteResultsView({
@@ -31,6 +33,7 @@ export function RouteResultsView({
   error,
   fromText,
   toText,
+  accessRecommendations,
 }: RouteResultsViewProps) {
   // State to track if beta banner has been dismissed
   const [isBetaBannerVisible, setIsBetaBannerVisible] = useState(true);
@@ -64,6 +67,11 @@ export function RouteResultsView({
       new Date().getTime().toString()
     );
   };
+
+  // Check if there are any valid access recommendations
+  const hasValidAccessRecommendations =
+    accessRecommendations &&
+    (accessRecommendations.origin || accessRecommendations.destination);
 
   return (
     <>
@@ -149,7 +157,14 @@ export function RouteResultsView({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <JourneyResults routes={routes} />
+            <JourneyResults
+              routes={routes}
+              accessRecommendations={
+                hasValidAccessRecommendations
+                  ? accessRecommendations
+                  : undefined
+              }
+            />
           </motion.div>
         )}
 

@@ -20,13 +20,27 @@ export function calculateRouteScore(route: Route, graph: TransitGraph): number {
   const complexityScore = calculateComplexityScore(route);
   const stopsScore = calculateStopsScore(route);
 
+  // Origin station penalty
+  let originPenalty = 0;
+
+  // Check if the route starts at the requested origin
+  if (
+    route.requestedOrigin &&
+    route.segments.length > 0 &&
+    route.segments[0].stations[0].id !== route.requestedOrigin
+  ) {
+    // Add a substantial penalty for routes not starting at the requested origin
+    originPenalty = 100; // High penalty to override transfer benefits
+  }
+
   // Combine weighted scores
   const totalScore =
     timeScore * ScoringWeights.TIME +
     transferScore * ScoringWeights.TRANSFERS +
     walkingScore * ScoringWeights.WALKING +
     complexityScore * ScoringWeights.COMPLEXITY +
-    stopsScore * ScoringWeights.STOPS;
+    stopsScore * ScoringWeights.STOPS +
+    originPenalty; // Add the origin penalty to the total score
 
   return totalScore;
 }

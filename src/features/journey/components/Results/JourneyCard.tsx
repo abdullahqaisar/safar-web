@@ -1,5 +1,7 @@
-import { Route } from '@/types/route';
-import { TransitSegment } from '@/types/route';
+import {
+  Route,
+  TransitRouteSegment as TransitSegment,
+} from '@/core/types/route';
 import {
   Clock,
   MapPin,
@@ -7,14 +9,17 @@ import {
   ChevronRight,
   Footprints,
   Star,
+  Wallet,
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { Button } from '@/components/common/Button';
+import { AccessRecommendations } from '@/core/types/route';
 
 interface JourneyCardProps {
   route: Route;
   onSelect: () => void;
   isRecommended?: boolean;
+  accessRecommendations?: AccessRecommendations;
 }
 
 export function JourneyCard({
@@ -31,6 +36,11 @@ export function JourneyCard({
   const totalWalkingTime = route.segments
     .filter((segment) => segment.type === 'walk')
     .reduce((total, segment) => total + segment.duration, 0);
+
+  // Format fare for display
+  const formatFare = (fare: number) => {
+    return `Rs ${fare.toFixed(0)}`;
+  };
 
   return (
     <div
@@ -86,10 +96,19 @@ export function JourneyCard({
           </div>
 
           {totalWalkingTime > 0 && (
-            <div className="flex items-center col-span-2">
+            <div className="flex items-center">
               <Footprints className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
               <span className="text-xs sm:text-sm text-gray-700">
                 {formatDuration(totalWalkingTime)} walking
+              </span>
+            </div>
+          )}
+
+          {route.totalFare && route.totalFare > 0 && (
+            <div className="flex items-center">
+              <Wallet className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
+              <span className="text-xs sm:text-sm text-gray-700">
+                {formatFare(route.totalFare)}
               </span>
             </div>
           )}
@@ -102,15 +121,15 @@ export function JourneyCard({
               const lineColorClass = lineName.toLowerCase().includes('green')
                 ? 'bg-green-100 text-green-800'
                 : lineName.toLowerCase().includes('blue')
-                ? 'bg-blue-100 text-blue-800'
-                : lineName.toLowerCase().includes('red')
-                ? 'bg-red-100 text-red-800'
-                : lineName.toLowerCase().includes('orange')
-                ? 'bg-orange-100 text-orange-800'
-                : lineName.toLowerCase().includes('fr-') ||
-                  lineName.toLowerCase().includes('fr_')
-                ? 'bg-cyan-100 text-cyan-600' // Updated to a brighter, more distinctive teal
-                : 'bg-gray-100 text-gray-800';
+                  ? 'bg-blue-100 text-blue-800'
+                  : lineName.toLowerCase().includes('red')
+                    ? 'bg-red-100 text-red-800'
+                    : lineName.toLowerCase().includes('orange')
+                      ? 'bg-orange-100 text-orange-800'
+                      : lineName.toLowerCase().includes('fr-') ||
+                          lineName.toLowerCase().includes('fr_')
+                        ? 'bg-cyan-100 text-cyan-600' // Updated to a brighter, more distinctive teal
+                        : 'bg-gray-100 text-gray-800';
 
               return (
                 <div

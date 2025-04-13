@@ -28,18 +28,18 @@ export const stationData: Station[] = [
   },
   {
     id: 'pims',
-    name: 'PIMS',
-    coordinates: { lat: 33.705834978100135, lng: 73.04839610641643 },
+    name: 'PIMS Metro',
+    coordinates: { lat: 33.705651018012496, lng: 73.04834774622357 },
   },
   {
     id: 'pims_children_hospital',
     name: 'PIMS Children Hospital',
-    coordinates: { lat: 33.70542066611799, lng: 73.05551797589479 },
+    coordinates: { lat: 33.70536521386618, lng: 73.05558474212248 },
   },
   {
     id: 'pims_gate',
     name: 'PIMS Gate',
-    coordinates: { lat: 33.70535821100434, lng: 73.05071146519091 },
+    coordinates: { lat: 33.70614834850119, lng: 73.05219909866369 },
   },
   {
     id: 'kachehry',
@@ -54,7 +54,7 @@ export const stationData: Station[] = [
   {
     id: 'chaman',
     name: 'Chaman',
-    coordinates: { lat: 33.69018093106195, lng: 73.04354130034186 },
+    coordinates: { lat: 33.6916525128973, lng: 73.04370720115476 },
   },
 
   {
@@ -155,8 +155,8 @@ export const stationData: Station[] = [
   },
   {
     id: 'nust',
-    name: 'NUST/G-12',
-    coordinates: { lat: 33.6557334964243, lng: 72.99340115280691 },
+    name: 'NUST/G-12 Metro',
+    coordinates: { lat: 33.656849307605924, lng: 72.99287088019028 },
   },
   {
     id: 'g13',
@@ -166,7 +166,7 @@ export const stationData: Station[] = [
   {
     id: 'golraMorr',
     name: 'Golra Morr',
-    coordinates: { lat: 33.64057464603409, lng: 72.96167871478063 },
+    coordinates: { lat: 33.64147190105308, lng: 72.96244138520534 },
   },
   {
     id: 'n5',
@@ -174,8 +174,23 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.631963701490236, lng: 72.94477006878428 },
   },
   {
+    id: 'badhanaKalan',
+    name: 'Badhana Kalan',
+    coordinates: { lat: 33.6164768798801, lng: 72.91383483433006 },
+  },
+  {
+    id: 'motorwayInterchange',
+    name: 'Motorway Interchange',
+    coordinates: { lat: 33.58997022639415, lng: 72.8702321356004 },
+  },
+  {
+    id: 'rakhPindRanjhan',
+    name: 'Rakh Pind Ranjhan',
+    coordinates: { lat: 33.575581149112296, lng: 72.86038386989927 },
+  },
+  {
     id: 'airport',
-    name: 'Airport',
+    name: 'Islamabad Int. Airport',
     coordinates: { lat: 33.555939595133935, lng: 72.83735610335114 },
   },
   {
@@ -186,12 +201,12 @@ export const stationData: Station[] = [
   {
     id: 'cda',
     name: 'CDA',
-    coordinates: { lat: 33.70026269568505, lng: 73.07816222598147 },
+    coordinates: { lat: 33.70069062293746, lng: 73.07779843850173 },
   },
   {
     id: 'aabpara',
     name: 'Aabpara',
-    coordinates: { lat: 33.70587017153255, lng: 73.088788480754 },
+    coordinates: { lat: 33.70572668110943, lng: 73.08794081961304 },
   },
   {
     id: 'foreignOffice',
@@ -211,68 +226,68 @@ export const stationData: Station[] = [
   {
     id: 'shahdara',
     name: 'Shahdara',
-    coordinates: { lat: 33.73476959678367, lng: 73.15926194293299 },
+    coordinates: { lat: 33.734543876259906, lng: 73.15937849563153 },
   },
   {
     id: 'bharakau',
     name: 'Jillani, Bharakau',
-    coordinates: { lat: 33.73545330312739, lng: 73.16534652238195 },
+    coordinates: { lat: 33.73545586140734, lng: 73.16561725338322 },
   },
   {
     id: 'h8Shakarparia',
     name: 'H-8 / Shakarparia',
-    coordinates: { lat: 33.68387250174979, lng: 73.07260503240163 },
+    coordinates: { lat: 33.68409993304759, lng: 73.07273291844588 },
   },
   {
     id: 'i8ParadeGround',
     name: 'I-8/Parade Ground',
-    coordinates: { lat: 33.67327094873524, lng: 73.08056387534658 },
+    coordinates: { lat: 33.67346776963855, lng: 73.08071602570564 },
   },
   {
     id: 'sohan',
     name: 'Sohan',
-    coordinates: { lat: 33.659589883030115, lng: 73.09080522598016 },
+    coordinates: { lat: 33.65962560419584, lng: 73.0905242133247 },
   },
   {
     id: 'iqbalTown',
     name: 'Iqbal Town',
-    coordinates: { lat: 33.645789656066505, lng: 73.10088498639699 },
+    coordinates: { lat: 33.64582366002216, lng: 73.10084448970166 },
   },
   {
     id: 'kuriRoad',
     name: 'Kuri Road',
-    coordinates: { lat: 33.64271726797072, lng: 73.10380327946089 },
+    coordinates: { lat: 33.64216226813523, lng: 73.10353281218318 },
   },
   {
     id: 'ziaMasjid',
     name: 'Zia Masjid',
-    coordinates: { lat: 33.63666729372628, lng: 73.10764972498504 },
+    coordinates: { lat: 33.636629926436115, lng: 73.1076814789326 },
   },
   {
     id: 'khannaPul',
     name: 'Khanna Pul',
-    coordinates: { lat: 33.62585038147842, lng: 73.11554358446452 },
+    coordinates: { lat: 33.62688749823069, lng: 73.11586057018127 },
   },
   {
     id: 'fazaia',
     name: 'Fazaia',
-    coordinates: { lat: 33.62094759803972, lng: 73.11937715608676 },
+    coordinates: { lat: 33.620608084040946, lng: 73.1203296051799 },
   },
   {
     id: 'gangal',
     name: 'Gangal',
-    coordinates: { lat: 33.61244250465781, lng: 73.12606611655178 },
+    coordinates: { lat: 33.61288497429886, lng: 73.12619087428027 },
   },
   {
     id: 'koralChowk',
     name: 'Koral Chowk',
-    coordinates: { lat: 33.603225129723704, lng: 73.13299865331676 },
+    coordinates: { lat: 33.603344650829285, lng: 73.13318643258594 },
   },
 
   {
     id: 'gulberg',
     name: 'Gulberg',
-    coordinates: { lat: 33.59847373401423, lng: 73.1380386979626 },
+    coordinates: { lat: 33.597725269533925, lng: 73.13734954437773 },
   },
 
   /* --------- FEEDER */
@@ -330,61 +345,75 @@ export const stationData: Station[] = [
     name: 'Metro Cash and Carry',
     coordinates: { lat: 33.6403817376959, lng: 73.023893 },
   },
-
+  {
+    id: 'islamabadMedicalComplex',
+    name: 'Islamabad Medical Complex',
+    coordinates: { lat: 33.64916146878899, lng: 73.0169299832297 },
+  },
+  {
+    id: 'policeLines',
+    name: 'Police Lines',
+    coordinates: { lat: 33.65512728880789, lng: 73.01064288525129 },
+  },
+  {
+    id: 'faqirIpiRoadNorth',
+    name: 'Faqir Ipi Road North',
+    coordinates: { lat: 33.66064546276081, lng: 73.00657372808679 },
+  },
   {
     id: 'faisalMasjid',
     name: 'Faisal Masjid',
-    coordinates: { lat: 33.72789739074284, lng: 73.03953950264346 },
+    coordinates: { lat: 33.72740136201711, lng: 73.03980805476587 },
   },
   {
     id: 'bariImam',
     name: 'Bari Imam',
-    coordinates: { lat: 33.743598, lng: 73.109557 },
+    coordinates: { lat: 33.74355541675426, lng: 73.10944502413625 },
   },
   {
     id: 'qau',
     name: 'Quaid-e-Azam University',
-    coordinates: { lat: 33.74495253938709, lng: 73.13977227116368 },
+    coordinates: { lat: 33.745028264806955, lng: 73.13981046000332 },
   },
   {
     id: 'noriHospital',
     name: 'NORI Hospital',
-    coordinates: { lat: 33.6984546848535, lng: 73.05351399999998 },
+    coordinates: { lat: 33.69842279164091, lng: 73.05373323627414 },
   },
   {
     id: 'g8Markaz',
     name: 'G-8 Markaz',
-    coordinates: { lat: 33.695552031383485, lng: 73.04837362883632 },
+    coordinates: { lat: 33.69893057226533, lng: 73.04743123519675 },
   },
   {
     id: 'g9_4_Park',
     name: 'G-9/4 Park',
-    coordinates: { lat: 33.6892736769966, lng: 73.03743818532656 },
+    coordinates: { lat: 33.689029481190204, lng: 73.03706184193007 },
   },
   {
     id: 'karachiCompany',
     name: 'Karachi Company',
-    coordinates: { lat: 33.68841721671436, lng: 73.03480906064185 },
+    coordinates: { lat: 33.68868003706895, lng: 73.03464441830866 },
   },
   {
     id: 'g9Markaz',
     name: 'G-9 Markaz',
-    coordinates: { lat: 33.68893052357229, lng: 73.03241653017926 },
+    coordinates: { lat: 33.689868075718174, lng: 73.03027449821184 },
   },
   {
     id: 'g11Markaz',
     name: 'G-11 Markaz',
-    coordinates: { lat: 33.66972464191491, lng: 72.9977157979607 },
+    coordinates: { lat: 33.66969510074861, lng: 72.99816428576455 },
   },
   {
     id: 'pirWadhaiMorh',
     name: 'Pir Wadhai Morh',
-    coordinates: { lat: 33.61542225707071, lng: 72.99468989770897 },
+    coordinates: { lat: 33.61544182051648, lng: 72.99475749848928 },
   },
   {
     id: 'tramriChowk',
     name: 'Tramri Chowk',
-    coordinates: { lat: 33.64544253421837, lng: 73.16325299999998 },
+    coordinates: { lat: 33.64478531910373, lng: 73.16386625128888 },
   },
   {
     id: 'taxila',
@@ -394,161 +423,161 @@ export const stationData: Station[] = [
   {
     id: 'bharakauBazar',
     name: 'Bharakau Bazar',
-    coordinates: { lat: 33.73861277340662, lng: 73.18556799999999 },
+    coordinates: { lat: 33.739916429962506, lng: 73.18007871699487 },
   },
   {
     id: 'satraMeel',
     name: 'Satra Meel',
-    coordinates: { lat: 33.763580782498074, lng: 73.21937945767263 },
+    coordinates: { lat: 33.7635533842201, lng: 73.21935274484308 },
   },
   {
     id: 'tChowk',
     name: 'T Chowk',
-    coordinates: { lat: 33.5105576906409, lng: 73.1798597288363 },
+    coordinates: { lat: 33.51053214884262, lng: 73.18051287551832 },
   },
 
   // FR-3A Additional Stations
   {
     id: 'f8Katchery',
     name: 'F-8 Katchery',
-    coordinates: { lat: 33.70888773751228, lng: 73.0394084 },
+    coordinates: { lat: 33.708807733697995, lng: 73.03934848027386 },
   },
   {
     id: 'f8Markaz',
     name: 'F-8 Markaz',
-    coordinates: { lat: 33.71249368850052, lng: 73.03656427116368 },
+    coordinates: { lat: 33.711734042099145, lng: 73.0371627913824 },
   },
   {
     id: 'raviGateF9',
     name: 'Ravi Gate F-9 Park',
-    coordinates: { lat: 33.70975068778784, lng: 73.02865172883631 },
+    coordinates: { lat: 33.70974193464229, lng: 73.02849517683904 },
   },
   {
     id: 'shaheenChowk',
     name: 'Shaheen Chowk',
-    coordinates: { lat: 33.71241498202111, lng: 73.0265294148113 },
+    coordinates: { lat: 33.71212235187223, lng: 73.02668358154814 },
   },
   {
     id: 'bahriaUniversity',
     name: 'Bahria University',
-    coordinates: { lat: 33.71530476492637, lng: 73.0309827288286 },
+    coordinates: { lat: 33.71559127832221, lng: 73.03121302723055 },
   },
   {
     id: 'navalComplex',
     name: 'Naval Complex',
-    coordinates: { lat: 33.71909769021656, lng: 73.03798800000001 },
+    coordinates: { lat: 33.71886635494088, lng: 73.03744306359584 },
   },
 
   // FR-4 Additional Stations
   {
     id: 'rescue15',
     name: 'Rescue 15',
-    coordinates: { lat: 33.69960768515297, lng: 73.0599117288363 },
+    coordinates: { lat: 33.69983743008975, lng: 73.05981232783363 },
   },
   {
     id: 'bankColony',
     name: 'Bank Colony',
-    coordinates: { lat: 33.70029468533143, lng: 73.0619552711637 },
+    coordinates: { lat: 33.700384402901506, lng: 73.06194487679386 },
   },
   {
     id: 'salaiCentre',
     name: 'Salai Centre',
-    coordinates: { lat: 33.70284573323329, lng: 73.06655965263789 },
+    coordinates: { lat: 33.702739463199656, lng: 73.0664019545267 },
   },
   {
     id: 'sitaraMarket',
     name: 'Sitara Market',
-    coordinates: { lat: 33.705936632459554, lng: 73.06688972726191 },
+    coordinates: { lat: 33.706064580680355, lng: 73.06679812710406 },
   },
   {
     id: 'pullyStop',
     name: 'Pully Stop',
-    coordinates: { lat: 33.70686668703858, lng: 73.070444 },
+    coordinates: { lat: 33.70693208405778, lng: 73.07046676646624 },
   },
   {
     id: 'iqbalHall',
     name: 'Iqbal Hall',
-    coordinates: { lat: 33.7091537626875, lng: 73.07463781349114 },
+    coordinates: { lat: 33.70926772142341, lng: 73.07493847422323 },
   },
   {
     id: 'g61',
     name: 'G-6/1,2',
-    coordinates: { lat: 33.71269036217316, lng: 73.08028561293783 },
+    coordinates: { lat: 33.71290489832085, lng: 73.08078780939253 },
   },
   {
     id: 'melodyMarket',
     name: 'Melody Market',
-    coordinates: { lat: 33.7145957389907, lng: 73.08396560376245 },
+    coordinates: { lat: 33.71472406401914, lng: 73.08495023176484 },
   },
   {
     id: 'abparaMarket',
     name: 'Abpara Market',
-    coordinates: { lat: 33.70828976237323, lng: 73.08950972883629 },
+    coordinates: { lat: 33.71028764482806, lng: 73.08831730345536 },
   },
   {
     id: 'youthHostel',
     name: 'Youth Hostel',
-    coordinates: { lat: 33.70996053756802, lng: 73.09177127116371 },
+    coordinates: { lat: 33.70989634309647, lng: 73.09183730587036 },
   },
   {
     id: 'metropolitanCorporation',
     name: 'Metropolitan Corporation',
-    coordinates: { lat: 33.71530782174842, lng: 73.0878072895949 },
+    coordinates: { lat: 33.71594497385183, lng: 73.08734952590375 },
   },
   {
     id: 'icbCollege',
     name: 'ICB College',
-    coordinates: { lat: 33.71742157160292, lng: 73.08919352428667 },
+    coordinates: { lat: 33.718118054561934, lng: 73.09057312022446 },
   },
   {
     id: 'nadraChowk',
     name: 'NADRA Chowk',
-    coordinates: { lat: 33.719987208819816, lng: 73.09539479156278 },
+    coordinates: { lat: 33.72023533100911, lng: 73.09529682792652 },
   },
   {
     id: 'lodgesPark',
     name: 'Lodges Park',
-    coordinates: { lat: 33.71590420555706, lng: 73.09845452792952 },
+    coordinates: { lat: 33.71604883537456, lng: 73.09846991331302 },
   },
   {
     id: 'sukhChaynPark',
     name: 'Sukh Chayn Park',
-    coordinates: { lat: 33.7132938237439, lng: 73.10018187051067 },
+    coordinates: { lat: 33.71360706214138, lng: 73.10029712253338 },
   },
   {
     id: 'ministryOfForeignAffairs',
     name: 'Ministry of Foreign Affairs',
-    coordinates: { lat: 33.718315614007295, lng: 73.10377772883629 },
+    coordinates: { lat: 33.71835195334311, lng: 73.10373114935079 },
   },
   {
-    id: 'radioIslamabad',
-    name: 'Radio Islamabad',
-    coordinates: { lat: 33.72221469102664, lng: 73.10084300000001 },
+    id: 'radioPakistan',
+    name: 'Radio Pakistan',
+    coordinates: { lat: 33.722628703341705, lng: 73.10045654986668 },
   },
   {
     id: 'nationalLibrary',
     name: 'National Library',
-    coordinates: { lat: 33.724532691629065, lng: 73.1025497288363 },
+    coordinates: { lat: 33.7246072449803, lng: 73.10270598584167 },
   },
   {
     id: 'secretariatePoliceStation',
     name: 'Secretariate Police Station',
-    coordinates: { lat: 33.72683376911966, lng: 73.106991 },
+    coordinates: { lat: 33.72753441398406, lng: 73.10828941799532 },
   },
   {
     id: 'diplomaticEnclaveGate4',
     name: 'Diplomatic Enclave Gate 4',
-    coordinates: { lat: 33.73014086656989, lng: 73.11125296878984 },
+    coordinates: { lat: 33.73101878588208, lng: 73.11054990916752 },
   },
   {
     id: 'aiwanESadarColony',
     name: 'Aiwan e Sadar Colony',
-    coordinates: { lat: 33.73341169393705, lng: 73.108774 },
+    coordinates: { lat: 33.73371820300583, lng: 73.10849341247464 },
   },
   {
     id: 'muslimColony',
     name: 'Muslim Colony',
-    coordinates: { lat: 33.7376211450211, lng: 73.10814617321213 },
+    coordinates: { lat: 33.73821820295093, lng: 73.10821799138738 },
   },
   {
     id: 'pullyStopI10',
@@ -560,85 +589,85 @@ export const stationData: Station[] = [
   {
     id: 'muhallahNooriBagh',
     name: 'Muhallah Noori Bagh',
-    coordinates: { lat: 33.744195539347736, lng: 73.11179 },
+    coordinates: { lat: 33.74442188397748, lng: 73.11308782641288 },
   },
   {
     id: 'communityHealthCentre',
     name: 'Community Health Centre',
-    coordinates: { lat: 33.74452985429432, lng: 73.117463 },
+    coordinates: { lat: 33.74458006294672, lng: 73.1173418583545 },
   },
   {
     id: 'dTypeQuaidEAzamColony',
     name: 'D-Type Quaid-e-Azam Colony',
-    coordinates: { lat: 33.7447126968754, lng: 73.12037572883628 },
+    coordinates: { lat: 33.74472206045009, lng: 73.12065899151342 },
   },
   {
     id: 'cTypeQuaidEAzamColony',
     name: 'C-Type Quaid-e-Azam Colony',
-    coordinates: { lat: 33.74482469690452, lng: 73.1247482711637 },
+    coordinates: { lat: 33.74483691174117, lng: 73.12495840779906 },
   },
   {
     id: 'babulQuaid',
     name: 'Babul Quaid',
-    coordinates: { lat: 33.744922596929975, lng: 73.13294307116371 },
+    coordinates: { lat: 33.744996645664024, lng: 73.13267292108092 },
   },
   // FR-7 Additional Stations
   {
     id: 'dentalHospital',
     name: 'Dental Hospital',
-    coordinates: { lat: 33.69989261113549, lng: 73.04891872883628 },
+    coordinates: { lat: 33.699648367118755, lng: 73.04888400126248 },
   },
   {
     id: 'developmentPark',
     name: 'Development Park',
-    coordinates: { lat: 33.69516953679959, lng: 73.04724699999998 },
+    coordinates: { lat: 33.69543926688337, lng: 73.04783135441295 },
   },
   {
     id: 'policeFlats',
     name: 'Police Flats',
-    coordinates: { lat: 33.68431160870777, lng: 73.02512572883629 },
+    coordinates: { lat: 33.68428135008027, lng: 73.02514172666525 },
   },
   {
     id: 'collegeMorh',
     name: 'College Morh',
-    coordinates: { lat: 33.68098160818905, lng: 73.018356 },
+    coordinates: { lat: 33.68117359248932, lng: 73.01904928260987 },
   },
   {
     id: 'g10Markaz',
     name: 'G-10 Markaz',
-    coordinates: { lat: 33.67659967917871, lng: 73.014712 },
+    coordinates: { lat: 33.677150551979125, lng: 73.01542110730672 },
   },
   {
     id: 'phaFlats',
     name: 'PHA Flats',
-    coordinates: { lat: 33.67573367895389, lng: 73.01258745767258 },
+    coordinates: { lat: 33.675495026422155, lng: 73.01255341764332 },
   },
   {
     id: 'tankiStop',
     name: 'Tanki Stop',
-    coordinates: { lat: 33.674554678647866, lng: 73.01020572883628 },
+    coordinates: { lat: 33.6741780306767, lng: 73.01001675498355 },
   },
   {
     id: 'greenbeltG10G11',
     name: 'Greenbelt G-10/G-11',
-    coordinates: { lat: 33.678589679695285, lng: 73.00392127116369 },
+    coordinates: { lat: 33.672832660219, lng: 73.00745473760108 },
   },
   {
     id: 'instituteOfModernStudies',
     name: 'Institute of Modern Studies',
-    coordinates: { lat: 33.673326678329126, lng: 73.00230999999998 },
+    coordinates: { lat: 33.671760069630594, lng: 73.00289061279501 },
   },
   {
     id: 'mehrabad',
     name: 'Mehrabad',
-    coordinates: { lat: 33.665099605715646, lng: 73.00038800000002 },
+    coordinates: { lat: 33.66632817533121, lng: 72.9898202178619 },
   },
 
   // FR-8A & FR-8C Additional Stations
   {
     id: 'zeroPakMonument',
     name: 'Zero Point (Pak Monument)',
-    coordinates: { lat: 33.69660368437274, lng: 73.06241499999999 },
+    coordinates: { lat: 33.695970029609065, lng: 73.06902852405788 },
   },
   {
     id: 'ttStop',
@@ -648,7 +677,7 @@ export const stationData: Station[] = [
   {
     id: 'kashmirChowk',
     name: 'Kashmir Chowk',
-    coordinates: { lat: 33.70832168741661, lng: 73.10522054232742 },
+    coordinates: { lat: 33.70750168076438, lng: 73.10631134053685 },
   },
   {
     id: 'rawalChowk',
@@ -663,7 +692,7 @@ export const stationData: Station[] = [
   {
     id: 'schoolBoardStop',
     name: 'School Board Stop',
-    coordinates: { lat: 33.68856960937113, lng: 73.11692127116369 },
+    coordinates: { lat: 33.689001990625314, lng: 73.1162649806889 },
   },
   {
     id: 'rawalDamColony',
@@ -673,58 +702,58 @@ export const stationData: Station[] = [
   {
     id: 'narcColony',
     name: 'NARC Colony',
-    coordinates: { lat: 33.68747775480561, lng: 73.13103472883628 },
+    coordinates: { lat: 33.68752880586232, lng: 73.13092789672197 },
   },
   {
     id: 'nihAllergyCenter',
     name: 'NIH Allergy Center',
-    coordinates: { lat: 33.68544568147524, lng: 73.13483572883628 },
+    coordinates: { lat: 33.6851197327926, lng: 73.13510896574026 },
   },
   {
     id: 'shahzadTown',
     name: 'Shahzad Town',
-    coordinates: { lat: 33.674261678571824, lng: 73.14386800000001 },
+    coordinates: { lat: 33.67656386586766, lng: 73.14234049746318 },
   },
   {
     id: 'parkViewKuriRoad',
     name: 'Park View (Kuri Road)',
-    coordinates: { lat: 33.674261678571824, lng: 73.1438894576726 },
+    coordinates: { lat: 33.67413883964874, lng: 73.14436779482888 },
   },
   {
     id: 'greenAvenue',
     name: 'Green Avenue',
-    coordinates: { lat: 33.66797753538769, lng: 73.14960345767258 },
+    coordinates: { lat: 33.66730581018109, lng: 73.1501415929722 },
   },
   {
     id: 'chattaBakhtawar',
     name: 'Chatta Bakhtawar',
-    coordinates: { lat: 33.6645276760455, lng: 73.15235827116369 },
+    coordinates: { lat: 33.66420019861936, lng: 73.15274880244938 },
   },
   {
     id: 'hostelCity',
     name: 'Hostel City',
-    coordinates: { lat: 33.65708167411345, lng: 73.15387845767259 },
+    coordinates: { lat: 33.65719432681552, lng: 73.15386885609603 },
   },
   {
     id: 'comsatsUniversity',
     name: 'COMSATS University',
-    coordinates: { lat: 33.65249260375304, lng: 73.1581857288363 },
+    coordinates: { lat: 33.65316253996013, lng: 73.15760919137517 },
   },
   {
     id: 'tammaStop',
     name: 'Tamma Stop',
-    coordinates: { lat: 33.64824167182018, lng: 73.16194627116371 },
+    coordinates: { lat: 33.648435615050104, lng: 73.16214038478199 },
   },
 
   {
     id: 'dhokeKalaKhan',
     name: 'Dhoke Kala Khan',
-    coordinates: { lat: 33.649770494504395, lng: 73.0977740685629 },
+    coordinates: { lat: 33.64976530592112, lng: 73.09778297881576 },
   },
   {
     id: 'pindoraChungi',
     name: 'Pindora Chungi',
-    coordinates: { lat: 33.65197839632907, lng: 73.0642967288363 },
+    coordinates: { lat: 33.65172874338581, lng: 73.06399924970574 },
   },
   {
     id: 'katarianChungi',
@@ -734,7 +763,7 @@ export const stationData: Station[] = [
   {
     id: 'katarianPull',
     name: 'Katarian Pull',
-    coordinates: { lat: 33.646594602835094, lng: 73.05361127116369 },
+    coordinates: { lat: 33.64587207919984, lng: 73.05242611259663 },
   },
   {
     id: 'cdaStop',
@@ -744,84 +773,84 @@ export const stationData: Station[] = [
   {
     id: 'mandiMorh',
     name: 'Mandi Morh',
-    coordinates: { lat: 33.635195601061355, lng: 73.0323217288363 },
+    coordinates: { lat: 33.63457732433383, lng: 73.03159518627537 },
   },
   {
     id: 'faujiColony',
     name: 'Fauji Colony',
-    coordinates: { lat: 33.633162139868205, lng: 73.02844120558892 },
+    coordinates: { lat: 33.632527269470984, lng: 73.02742528993505 },
   },
   {
     id: 'carriageFactory',
     name: 'Carriage Factory',
-    coordinates: { lat: 33.63041560031775, lng: 73.023316 },
+    coordinates: { lat: 33.62996786752527, lng: 73.02257762644807 },
   },
   {
     id: 'westridge',
     name: 'Westridge',
-    coordinates: { lat: 33.62711859980488, lng: 73.0171077288363 },
+    coordinates: { lat: 33.62345821578825, lng: 73.01011063762535 },
   },
   {
     id: 'ctti',
     name: 'CTTI',
-    coordinates: { lat: 33.62488553315229, lng: 73.012709 },
+    coordinates: { lat: 33.6263509657773, lng: 73.01570560939274 },
   },
   {
     id: 'socialSecurityHospital',
     name: 'Social Security Hospital',
-    coordinates: { lat: 33.62022759873308, lng: 73.0025415423274 },
+    coordinates: { lat: 33.61980216356501, lng: 73.00318223829615 },
   },
   {
     id: 'britishHomes',
     name: 'British Homes',
-    coordinates: { lat: 33.615089597934094, lng: 72.99839134617069 },
+    coordinates: { lat: 33.61826268813282, lng: 73.00021133037666 },
   },
   {
     id: 'kohinoorMill',
     name: 'Kohinoor Mill',
-    coordinates: { lat: 33.61896646715481, lng: 72.98077181349112 },
+    coordinates: { lat: 33.61902542283679, lng: 72.9808592076507 },
   },
   {
     id: 'kohinoorMillColony',
     name: 'Kohinoor Mill Colony',
-    coordinates: { lat: 33.61681172914095, lng: 72.98660045767257 },
+    coordinates: { lat: 33.616560110181695, lng: 72.98681751853452 },
   },
   {
     id: 'golraMorhChowk',
     name: 'Golra Morh Chowk',
-    coordinates: { lat: 33.62475266572926, lng: 72.971451 },
+    coordinates: { lat: 33.624615758768904, lng: 72.97079139270264 },
   },
 
   // FR-14 & FR-14A Additional Stations
   {
     id: 'colAmmanullahRoad',
     name: 'Col. Ammanullah Road',
-    coordinates: { lat: 33.73695461691421, lng: 73.174402 },
+    coordinates: { lat: 33.73699830810451, lng: 73.17442209478754 },
   },
   {
     id: 'athalChowk',
     name: 'Athal Chowk',
-    coordinates: { lat: 33.73898869538702, lng: 73.17817418650887 },
+    coordinates: { lat: 33.738945735888464, lng: 73.17808697438785 },
   },
   {
     id: 'gardenAvenue',
     name: 'Garden Avenue',
-    coordinates: { lat: 33.6849847538994, lng: 73.10649445767258 },
+    coordinates: { lat: 33.68530141207598, lng: 73.10652239557001 },
   },
   {
     id: 'margallaTown',
     name: 'Margalla Town',
-    coordinates: { lat: 33.68160753609528, lng: 73.10233281349112 },
+    coordinates: { lat: 33.68145651957648, lng: 73.10160517628836 },
   },
   {
     id: 'itpCentre',
     name: 'ITP Centre',
-    coordinates: { lat: 33.67161646442365, lng: 73.09303 },
+    coordinates: { lat: 33.671787662246686, lng: 73.0929128254455 },
   },
   {
-    id: 'jhugi',
-    name: 'Jhugi',
-    coordinates: { lat: 33.74367969660677, lng: 73.18068845767259 },
+    id: 'ghugi',
+    name: 'Ghugi',
+    coordinates: { lat: 33.743030816703914, lng: 73.18507286773266 },
   },
   {
     id: 'bheraPul',
@@ -863,51 +892,51 @@ export const stationData: Station[] = [
   {
     id: 'tuthStop',
     name: 'Tuth Stop',
-    coordinates: { lat: 33.58627559345525, lng: 73.14559445767259 },
+    coordinates: { lat: 33.58564458499054, lng: 73.14642272577143 },
   },
   {
     id: 'pwdHousingSociety',
     name: 'PWD Housing society',
-    coordinates: { lat: 33.57597865309367, lng: 73.15319045767258 },
+    coordinates: { lat: 33.57639145292076, lng: 73.15337723244859 },
   },
   {
     id: 'sohanGardenEBlock',
     name: 'Sohan garden E block',
-    coordinates: { lat: 33.56944410638175, lng: 73.15807293254437 },
+    coordinates: { lat: 33.56808953089137, lng: 73.15963283322819 },
   },
   {
     id: 'sohanGardenGBlock',
     name: 'Sohan garden G block',
-    coordinates: { lat: 33.562990709626014, lng: 73.162914 },
+    coordinates: { lat: 33.561579098371716, lng: 73.1644677052197 },
   },
   {
     id: 'sohanGardenHBlock',
     name: 'Sohan garden H block',
-    coordinates: { lat: 33.558553589149334, lng: 73.16619654232741 },
+    coordinates: { lat: 33.55719574934774, lng: 73.16776906977502 },
   },
   {
     id: 'riverGarden',
     name: 'River Garden',
-    coordinates: { lat: 33.55183858810684, lng: 73.17113945767258 },
+    coordinates: { lat: 33.55048756632599, lng: 73.17287366963103 },
   },
   {
     id: 'kaakPul',
     name: 'Kaak Pul',
-    coordinates: { lat: 33.543877644786306, lng: 73.177274 },
+    coordinates: { lat: 33.54319563254267, lng: 73.17812128357154 },
   },
   {
     id: 'dhaGate8',
     name: 'DHA Gate 8',
-    coordinates: { lat: 33.53911570097803, lng: 73.18016981349113 },
+    coordinates: { lat: 33.538858736124816, lng: 73.18079013307181 },
   },
   {
     id: 'dhaGate7',
     name: 'DHA Gate 7',
-    coordinates: { lat: 33.533472698934816, lng: 73.18085672883629 },
+    coordinates: { lat: 33.53327266712339, lng: 73.18132679142042 },
   },
   {
     id: 'suparco',
     name: 'Suparco',
-    coordinates: { lat: 33.51831969344972, lng: 73.17895244047337 },
+    coordinates: { lat: 33.51869673088975, lng: 73.17934846482159 },
   },
 ];

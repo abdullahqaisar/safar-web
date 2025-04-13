@@ -47,13 +47,23 @@ export function findDirectRoutes(
         line,
         stations.slice(originIndex, destIndex + 1)
       );
-      routes.push(createRoute([routeSegment]));
+
+      if (routeSegment) {
+        routes.push(
+          createRoute([routeSegment], { requestedOrigin: originId } as Route)
+        );
+      }
     }
     // Create reverse route if origin comes after destination
     else if (originIndex > destIndex) {
       const stationIds = stations.slice(destIndex, originIndex + 1).reverse();
       const routeSegment = createTransitSegment(graph, line, stationIds);
-      routes.push(createRoute([routeSegment]));
+
+      if (routeSegment) {
+        routes.push(
+          createRoute([routeSegment], { requestedOrigin: originId } as Route)
+        );
+      }
     }
   });
 

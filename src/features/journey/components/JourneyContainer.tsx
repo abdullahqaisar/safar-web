@@ -33,6 +33,7 @@ function JourneyContent() {
     setFromLocation,
     setToLocation,
     searchRoutes,
+    accessRecommendations,
   } = useJourney();
 
   // Determine initial state from URL immediately to avoid flicker
@@ -285,6 +286,7 @@ function JourneyContent() {
             error={error}
             fromText={fromText}
             toText={toText}
+            accessRecommendations={accessRecommendations}
           />
         )}
 

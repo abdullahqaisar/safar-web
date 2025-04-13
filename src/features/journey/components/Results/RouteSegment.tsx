@@ -1,8 +1,8 @@
 import {
   RouteSegment as SegmentType,
-  TransitSegment,
-  WalkSegment,
-} from '@/types/route';
+  TransitRouteSegment as TransitSegment,
+  WalkingRouteSegment as WalkSegment,
+} from '@/core/types/route';
 import {
   Train,
   Info,
@@ -10,20 +10,39 @@ import {
   Clock,
   ChevronDown,
   Footprints,
+  Bus,
+  ExternalLink,
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils/formatters';
 
+// Extended segment type to include access segments
+interface AccessSegment {
+  type: 'access';
+  accessType: 'origin' | 'destination';
+  recommendation: {
+    type: 'walk' | 'public_transport';
+    distance: number;
+    googleMapsUrl?: string;
+  };
+  duration: number;
+  stations: {
+    id: string;
+    name: string;
+    coordinates?: { lat: number; lng: number };
+  }[];
+}
+
 interface RouteSegmentProps {
-  segment: SegmentType;
+  segment: SegmentType | AccessSegment;
   isLast: boolean;
   position: 'first' | 'middle' | 'last';
   isExpanded?: boolean;
   onToggleExpand: () => void;
   isTransfer?: boolean;
   segmentIndex: number;
-  isLastTransitSegment?: boolean; // New prop to identify last transit segment
+  isLastTransitSegment?: boolean;
 }
 
 export function RouteSegment({
@@ -34,7 +53,7 @@ export function RouteSegment({
   onToggleExpand,
   isTransfer = false,
   segmentIndex,
-  isLastTransitSegment = false, // Default to false
+  isLastTransitSegment = false,
 }: RouteSegmentProps) {
   const getSegmentTypeStyles = () => {
     if (segment.type === 'transit') {
@@ -46,6 +65,20 @@ export function RouteSegment({
       return {
         bgColor: 'bg-gray-200 text-gray-700',
         icon: <Footprints className="w-5 h-5" aria-hidden="true" />,
+      };
+    } else if (segment.type === 'access') {
+      const accessSegment = segment as AccessSegment;
+      const isWalk = accessSegment.recommendation.type === 'walk';
+
+      return {
+        bgColor: isWalk
+          ? 'bg-[rgba(var(--color-accent-rgb),0.15)] text-[var(--color-accent)]'
+          : 'bg-gray-200 text-gray-700',
+        icon: isWalk ? (
+          <Footprints className="w-5 h-5" aria-hidden="true" />
+        ) : (
+          <Bus className="w-5 h-5" aria-hidden="true" />
+        ),
       };
     } else {
       return {
@@ -82,6 +115,14 @@ export function RouteSegment({
     return 'bg-gray-100 text-gray-700 border border-gray-200';
   };
 
+  // Format distance for access segments
+  const formatDistance = (meters: number) => {
+    if (meters < 1000) {
+      return `${Math.round(meters)}m`;
+    }
+    return `${(meters / 1000).toFixed(1)}km`;
+  };
+
   // Get description based on segment type and position
   const getDescription = () => {
     if (segment.type === 'transit') {
@@ -105,6 +146,51 @@ export function RouteSegment({
       const destinationStation =
         walkSegment.stations[walkSegment.stations.length - 1];
       return `Walk to ${destinationStation?.name || 'next stop'}`;
+    } else if (segment.type === 'access') {
+      const accessSegment = segment as AccessSegment;
+      const isWalk = accessSegment.recommendation.type === 'walk';
+      const distance = formatDistance(accessSegment.recommendation.distance);
+
+      // Get the actual station and location names
+      const stationName =
+        accessSegment.accessType === 'origin'
+          ? accessSegment.stations[1]?.name
+          : accessSegment.stations[0]?.name;
+
+      const locationName =
+        accessSegment.accessType === 'origin'
+          ? 'starting point'
+          : 'destination';
+
+      // Create base description text
+      let description = '';
+      if (accessSegment.accessType === 'origin') {
+        description = isWalk
+          ? `Walk ${distance} from ${locationName} to ${stationName}`
+          : `Take public transport ${distance} from ${locationName} to ${stationName}`;
+      } else {
+        description = isWalk
+          ? `Walk ${distance} from ${stationName} to ${locationName}`
+          : `Take public transport ${distance} from ${stationName} to ${locationName}`;
+      }
+
+      return (
+        <>
+          {description}
+          {accessSegment.recommendation.googleMapsUrl && (
+            <a
+              href={accessSegment.recommendation.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-[var(--color-accent)] ml-2 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="text-xs mr-1">Open in Maps</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </>
+      );
     }
     return 'Continue your journey';
   };
@@ -161,6 +247,21 @@ export function RouteSegment({
                       />
                       <span>{duration}</span>
                     </>
+                  )}
+                </div>
+              )}
+
+              {/* Access segment details */}
+              {segment.type === 'access' && (
+                <div className="flex items-center text-sm text-gray-600 mt-1">
+                  {duration && (
+                    <div className="flex items-center">
+                      <Clock
+                        className="w-3.5 h-3.5 mr-1 text-[var(--color-accent)]"
+                        aria-hidden="true"
+                      />
+                      <span>Approximately {duration}</span>
+                    </div>
                   )}
                 </div>
               )}
@@ -251,14 +352,77 @@ export function RouteSegment({
                     const isOrigin = idx === 0;
                     const isDestination = idx === segment.stations.length - 1;
 
+                    // For access segments, use special labels
+                    if (segment.type === 'access') {
+                      const accessSegment = segment as AccessSegment;
+                      const isOriginSegment =
+                        accessSegment.accessType === 'origin';
+
+                      // For origin access segments: first = starting point, second = station
+                      // For destination access segments: first = station, second = destination
+                      const isStartingPoint = isOriginSegment && isOrigin;
+                      const isEndPoint = !isOriginSegment && isDestination;
+
+                      let stationLabel = '';
+                      let badgeColor = '';
+
+                      if (isStartingPoint) {
+                        stationLabel = 'Starting Point';
+                        badgeColor = 'bg-blue-50 text-blue-600 border-blue-200';
+                      } else if (isEndPoint) {
+                        stationLabel = 'Destination';
+                        badgeColor = 'bg-blue-50 text-blue-600 border-blue-200';
+                      } else if (isOriginSegment && isDestination) {
+                        stationLabel = station.name;
+                        badgeColor =
+                          'bg-emerald-50 text-emerald-600 border-emerald-200';
+                      } else if (!isOriginSegment && isOrigin) {
+                        stationLabel = station.name;
+                        badgeColor = 'bg-red-50 text-red-600 border-red-100';
+                      }
+
+                      return (
+                        <div key={idx} className="flex items-center py-1.5">
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              isStartingPoint || isOrigin
+                                ? 'bg-emerald-500'
+                                : isEndPoint || isDestination
+                                  ? 'bg-red-500'
+                                  : 'bg-gray-300'
+                            } mr-2.5 flex-shrink-0`}
+                            aria-hidden="true"
+                          ></div>
+                          <div className="flex items-center flex-wrap gap-1.5">
+                            <span
+                              className={`text-sm ${
+                                isStartingPoint || isOrigin
+                                  ? 'text-emerald-600 font-medium'
+                                  : isEndPoint || isDestination
+                                    ? 'text-red-600 font-medium'
+                                    : 'text-gray-500'
+                              }`}
+                            >
+                              {station.name}
+                            </span>
+                            <span
+                              className={`px-1.5 py-0.5 text-[10px] rounded-md font-medium border ${badgeColor}`}
+                            >
+                              {stationLabel}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     // Determine station label based on position and context
                     const stationLabel = isOrigin
                       ? 'Origin'
                       : isDestination
-                      ? isLast
-                        ? 'Destination'
-                        : 'Transfer point'
-                      : 'Stop';
+                        ? isLast
+                          ? 'Destination'
+                          : 'Transfer point'
+                        : 'Stop';
 
                     // Determine what text to show for destination badges
                     const getDestinationLabel = () => {
@@ -278,8 +442,8 @@ export function RouteSegment({
                             isOrigin
                               ? 'bg-emerald-500'
                               : isDestination
-                              ? 'bg-red-500'
-                              : 'bg-gray-300'
+                                ? 'bg-red-500'
+                                : 'bg-gray-300'
                           } mr-2.5 flex-shrink-0`}
                           aria-hidden="true"
                         ></div>
@@ -289,8 +453,8 @@ export function RouteSegment({
                               isOrigin
                                 ? 'text-emerald-600 font-medium'
                                 : isDestination
-                                ? 'text-red-600 font-medium'
-                                : 'text-gray-500'
+                                  ? 'text-red-600 font-medium'
+                                  : 'text-gray-500'
                             }`}
                           >
                             {station.name}
@@ -312,8 +476,8 @@ export function RouteSegment({
                                 isLastTransitSegment
                                   ? 'Exit here'
                                   : isLast
-                                  ? 'Arrive here'
-                                  : 'Transfer here'
+                                    ? 'Arrive here'
+                                    : 'Transfer here'
                               }
                             >
                               {getDestinationLabel()}

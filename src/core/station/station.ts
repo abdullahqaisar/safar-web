@@ -1,9 +1,13 @@
 import { Coordinates, Station } from '../types/graph';
 import { calculateDistance } from '../utils/geo-utils';
 import { TransitGraph } from '../graph/graph';
+import { AccessRecommendation, AccessType } from '../types/route';
 
 // Very large search radius (10km) to find stations even for users far from any station
 const MAX_SEARCH_RADIUS = 10000; // meters
+
+// Distance threshold for recommending walking vs public transport
+const WALKING_DISTANCE_THRESHOLD = 500; // meters
 
 /**
  * Find the nearest station ID from a set of coordinates
@@ -121,4 +125,47 @@ export function isWithinWalkingDistanceOfStation(
     walkingDistance
   );
   return nearestStation !== null;
+}
+
+/**
+ * Get the distance to the nearest station and recommend whether to walk or take public transport
+ * @param coordinates User coordinates
+ * @param graph Transit graph
+ * @param stationId Optional specific station ID to calculate distance to
+ * @returns Access recommendation with distance and recommendation type, or null if distance is very short
+ */
+export function getAccessRecommendation(
+  coordinates: Coordinates,
+  graph: TransitGraph,
+  stationId?: string
+): AccessRecommendation | null {
+  let distance: number;
+
+  if (stationId) {
+    // Calculate distance to the specified station
+    const station = graph.stations[stationId];
+    if (!station) return null;
+
+    distance = calculateDistance(coordinates, station.coordinates);
+  } else {
+    // Find nearest station and its distance
+    const nearestStations = findMultipleNearestStations(coordinates, graph, 1);
+    if (nearestStations.length === 0) return null;
+
+    distance = nearestStations[0].distance;
+  }
+
+  // Skip recommendation if distance is very short (less than 50 meters)
+  if (distance <= 50) {
+    return null;
+  }
+
+  // Determine recommendation type based on distance threshold
+  const accessType: AccessType =
+    distance <= WALKING_DISTANCE_THRESHOLD ? 'walk' : 'public_transport';
+
+  return {
+    type: accessType,
+    distance: Math.round(distance),
+  };
 }
