@@ -9,9 +9,7 @@ import {
   ChevronRight,
   Footprints,
   Star,
-  Bus,
   Wallet,
-  ExternalLink,
 } from 'lucide-react';
 import { formatDuration } from '../../utils';
 import { Button } from '@/components/common/Button';
@@ -28,7 +26,6 @@ export function JourneyCard({
   route,
   onSelect,
   isRecommended = false,
-  accessRecommendations,
 }: JourneyCardProps) {
   // Get transit segments for line badges
   const transitSegments = route.segments.filter(
@@ -39,14 +36,6 @@ export function JourneyCard({
   const totalWalkingTime = route.segments
     .filter((segment) => segment.type === 'walk')
     .reduce((total, segment) => total + segment.duration, 0);
-
-  // Format distance for access recommendations
-  const formatDistance = (meters: number) => {
-    if (meters < 1000) {
-      return `${Math.round(meters)}m`;
-    }
-    return `${(meters / 1000).toFixed(1)}km`;
-  };
 
   // Format fare for display
   const formatFare = (fare: number) => {
@@ -120,60 +109,6 @@ export function JourneyCard({
               <Wallet className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
               <span className="text-xs sm:text-sm text-gray-700">
                 {formatFare(route.totalFare)}
-              </span>
-            </div>
-          )}
-
-          {/* Origin access recommendation */}
-          {accessRecommendations?.origin && (
-            <div className="flex items-center">
-              {accessRecommendations.origin.type === 'walk' ? (
-                <Footprints className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
-              ) : (
-                <Bus className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
-              )}
-              <span className="text-xs sm:text-sm text-gray-700">
-                {accessRecommendations.origin.type === 'walk'
-                  ? `${formatDistance(accessRecommendations.origin.distance)} to start`
-                  : `${formatDistance(accessRecommendations.origin.distance)} to start`}
-                {accessRecommendations.origin.googleMapsUrl && (
-                  <a
-                    href={accessRecommendations.origin.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-[var(--color-accent)] ml-1 hover:underline"
-                    onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the link
-                  >
-                    <ExternalLink className="w-3 h-3 ml-0.5" />
-                  </a>
-                )}
-              </span>
-            </div>
-          )}
-
-          {/* Destination access recommendation */}
-          {accessRecommendations?.destination && (
-            <div className="flex items-center">
-              {accessRecommendations.destination.type === 'walk' ? (
-                <Footprints className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
-              ) : (
-                <Bus className="w-4 h-4 text-[var(--color-accent)] mr-1.5" />
-              )}
-              <span className="text-xs sm:text-sm text-gray-700">
-                {accessRecommendations.destination.type === 'walk'
-                  ? `${formatDistance(accessRecommendations.destination.distance)} from end`
-                  : `${formatDistance(accessRecommendations.destination.distance)} from end`}
-                {accessRecommendations.destination.googleMapsUrl && (
-                  <a
-                    href={accessRecommendations.destination.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-[var(--color-accent)] ml-1 hover:underline"
-                    onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the link
-                  >
-                    <ExternalLink className="w-3 h-3 ml-0.5" />
-                  </a>
-                )}
               </span>
             </div>
           )}
