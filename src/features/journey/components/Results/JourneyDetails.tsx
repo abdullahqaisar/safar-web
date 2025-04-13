@@ -74,6 +74,12 @@ export function JourneyDetails({
 
     // Only add origin access segment if there's a valid recommendation
     if (accessRecommendations.origin) {
+      // Calculate duration based on type (walk vs public transport)
+      const speed =
+        accessRecommendations.origin.type === 'walk'
+          ? 80 // 80 meters per minute walking pace
+          : 333; // 333 meters per minute (~20 km/h) for public transport
+
       // Create origin access segment
       const originSegment: AccessSegment = {
         type: 'access',
@@ -82,8 +88,9 @@ export function JourneyDetails({
           ...accessRecommendations.origin,
           googleMapsUrl: accessRecommendations.origin.googleMapsUrl,
         },
-        // Estimate duration: 80m per minute walking pace
-        duration: Math.round(accessRecommendations.origin.distance / 80) * 60,
+        // Estimate duration based on type
+        duration:
+          Math.round(accessRecommendations.origin.distance / speed) * 60,
         stations: [
           { id: 'origin', name: 'Your Starting Point' },
           {
@@ -99,6 +106,12 @@ export function JourneyDetails({
 
     // Only add destination access segment if there's a valid recommendation
     if (accessRecommendations.destination) {
+      // Calculate duration based on type (walk vs public transport)
+      const speed =
+        accessRecommendations.destination.type === 'walk'
+          ? 80 // 80 meters per minute walking pace
+          : 333; // 333 meters per minute (~20 km/h) for public transport
+
       // Create destination access segment
       const lastSegment = route.segments[route.segments.length - 1];
       const lastStation =
@@ -111,9 +124,9 @@ export function JourneyDetails({
           ...accessRecommendations.destination,
           googleMapsUrl: accessRecommendations.destination.googleMapsUrl,
         },
-        // Estimate duration: 80m per minute walking pace
+        // Estimate duration based on type
         duration:
-          Math.round(accessRecommendations.destination.distance / 80) * 60,
+          Math.round(accessRecommendations.destination.distance / speed) * 60,
         stations: [
           {
             id: lastStation?.id || 'last-station',
