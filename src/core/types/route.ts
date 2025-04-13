@@ -33,12 +33,13 @@ export interface WalkingRouteSegment extends BaseRouteSegment {
 export type RouteSegment = TransitRouteSegment | WalkingRouteSegment;
 
 export interface Route {
+  id: string;
   segments: RouteSegment[];
-  totalStops: number;
-  totalDistance: number; // in meters
-  totalDuration: number; // in seconds
+  totalDuration: number;
+  totalDistance: number;
   transfers: number;
-  id: string; // Unique identifier
+  totalStops: number;
+  requestedOrigin?: string;
 }
 
 export interface RoutingError {

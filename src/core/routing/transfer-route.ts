@@ -286,7 +286,7 @@ function findMultiTransferRoutes(
     if (stationId === destinationId) {
       // Before constructing a route, validate the path doesn't have unnecessary transfers
       if (!hasUnnecessaryTransfers(path, graph)) {
-        const route = constructRouteFromPath(graph, path);
+        const route = constructRouteFromPath(graph, path, originId);
 
         // Only add routes that meet the duration threshold (if specified)
         if (
@@ -811,7 +811,8 @@ function createSegmentBetweenStations(
  */
 function constructRouteFromPath(
   graph: TransitGraph,
-  path: { stationId: string; lineId: string; isTransfer: boolean }[]
+  path: { stationId: string; lineId: string; isTransfer: boolean }[],
+  originId?: string
 ): Route | null {
   if (path.length < 2) return null;
 
@@ -891,7 +892,9 @@ function constructRouteFromPath(
         try {
           // Create segment only if it's a valid segment (no self-loops)
           const segment = createTransitSegment(graph, line, uniqueStationIds);
-          segments.push(segment);
+          if (segment) {
+            segments.push(segment);
+          }
         } catch (error) {
           console.warn(`Failed to create segment: ${error}`);
           continue;
@@ -920,7 +923,10 @@ function constructRouteFromPath(
 
   // Create and validate the route
   try {
-    const route = createRoute(validSegments);
+    const route = createRoute(
+      validSegments,
+      originId ? ({ requestedOrigin: originId } as Route) : undefined
+    );
     return route;
   } catch (error) {
     console.error('Error creating route from path:', error);

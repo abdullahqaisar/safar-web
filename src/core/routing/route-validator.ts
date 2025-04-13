@@ -7,9 +7,20 @@ import { createRoute } from '../utils/route-builder';
  * 2. Eliminates unnecessary transfers
  * 3. Merges redundant transit segments
  * 4. Detects and fixes complex circular patterns
+ * 5. Ensures route starts at the requested origin
  */
 export function validateAndOptimizeRoute(route: Route): Route | null {
   try {
+    // Check if the route starts at the requested origin (if specified)
+    if (
+      route.requestedOrigin &&
+      route.segments.length > 0 &&
+      route.segments[0].stations[0].id !== route.requestedOrigin
+    ) {
+      // Route doesn't start at the requested origin, reject it
+      return null;
+    }
+
     // First pass: Filter out invalid segments
     let segments = removeInvalidSegments(route.segments);
 
@@ -25,8 +36,9 @@ export function validateAndOptimizeRoute(route: Route): Route | null {
     // Fourth pass: Detect and eliminate complex circular patterns
     segments = eliminateComplexCircularPatterns(segments);
 
-    // Create a new optimized route
-    return createRoute(segments);
+    // Create a new optimized route, preserving the requestedOrigin
+    const optimizedRoute = createRoute(segments, route);
+    return optimizedRoute;
   } catch (error) {
     console.warn('Error validating route:', error);
     // Return original route if validation fails

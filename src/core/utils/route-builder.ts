@@ -13,13 +13,20 @@ import { convertToRouteStation } from './station-utils';
 import { calculateTransitTime } from './time-utils';
 
 /**
+ * Generate a unique ID for a route
+ */
+function generateUniqueId(): string {
+  return `route-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+/**
  * Create a transit segment from a sequence of station IDs on a line
  */
 export function createTransitSegment(
   graph: TransitGraph,
   line: TransitLine,
   stationIds: string[]
-): TransitRouteSegment {
+): TransitRouteSegment | null {
   // Validate: require at least two distinct stations
   if (stationIds.length < 2) {
     throw new Error(
@@ -102,74 +109,61 @@ export function createWalkingSegment(
   return {
     type: 'walk',
     stations: [fromStation, toStation],
-    duration,
-    walkingTime: duration,
     walkingDistance: distance,
+    walkingTime: duration,
+    duration: duration,
   };
 }
 
 /**
- * Create a complete route from segments
+ * Create a new route from segments
  */
-export function createRoute(segments: RouteSegment[]): Route {
-  // Validate segments: skip empty segments
-  const validSegments = segments.filter(
-    (segment) => segment.stations.length >= 2
-  );
+export function createRoute(
+  segments: RouteSegment[],
+  sourceRoute?: Route
+): Route {
+  // Generate unique route ID
+  const routeId = generateUniqueId();
 
-  // If no valid segments, throw an error
-  if (validSegments.length === 0) {
-    throw new Error('Cannot create route with no valid segments');
-  }
-
-  let totalStops = 0;
-  let totalDistance = 0;
+  // Calculate route statistics
   let totalDuration = 0;
+  let totalDistance = 0;
+  let totalStops = 0;
+  const transfers = Math.max(0, segments.length - 1);
 
-  // Calculate route stats
-  validSegments.forEach((segment) => {
-    if (segment.type === 'transit') {
-      totalStops += segment.stations.length - 1;
-    }
+  segments.forEach((segment) => {
     totalDuration += segment.duration;
 
-    // Calculate distance
-    for (let i = 0; i < segment.stations.length - 1; i++) {
-      const from = segment.stations[i];
-      const to = segment.stations[i + 1];
-      const distance = calculateDistance(from.coordinates, to.coordinates);
-      totalDistance += distance;
+    if (segment.type === 'transit') {
+      // For transit segments, calculate distance from stations
+      const transitSegment = segment as TransitRouteSegment;
+      for (let i = 0; i < transitSegment.stations.length - 1; i++) {
+        const from = transitSegment.stations[i];
+        const to = transitSegment.stations[i + 1];
+        totalDistance += calculateDistance(from.coordinates, to.coordinates);
+      }
+      // Count stations minus 1 for stops
+      totalStops += segment.stations.length - 1;
+    } else if (segment.type === 'walk') {
+      const walkSegment = segment as WalkingRouteSegment;
+      totalDistance += walkSegment.walkingDistance;
     }
   });
 
-  // Generate a unique ID
-  const id = `transit-${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2, 11)}`;
+  // Create the route object
+  const route: Route = {
+    id: routeId,
+    segments,
+    totalDuration,
+    totalDistance,
+    transfers,
+    totalStops,
+  };
 
-  // Adjust transfers count to count only transitions between different transport modes or lines
-  let transferCount = 0;
-  for (let i = 1; i < validSegments.length; i++) {
-    const prevSegment = validSegments[i - 1];
-    const currSegment = validSegments[i];
-
-    // If segment types are different, or both are transit but different lines
-    if (
-      prevSegment.type !== currSegment.type ||
-      (prevSegment.type === 'transit' &&
-        currSegment.type === 'transit' &&
-        prevSegment.line.id !== currSegment.line.id)
-    ) {
-      transferCount++;
-    }
+  // If a source route was provided with a requestedOrigin, preserve it
+  if (sourceRoute && sourceRoute.requestedOrigin) {
+    route.requestedOrigin = sourceRoute.requestedOrigin;
   }
 
-  return {
-    segments: validSegments,
-    totalStops,
-    totalDistance,
-    totalDuration,
-    transfers: transferCount,
-    id,
-  };
+  return route;
 }

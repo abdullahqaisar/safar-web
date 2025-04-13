@@ -48,6 +48,11 @@ export class TransitRouter {
     // Discover all possible routes
     const allRoutes = discoverAllRoutes(this.graph, originId, destinationId);
 
+    // Annotate each route with the requested origin
+    allRoutes.forEach((route) => {
+      route.requestedOrigin = originId;
+    });
+
     // Process routes (filter, rank, optimize diversity) and ensure sorted by time
     const processedRoutes = processRoutes(allRoutes, this.graph);
 
