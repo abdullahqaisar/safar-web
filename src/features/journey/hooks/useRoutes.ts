@@ -52,8 +52,15 @@ export const useRoutes = (enabled = false) => {
     },
   });
 
+  // Extract relevant data from the response
+  const routeData = routesQuery.data;
+
   return {
-    routes: routesQuery.data,
+    routes: routeData?.routes,
+    origin: routeData?.origin,
+    destination: routeData?.destination,
+    accessRecommendations: routeData?.accessRecommendations,
+    userCoordinates: routeData?.userCoordinates,
     isLoading: routesQuery.isLoading,
     isSearching: searchRoutesMutation.isPending,
     error: routesQuery.error || null,

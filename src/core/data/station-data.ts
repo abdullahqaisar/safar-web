@@ -345,7 +345,21 @@ export const stationData: Station[] = [
     name: 'Metro Cash and Carry',
     coordinates: { lat: 33.6403817376959, lng: 73.023893 },
   },
-
+  {
+    id: 'islamabadMedicalComplex',
+    name: 'Islamabad Medical Complex',
+    coordinates: { lat: 33.64916146878899, lng: 73.0169299832297 },
+  },
+  {
+    id: 'policeLines',
+    name: 'Police Lines',
+    coordinates: { lat: 33.65512728880789, lng: 73.01064288525129 },
+  },
+  {
+    id: 'faqirIpiRoadNorth',
+    name: 'Faqir Ipi Road North',
+    coordinates: { lat: 33.66064546276081, lng: 73.00657372808679 },
+  },
   {
     id: 'faisalMasjid',
     name: 'Faisal Masjid',
@@ -409,7 +423,7 @@ export const stationData: Station[] = [
   {
     id: 'bharakauBazar',
     name: 'Bharakau Bazar',
-    coordinates: { lat: 33.73861277340662, lng: 73.18556799999999 },
+    coordinates: { lat: 33.739916429962506, lng: 73.18007871699487 },
   },
   {
     id: 'satraMeel',
@@ -811,12 +825,12 @@ export const stationData: Station[] = [
   {
     id: 'colAmmanullahRoad',
     name: 'Col. Ammanullah Road',
-    coordinates: { lat: 33.73727629910715, lng: 73.17513287667903 },
+    coordinates: { lat: 33.73699830810451, lng: 73.17442209478754 },
   },
   {
     id: 'athalChowk',
     name: 'Athal Chowk',
-    coordinates: { lat: 33.739862225602316, lng: 73.17955731395756 },
+    coordinates: { lat: 33.738945735888464, lng: 73.17808697438785 },
   },
   {
     id: 'gardenAvenue',
@@ -834,8 +848,8 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.671787662246686, lng: 73.0929128254455 },
   },
   {
-    id: 'jhugi',
-    name: 'Jhugi',
+    id: 'ghugi',
+    name: 'Ghugi',
     coordinates: { lat: 33.743030816703914, lng: 73.18507286773266 },
   },
   {

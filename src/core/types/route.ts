@@ -10,6 +10,7 @@ export interface TransitLine {
   id: string;
   name: string;
   color?: string;
+  ticketCost?: number;
 }
 
 export interface BaseRouteSegment {
@@ -22,6 +23,7 @@ export interface TransitRouteSegment extends BaseRouteSegment {
   type: 'transit';
   line: TransitLine;
   stopWaitTime: number; // in seconds
+  ticketCost: number;
 }
 
 export interface WalkingRouteSegment extends BaseRouteSegment {
@@ -40,6 +42,7 @@ export interface Route {
   transfers: number;
   totalStops: number;
   requestedOrigin?: string;
+  totalFare?: number;
 }
 
 export interface RoutingError {
@@ -48,3 +51,25 @@ export interface RoutingError {
 }
 
 export type RoutingResult = Route[] | RoutingError;
+
+/**
+ * Recommendation type for accessing stations at the start/end of a journey
+ */
+export type AccessType = 'walk' | 'public_transport';
+
+/**
+ * Access recommendation with distance information
+ */
+export interface AccessRecommendation {
+  type: AccessType;
+  distance: number; // in meters
+  googleMapsUrl?: string; // Google Maps navigation URL
+}
+
+/**
+ * Access recommendations for both origin and destination
+ */
+export interface AccessRecommendations {
+  origin: AccessRecommendation;
+  destination: AccessRecommendation;
+}

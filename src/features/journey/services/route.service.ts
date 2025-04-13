@@ -2,6 +2,8 @@ import { Coordinates } from '@/types/station';
 import { Route } from '@/types/route';
 import { ErrorCodes } from '@/types/error';
 import { NearbyStationInfo } from '@/core/types/station';
+import { AccessRecommendations } from '@/core/types/route';
+import { Station } from '@/core/types/graph';
 
 export class RouteError extends Error {
   constructor(
@@ -16,10 +18,22 @@ export class RouteError extends Error {
   }
 }
 
+// Add response type to clearly define the API response structure
+export interface RouteResponse {
+  routes: Route[];
+  origin: Station;
+  destination: Station;
+  accessRecommendations?: AccessRecommendations;
+  userCoordinates?: {
+    origin: Coordinates | null;
+    destination: Coordinates | null;
+  };
+}
+
 export async function fetchRoutes(
   fromLocation: Coordinates,
   toLocation: Coordinates
-): Promise<Route[]> {
+): Promise<RouteResponse> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
 
@@ -80,7 +94,13 @@ export async function fetchRoutes(
       );
     }
 
-    return data.routes;
+    return {
+      routes: data.routes,
+      origin: data.origin,
+      destination: data.destination,
+      accessRecommendations: data.accessRecommendations,
+      userCoordinates: data.userCoordinates,
+    };
   } catch (error) {
     // If error is already a RouteError, just rethrow it
     if (error instanceof RouteError) {

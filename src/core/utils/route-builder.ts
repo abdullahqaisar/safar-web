@@ -94,6 +94,7 @@ export function createTransitSegment(
     stations,
     duration,
     stopWaitTime,
+    ticketCost: line.ticketCost || 30,
   };
 }
 
@@ -129,6 +130,7 @@ export function createRoute(
   let totalDuration = 0;
   let totalDistance = 0;
   let totalStops = 0;
+  let totalFare = 0;
   const transfers = Math.max(0, segments.length - 1);
 
   segments.forEach((segment) => {
@@ -137,6 +139,12 @@ export function createRoute(
     if (segment.type === 'transit') {
       // For transit segments, calculate distance from stations
       const transitSegment = segment as TransitRouteSegment;
+
+      // Add fare for this transit segment
+      if (transitSegment.ticketCost) {
+        totalFare += transitSegment.ticketCost;
+      }
+
       for (let i = 0; i < transitSegment.stations.length - 1; i++) {
         const from = transitSegment.stations[i];
         const to = transitSegment.stations[i + 1];
@@ -158,6 +166,7 @@ export function createRoute(
     totalDistance,
     transfers,
     totalStops,
+    totalFare: totalFare > 0 ? totalFare : undefined,
   };
 
   // If a source route was provided with a requestedOrigin, preserve it

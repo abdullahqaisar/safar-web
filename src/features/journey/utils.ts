@@ -11,8 +11,8 @@ export function getWalkSegmentDetails(
     position === 'first'
       ? 'Walk to station'
       : position === 'last'
-      ? 'Walk to destination'
-      : 'Walk to next station';
+        ? 'Walk to destination'
+        : 'Walk to next station';
 
   return {
     icon: FootprintsIcon,

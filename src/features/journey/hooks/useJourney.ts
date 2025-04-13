@@ -1,6 +1,6 @@
 import { useJourneyContext } from '../context/JourneyContext';
 import { useRoutes } from './useRoutes';
-import { Route } from '@/types/route';
+import { Route } from '@/core/types/route';
 
 export const useJourney = (enableAutoFetch = false) => {
   const journeyContext = useJourneyContext();
@@ -34,6 +34,10 @@ export const useJourney = (enableAutoFetch = false) => {
     isFormValid: journeyContext.isFormValid,
 
     routes: routesQuery.routes as Route[] | undefined,
+    origin: routesQuery.origin,
+    destination: routesQuery.destination,
+    accessRecommendations: routesQuery.accessRecommendations,
+    userCoordinates: routesQuery.userCoordinates,
 
     isLoading: routesQuery.isLoading || routesQuery.isSearching,
     error: routesQuery.error || routesQuery.searchError,

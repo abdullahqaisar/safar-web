@@ -107,6 +107,12 @@ function mergeRedundantSegments(segments: RouteSegment[]): RouteSegment[] {
           stations: mergedStations,
           duration: transitPrev.duration + transitCurrent.duration,
           stopWaitTime: transitPrev.stopWaitTime,
+          // For ticket cost, since it's usually a flat fare per line,
+          // we should use the maximum of the two rather than adding them
+          ticketCost: Math.max(
+            transitPrev.ticketCost || 0,
+            transitCurrent.ticketCost || 0
+          ),
         };
 
         // Replace the previous segment with the merged segment
