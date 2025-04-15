@@ -191,9 +191,8 @@ export function removeDuplicateRoutes(routes: Route[]): Route[] {
  * Lower score is better
  */
 function calculateRouteSortScore(route: Route): number {
-  // Weights for different factors (these can be tuned)
-  const TIME_WEIGHT = 0.6; // 60% weight for duration
-  const TRANSFER_WEIGHT = 0.3; // 30% weight for transfers
+  const TIME_WEIGHT = 0.75; // 75% weight for duration
+  const TRANSFER_WEIGHT = 0.15; // 15% weight for transfers
   const FARE_WEIGHT = 0.1; // 10% weight for fare
 
   // Normalize duration (assuming most trips are under 2 hours = 7200 seconds)
