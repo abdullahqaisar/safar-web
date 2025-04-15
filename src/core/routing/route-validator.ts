@@ -36,8 +36,6 @@ export function validateAndOptimizeRoute(route: Route): Route | null {
     // Second pass: Merge consecutive transit segments on same line
     segments = mergeRedundantSegments(segments);
 
-    // Third pass: Eliminate unnecessary transfers including complex patterns
-    const beforeTransfersLength = segments.length;
     segments = eliminateUnnecessaryTransfers(segments);
 
     // Fourth pass: Detect and eliminate complex circular patterns
