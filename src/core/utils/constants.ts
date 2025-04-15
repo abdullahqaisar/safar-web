@@ -3,7 +3,7 @@ export const EARTH_RADIUS_KM = 6371;
 export const AVG_WALKING_SPEED_KM_H = 5;
 export const AVG_WALKING_SPEED_M_MIN = (AVG_WALKING_SPEED_KM_H * 1000) / 60;
 export const DEFAULT_STOP_WAIT_TIME = 20; // seconds
-export const WALKING_MAX_DISTANCE = 800; // meters
+export const WALKING_MAX_DISTANCE = 500; // meters
 export const INTERCHANGE_WALKING_TIME = 120; // seconds (time to change platforms)
 
 // Constants for enhanced transit time calculation

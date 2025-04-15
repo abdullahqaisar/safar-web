@@ -117,7 +117,7 @@ export function findMultipleNearestStations(
 export function isWithinWalkingDistanceOfStation(
   coordinates: Coordinates,
   graph: TransitGraph,
-  walkingDistance: number = 800
+  walkingDistance: number = 500
 ): boolean {
   const nearestStation = findNearestStationID(
     coordinates,
