@@ -30,39 +30,8 @@ import { Locate } from 'lucide-react';
 import StationMarkerList from '../stations/StationMarkerList';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-// Define interface for Leaflet touch events
-interface LeafletTouchEvent extends L.LeafletEvent {
-  touches: TouchList;
-}
-
 // CSS for clean mobile UX
 const mapStyles = `
-  /* Gesture hint styles */
-  .gesture-hint {
-    position: absolute;
-    top: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 12px;
-    color: #555;
-    z-index: 900;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    white-space: nowrap;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    max-width: 210px;
-  }
-  
-  .gesture-hint.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-  
   /* Mobile touch behavior - allow page scroll with one finger, map pan with two */
   @media (max-width: 768px) {
     .leaflet-container {
@@ -71,10 +40,11 @@ const mapStyles = `
     }
     
     /* When map is active (two fingers), disable browser scroll */
-    .leaflet-container.map-active {
+    /* Handled by leaflet-gesture-handling */
+    /* .leaflet-container.map-active {
       touch-action: none !important;
       cursor: grab;
-    }
+    } */
     
     /* In fullscreen, allow map to capture all touch events */
     .leaflet-container.fullscreen-mode {
@@ -97,20 +67,6 @@ const mapStyles = `
   .transit-map-container {
     -webkit-tap-highlight-color: transparent;
   }
-  
-  /* Map overlay for touch control */
-  .map-touch-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 
   /* Control panel styles - position controls in the right corner */
   .map-controls {
@@ -125,11 +81,12 @@ const mapStyles = `
   
   /* Desktop positioning - adjust for fullscreen button */
   @media (min-width: 769px) {
-    .map-controls {
-      right: 60px; /* Move right controls away from fullscreen button */
-      flex-direction: row; /* Place buttons in a row for desktop */
-      gap: 8px; /* Slightly larger gap for horizontal layout */
-    }
+    /* Handled by external Control Panel now */
+    /* .map-controls {
+      right: 60px;
+      flex-direction: row;
+      gap: 8px;
+    } */
   }
   
   .map-control-button {
@@ -231,23 +188,13 @@ interface TransitMapViewProps {
   onMapInstance?: (map: L.Map) => void;
 }
 
-// Simple gesture hint component
-const GestureHint: React.FC<{
-  visible: boolean;
-  message: string;
-}> = ({ visible, message }) => {
-  return (
-    <div className={`gesture-hint ${visible ? 'visible' : ''}`}>{message}</div>
-  );
-};
-
-// New control panel component with better positioning
+// Control panel for mobile Locate button
 const ControlPanel: React.FC<{
   onCenterMap: () => void;
 }> = ({ onCenterMap }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Only show this control panel on mobile, as desktop now uses the external one
+  // Only show this control panel on mobile
   if (!isMobile) {
     return null;
   }
@@ -286,39 +233,9 @@ const TransitMapView: React.FC<
   const [tilesLoaded, setTilesLoaded] = useState(false);
   const hasInitializedRef = useRef(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [showGestureHint, setShowGestureHint] = useState(false);
-  const [hintMessage, setHintMessage] = useState(
-    'Use two fingers to navigate the map'
-  );
-  const [mapActive, setMapActive] = useState(false);
-  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Track touch points for multitouch detection
-  const touchPointsRef = useRef<number>(0);
 
   // Update hint message when fullscreen mode changes
   useEffect(() => {
-    if (isMobile) {
-      if (isFullscreen) {
-        setHintMessage('You can drag the map with one finger');
-
-        // In fullscreen, enable dragging immediately
-        if (mapRef.current) {
-          mapRef.current.dragging.enable();
-          setMapActive(true);
-        }
-      } else {
-        setHintMessage('Use two fingers to navigate the map');
-
-        // When exiting fullscreen (including via back gesture), disable dragging
-        if (mapRef.current) {
-          mapRef.current.dragging.disable();
-          setMapActive(false);
-        }
-      }
-    }
-
     // Always invalidate map size when fullscreen changes to ensure proper rendering
     if (mapRef.current) {
       // Use setTimeout to ensure the DOM has updated with the new fullscreen state
@@ -332,9 +249,24 @@ const TransitMapView: React.FC<
             animate: false,
           });
         }
+
+        // Re-configure gesture handling after fullscreen state change
+        const map = mapRef.current;
+        if (!map) return;
+
+        const mapWithGestureHandling = map as L.Map & {
+          gestureHandling?: { enable: () => void; disable: () => void };
+        };
+        if (isMobile && isFullscreen) {
+          mapWithGestureHandling.gestureHandling?.disable();
+          map.dragging.enable();
+        } else if (isMobile) {
+          mapWithGestureHandling.gestureHandling?.enable();
+          map.dragging.disable();
+        }
       }, 100);
     }
-  }, [isMobile, isFullscreen]);
+  }, [isFullscreen, isMobile]); // Add isMobile dependency
 
   // Inject styles
   useEffect(() => {
@@ -347,121 +279,64 @@ const TransitMapView: React.FC<
     };
   }, []);
 
-  // Handle initial hint
+  // Ensure map responds correctly to resize
   useEffect(() => {
-    if (isMobile && tilesLoaded && !hasInitializedRef.current) {
-      // Show initial hint after a delay
-      const timer = setTimeout(() => {
-        setShowGestureHint(true);
+    const handleResize = () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    };
 
-        // Auto-hide after 4 seconds
-        hintTimeoutRef.current = setTimeout(() => {
-          setShowGestureHint(false);
-        }, 4000);
-      }, 1000);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-      return () => {
-        clearTimeout(timer);
-        if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
+  // This function will be called when MapContainer is fully loaded
+  const handleMapInit = useCallback(
+    (map: L.Map) => {
+      // Store the map reference
+      mapRef.current = map;
+
+      // Pass the map instance to parent component
+      onMapInstance(map);
+
+      // Configure gesture handling and dragging based on fullscreen state
+      const mapWithGestureHandling = map as L.Map & {
+        gestureHandling?: { enable: () => void; disable: () => void };
       };
-    }
-  }, [isMobile, tilesLoaded]);
-
-  // Handle dragging based on fullscreen mode
-  useEffect(() => {
-    if (mapRef.current && isMobile) {
-      if (isFullscreen) {
-        // In fullscreen, enable dragging with one finger
-        mapRef.current.dragging.enable();
+      if (isMobile && isFullscreen) {
+        // Fullscreen mobile: disable gesture handling, enable standard dragging
+        mapWithGestureHandling.gestureHandling?.disable();
+        map.dragging.enable();
+      } else if (isMobile) {
+        // Non-fullscreen mobile: enable gesture handling, disable standard dragging initially
+        mapWithGestureHandling.gestureHandling?.enable();
+        map.dragging.disable(); // Gesture handling will enable it on two-finger touch
       } else {
-        // Otherwise, disable dragging (will be enabled with multi-touch)
-        mapRef.current.dragging.disable();
+        // Desktop: Gesture handling likely not needed, ensure standard dragging is on
+        mapWithGestureHandling.gestureHandling?.disable();
+        map.dragging.enable();
       }
-    }
-  }, [isMobile, isFullscreen]);
 
-  // Touch event handlers for mobile
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isMobile || !mapRef.current) return;
-
-      // Only prevent default for 2+ fingers to allow normal page scrolling with one finger
-      const touchCount = e.touches.length;
-      touchPointsRef.current = touchCount;
-
-      // Skip extra handling if in fullscreen mode
-      if (isFullscreen) return;
-
-      if (touchCount >= 2) {
-        // Multi-touch - enable map interactions
-        e.preventDefault(); // Only prevent default for multi-touch
-        setMapActive(true); // Enable map dragging
-        mapRef.current.dragging.enable();
-
-        // Hide any hint
-        setShowGestureHint(false);
-        if (hintTimeoutRef.current) {
-          clearTimeout(hintTimeoutRef.current);
-        }
-      } else if (touchCount === 1) {
-        // For single touch - detect vertical scroll attempts
-        const initialY = e.touches[0].clientY;
-
-        const handleTouchMove = (moveEvent: TouchEvent) => {
-          if (moveEvent.touches.length !== 1) return;
-
-          const currentY = moveEvent.touches[0].clientY;
-          const deltaY = Math.abs(currentY - initialY);
-
-          // If user is trying to scroll vertically, show hint
-          if (deltaY > 10 && !showGestureHint) {
-            setHintMessage('Use two fingers to move the map');
-            setShowGestureHint(true);
-
-            // Auto-hide hint after 3 seconds
-            if (hintTimeoutRef.current) {
-              clearTimeout(hintTimeoutRef.current);
-            }
-
-            hintTimeoutRef.current = setTimeout(() => {
-              setShowGestureHint(false);
-            }, 3000);
+      // Listen for fullscreen change events from browser
+      document.addEventListener('fullscreenchange', () => {
+        const map = mapRef.current;
+        if (!document.fullscreenElement && isFullscreen && map) {
+          // Handle case when user exits fullscreen via browser UI/back button
+          // Re-evaluate dragging state based on the new fullscreen status
+          if (isMobile) {
+            map.dragging.disable();
+            // Also re-enable gesture handling if needed
+            const mapWithGestureHandling = map as L.Map & {
+              gestureHandling?: { enable: () => void; disable: () => void };
+            };
+            mapWithGestureHandling.gestureHandling?.enable();
           }
-        };
-
-        const handleTouchEnd = () => {
-          document.removeEventListener('touchmove', handleTouchMove);
-          document.removeEventListener('touchend', handleTouchEnd);
-        };
-
-        document.addEventListener('touchmove', handleTouchMove, {
-          passive: true, // Keep passive for single-finger to allow page scroll
-        });
-        document.addEventListener('touchend', handleTouchEnd, { once: true });
-      }
-    },
-    [isMobile, showGestureHint, isFullscreen]
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    if (!isMobile || !mapRef.current) return;
-
-    // If not in fullscreen, disable dragging after two-finger interaction
-    if (!isFullscreen && touchPointsRef.current >= 2) {
-      if (touchTimeoutRef.current) {
-        clearTimeout(touchTimeoutRef.current);
-      }
-
-      touchTimeoutRef.current = setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.dragging.disable();
-          setMapActive(false);
         }
-      }, 1000); // Keep map interactive for 1 second after touch ends
-    }
-
-    touchPointsRef.current = 0;
-  }, [isMobile, isFullscreen]);
+      });
+    },
+    [isMobile, isFullscreen, onMapInstance]
+  );
 
   // Notify parent about map ready state
   useEffect(() => {
@@ -476,7 +351,7 @@ const TransitMapView: React.FC<
     setTilesLoaded(true);
   }, []);
 
-  // Handle map initialization
+  // Handle map initialization (just invalidate size)
   const handleMapReady = useCallback(() => {
     if (mapRef.current) {
       mapRef.current.invalidateSize();
@@ -540,59 +415,6 @@ const TransitMapView: React.FC<
     }
   };
 
-  // Ensure map responds correctly to resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // This function will be called when MapContainer is fully loaded
-  const handleMapInit = useCallback(
-    (map: L.Map) => {
-      // Store the map reference
-      mapRef.current = map;
-
-      // Pass the map instance to parent component
-      onMapInstance(map);
-
-      // Configure touch behavior based on fullscreen state
-      if (isMobile) {
-        if (isFullscreen) {
-          map.dragging.enable();
-        } else {
-          map.dragging.disable();
-        }
-      }
-
-      // Set appropriate touch gesture handling
-      map.on('touchstart', (e: L.LeafletEvent) => {
-        // Cast to LeafletTouchEvent which has the touches property
-        const touchEvent = e as LeafletTouchEvent;
-        if (touchEvent.touches && touchEvent.touches.length >= 2) {
-          // If multi-touch detected, make sure map is active
-          setMapActive(true);
-          map.dragging.enable();
-        }
-      });
-
-      // Listen for fullscreen change events from browser
-      document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && isFullscreen && mapRef.current) {
-          // Handle case when user exits fullscreen via browser UI/back button
-          mapRef.current.dragging.disable();
-          setMapActive(false);
-        }
-      });
-    },
-    [isMobile, isFullscreen, onMapInstance]
-  );
-
   return (
     <div
       className={`transit-map-container ${className} relative`}
@@ -605,7 +427,7 @@ const TransitMapView: React.FC<
         <MapContainer
           center={getMapCenter()}
           zoom={zoomLevel}
-          className={`transit-map-leaflet ${mapActive ? 'map-active' : ''} ${isFullscreen ? 'fullscreen-mode' : ''}`}
+          className={`transit-map-leaflet ${isFullscreen ? 'fullscreen-mode' : ''}`}
           whenReady={handleMapReady}
           zoomControl={false}
           attributionControl={false}
@@ -614,9 +436,7 @@ const TransitMapView: React.FC<
           minZoom={9}
           maxZoom={18}
           scrollWheelZoom={true}
-          touchZoom={true}
-          doubleClickZoom={true}
-          // Enable dragging by default on desktop, conditionally on mobile
+          // Explicitly set dragging based only on desktop/fullscreen status
           dragging={!isMobile || isFullscreen}
           // Disable browser's behaviors that might interfere
           preferCanvas={true}
@@ -662,23 +482,9 @@ const TransitMapView: React.FC<
             getLineName={getLineName}
           />
         </MapContainer>
-
-        {/* Only show touch overlay when not in fullscreen mode on mobile */}
-        {isMobile && !isFullscreen && (
-          <div
-            className="map-touch-overlay"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          />
-        )}
       </div>
 
-      {/* Gesture hint only on mobile */}
-      {isMobile && (
-        <GestureHint visible={showGestureHint} message={hintMessage} />
-      )}
-
-      {/* Action buttons with better positioning */}
+      {/* Mobile-only Control Panel for Locate button */}
       <ControlPanel onCenterMap={handleCenterMap} />
     </div>
   );
