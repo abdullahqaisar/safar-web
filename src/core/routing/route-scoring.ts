@@ -33,6 +33,12 @@ export function calculateRouteScore(route: Route, graph: TransitGraph): number {
     originPenalty = 100; // High penalty to override transfer benefits
   }
 
+  // Apply a bonus for routes that use walking transfers instead of multiple transit segments
+  let walkingTransferBonus = 0;
+  if (hasWalkingTransfers(route)) {
+    walkingTransferBonus = -5; // Negative score is a bonus
+  }
+
   // Combine weighted scores
   const totalScore =
     timeScore * ScoringWeights.TIME +
@@ -40,9 +46,31 @@ export function calculateRouteScore(route: Route, graph: TransitGraph): number {
     walkingScore * ScoringWeights.WALKING +
     complexityScore * ScoringWeights.COMPLEXITY +
     stopsScore * ScoringWeights.STOPS +
-    originPenalty; // Add the origin penalty to the total score
+    originPenalty + // Add the origin penalty to the total score
+    walkingTransferBonus; // Add the walking transfer bonus
 
   return totalScore;
+}
+
+/**
+ * Check if a route has walking transfers between transit segments
+ */
+function hasWalkingTransfers(route: Route): boolean {
+  for (let i = 0; i < route.segments.length; i++) {
+    if (route.segments[i].type === 'walk') {
+      // Only count internal walking segments (not at the start or end)
+      if (i > 0 && i < route.segments.length - 1) {
+        // If this walking segment connects two transit segments, it's a walking transfer
+        if (
+          route.segments[i - 1].type === 'transit' &&
+          route.segments[i + 1].type === 'transit'
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -84,6 +112,10 @@ function calculateTransferScore(route: Route, graph: TransitGraph): number {
       (transferCount - 1) * ScoringWeights.MULTIPLE_TRANSFER_PENALTY * 10;
   }
 
+  // Count walking transfers vs transit transfers
+  let walkingTransferCount = 0;
+  let transitTransferCount = 0;
+
   for (let i = 0; i < route.segments.length - 1; i++) {
     const currentSegment = route.segments[i];
     const nextSegment = route.segments[i + 1];
@@ -92,10 +124,22 @@ function calculateTransferScore(route: Route, graph: TransitGraph): number {
     if (currentSegment.type === 'transit' || nextSegment.type === 'transit') {
       // If this is a walking transfer
       if (currentSegment.type === 'walk' || nextSegment.type === 'walk') {
+        walkingTransferCount++;
         const walkSegment =
           currentSegment.type === 'walk'
             ? (currentSegment as WalkingRouteSegment)
             : (nextSegment as WalkingRouteSegment);
+
+        // For short walking transfers, give a discount to the transfer penalty
+        if (
+          walkSegment.walkingDistance <= ScoringThresholds.SHORT_WALK_METERS
+        ) {
+          score -= 3; // Discount for very short walks
+        } else if (
+          walkSegment.walkingDistance <= ScoringThresholds.MEDIUM_WALK_METERS
+        ) {
+          score -= 1; // Smaller discount for medium walks
+        }
 
         // Penalize long walking transfers more heavily
         if (
@@ -109,6 +153,7 @@ function calculateTransferScore(route: Route, graph: TransitGraph): number {
         }
       } else {
         // This is a station-to-station transfer
+        transitTransferCount++;
         const transferStation =
           currentSegment.stations[currentSegment.stations.length - 1];
 
@@ -126,6 +171,12 @@ function calculateTransferScore(route: Route, graph: TransitGraph): number {
         }
       }
     }
+  }
+
+  // If route has multiple transfers but some are walking transfers,
+  // give a slight bonus for walking transfers over transit transfers
+  if (walkingTransferCount > 0 && transitTransferCount > 0) {
+    score -= walkingTransferCount * 2; // Discount for routes that use walking transfers
   }
 
   return Math.max(0, score); // Ensure non-negative score

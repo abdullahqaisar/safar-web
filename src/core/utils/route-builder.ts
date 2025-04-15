@@ -71,9 +71,8 @@ export function createTransitSegment(
         segmentDuration = edgeAttributes.duration;
       }
     } catch (e) {
-      console.error(
-        `Error getting edge attributes for ${fromId} -> ${toId}, ${e}`
-      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _err = e;
     }
 
     duration += segmentDuration;
@@ -147,14 +146,27 @@ export function createRoute(
   let totalDistance = 0;
   let totalStops = 0;
   let totalFare = 0;
-  const transfers = Math.max(0, segments.length - 1);
 
-  segments.forEach((segment) => {
+  // Count transfers properly - only when changing transit lines, not when walking
+  let transfers = 0;
+  let previousTransitLine: string | null = null;
+
+  segments.forEach((segment, index) => {
     totalDuration += segment.duration;
 
     if (segment.type === 'transit') {
-      // For transit segments, calculate distance from stations
       const transitSegment = segment as TransitRouteSegment;
+
+      // Check if this is a transfer from a previous transit line
+      if (
+        previousTransitLine !== null &&
+        previousTransitLine !== transitSegment.line.id
+      ) {
+        transfers++;
+      }
+
+      // Update previous transit line
+      previousTransitLine = transitSegment.line.id;
 
       // Add fare for this transit segment
       if (transitSegment.ticketCost) {
@@ -171,6 +183,17 @@ export function createRoute(
     } else if (segment.type === 'walk') {
       const walkSegment = segment as WalkingRouteSegment;
       totalDistance += walkSegment.walkingDistance;
+
+      // If this is a walking transfer (not at start/end) and followed by transit,
+      // add wait time for the next transit service
+      if (
+        index > 0 &&
+        index < segments.length - 1 &&
+        segments[index + 1].type === 'transit'
+      ) {
+        // Add average wait time for next service (half the typical headway)
+        totalDuration += DEFAULT_STOP_WAIT_TIME;
+      }
     }
   });
 

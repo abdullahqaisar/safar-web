@@ -130,17 +130,23 @@ export function analyzeRouteRationality(
     };
   }
 
+  console.log(`[Rationality] Analyzing route ${route.id}`);
+
   // Check for destination pass-through
   if (detectDestinationPassthrough(route, destinationId)) {
     issues.push('DESTINATION_PASSTHROUGH');
     score += 50; // Major issue
   }
 
+  console.log(`[Rationality] Route ${route.id} has ${issues.length} issues`);
+
   // Check for significant backtracking
   if (detectSignificantBacktracking(route, graph, destinationId)) {
     issues.push('SIGNIFICANT_BACKTRACKING');
     score += 40;
   }
+
+  console.log(`[Rationality] Route ${route.id} has ${issues.length} issues`);
 
   // Check for U-turn patterns
   if (detectUTurnPattern(route)) {
@@ -166,6 +172,9 @@ export function filterIrrationalRoutes(
   graph: TransitGraph,
   destinationId?: string
 ): Route[] {
+  console.log(
+    `[Rationality] Filtering ${routes.length} routes for rationality`
+  );
   // If no destination ID is provided, we can't filter based on rationality
   if (!destinationId) {
     return routes;
@@ -179,6 +188,10 @@ export function filterIrrationalRoutes(
     if (analysis.issues.includes('DESTINATION_PASSTHROUGH')) {
       return false;
     }
+
+    console.log(
+      `[Rationality] Route ${route.id} has ${analysis.issues.length} issues`
+    );
 
     // If there are multiple rationality issues, filter out the route
     return analysis.issues.length < 2;

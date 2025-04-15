@@ -52,6 +52,11 @@ export function isRouteDuplicate(
     }
   });
 
+  // Count walking segments in this route
+  const routeWalkingSegments = route.segments.filter(
+    (segment) => segment.type === 'walk'
+  ).length;
+
   // Special case: direct routes (0 transfers) with a single transit line
   // should never be considered duplicates of each other if they use different lines
   const isDirectSingleLineRoute =
@@ -67,6 +72,34 @@ export function isRouteDuplicate(
         existingLineIds.add(segment.line.id);
       }
     });
+
+    // Count walking segments in the existing route
+    const existingWalkingSegments = existingRoute.segments.filter(
+      (segment) => segment.type === 'walk'
+    ).length;
+
+    // Special case: If one route has walking transfers and the other doesn't,
+    // don't consider them duplicates, even if they share most stations
+    // This ensures routes with walking transfers aren't filtered out in favor of routes with transit transfers
+    if (routeWalkingSegments > 0 && existingWalkingSegments === 0) {
+      // Route with walking transfers competing against a route with only transit transfers
+      continue;
+    }
+
+    if (routeWalkingSegments === 0 && existingWalkingSegments > 0) {
+      // Route with only transit transfers competing against a route with walking transfers
+      continue;
+    }
+
+    // If both routes have the same number of transfers but one has walking segments
+    // and they have different numbers of segments, don't consider them duplicates
+    if (
+      route.transfers === existingRoute.transfers &&
+      routeWalkingSegments !== existingWalkingSegments &&
+      route.segments.length !== existingRoute.segments.length
+    ) {
+      continue;
+    }
 
     // If both routes are direct routes with a single line, compare line IDs
     if (
@@ -98,12 +131,41 @@ export function isRouteDuplicate(
       );
 
       // If more than 70% of stations are the same, consider it duplicate
+      // unless they have different types of transfers (walking vs transit)
       if (overlap > 0.7) {
+        // Additional check for transfer modes to avoid filtering out walking transfers
+        const hasWalkingTransfer = hasWalkingTransferSegment(route);
+        const existingHasWalkingTransfer =
+          hasWalkingTransferSegment(existingRoute);
+
+        // If transfer types differ, don't consider them duplicates
+        if (hasWalkingTransfer !== existingHasWalkingTransfer) {
+          continue;
+        }
+
         return true;
       }
     }
   }
 
+  return false;
+}
+
+/**
+ * Helper function to check if a route has a walking transfer segment
+ * (as opposed to walking-only route or transit-only route)
+ */
+function hasWalkingTransferSegment(route: Route): boolean {
+  // Check if the route has a walking segment between transit segments (a walking transfer)
+  for (let i = 1; i < route.segments.length - 1; i++) {
+    if (
+      route.segments[i].type === 'walk' &&
+      route.segments[i - 1].type === 'transit' &&
+      route.segments[i + 1].type === 'transit'
+    ) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -125,30 +187,52 @@ export function removeDuplicateRoutes(routes: Route[]): Route[] {
 }
 
 /**
- * Rank routes by weighted score
+ * Calculate a weighted score for route sorting
+ * Lower score is better
  */
-export function rankRoutes(routes: Route[]): Route[] {
-  return routes.sort((a, b) => {
-    // Prioritize by number of transfers first
-    if (a.transfers !== b.transfers) {
-      return a.transfers - b.transfers;
-    }
+function calculateRouteSortScore(route: Route): number {
+  // Weights for different factors (these can be tuned)
+  const TIME_WEIGHT = 0.6; // 60% weight for duration
+  const TRANSFER_WEIGHT = 0.3; // 30% weight for transfers
+  const FARE_WEIGHT = 0.1; // 10% weight for fare
 
-    // Then by duration
-    if (Math.abs(a.totalDuration - b.totalDuration) > 60) {
-      // If difference > 1 minute
-      return a.totalDuration - b.totalDuration;
-    }
+  // Normalize duration (assuming most trips are under 2 hours = 7200 seconds)
+  const normalizedDuration = route.totalDuration / 7200;
 
-    // If transfers and duration are very similar, prefer routes with fewer segments
-    return a.segments.length - b.segments.length;
+  // Normalize transfers (assuming max 5 transfers)
+  const normalizedTransfers = route.transfers / 5;
+
+  // Normalize fare (assuming max fare around 200)
+  const normalizedFare = (route.totalFare || 0) / 200;
+
+  // Calculate weighted score
+  const score =
+    normalizedDuration * TIME_WEIGHT +
+    normalizedTransfers * TRANSFER_WEIGHT +
+    normalizedFare * FARE_WEIGHT;
+
+  return score;
+}
+
+/**
+ * Sort routes by multiple factors:
+ * 1. Time (50% weight)
+ * 2. Number of transfers (30% weight)
+ * 3. Total fare (20% weight)
+ */
+export function sortRoutesByTime(routes: Route[]): Route[] {
+  return [...routes].sort((a, b) => {
+    const scoreA = calculateRouteSortScore(a);
+    const scoreB = calculateRouteSortScore(b);
+    return scoreA - scoreB;
   });
 }
 
 /**
  * Sort routes strictly by time (fastest first)
+ * @deprecated Use sortRoutesByTime which considers multiple factors
  */
-export function sortRoutesByTime(routes: Route[]): Route[] {
+export function sortRoutesByTimeOnly(routes: Route[]): Route[] {
   return [...routes].sort((a, b) => a.totalDuration - b.totalDuration);
 }
 
@@ -174,9 +258,9 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
   routes = consolidateRoutesByPath(routes);
 
   if (!graph) {
-    // Fallback to simple ranking if graph is not provided
-    const sortedRoutes = rankRoutes(routes);
-    return sortRoutesByTime(sortedRoutes.slice(0, MAX_ROUTES));
+    // Fallback to simple sorting if graph is not provided
+    const sortedRoutes = sortRoutesByTime(routes);
+    return sortedRoutes.slice(0, MAX_ROUTES);
   }
 
   // Apply intelligent pruning to filter inefficient routes

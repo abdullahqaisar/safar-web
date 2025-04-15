@@ -16,19 +16,23 @@ export function optimizeRouteDiversity(
   graph: TransitGraph,
   maxRoutes: number = 5
 ): Route[] {
-  if (routes.length <= maxRoutes) return routes;
+  console.log(
+    `[Diversity] Optimizing diversity for ${routes.length} routes (max: ${maxRoutes})`
+  );
+
+  if (routes.length <= maxRoutes) {
+    console.log(
+      `[Diversity] No optimization needed, returning all ${routes.length} routes`
+    );
+    return routes;
+  }
 
   // Calculate scores for all routes
   const routesWithScores = routes.map((route) => ({
     route,
     score: calculateRouteScore(route, graph),
-    normalizedScore: 0, // Will be calculated after all scores are computed
+    normalizedScore: calculateNormalizedScore(route, routes, graph),
   }));
-
-  // Calculate normalized scores
-  routesWithScores.forEach((item) => {
-    item.normalizedScore = calculateNormalizedScore(item.route, routes, graph);
-  });
 
   // Sort by score (best first)
   routesWithScores.sort((a, b) => a.score - b.score);
@@ -131,11 +135,17 @@ function calculateDiversityValue(
 
   // Calculate transfer count diversity
   let transferDiversity = 20; // Default value
-  // If candidate has a different transfer count than all selected routes
-  const hasUniqueTransferCount = !selectedRoutes.some(
-    (r) => r.transfers === candidate.transfers
+
+  // If candidate has fewer transfers than all selected routes, give it a big boost
+  const hasFewerTransfers = selectedRoutes.every(
+    (r) => candidate.transfers < r.transfers
   );
-  if (hasUniqueTransferCount) {
+
+  if (hasFewerTransfers) {
+    transferDiversity = 50; // Major bonus for routes with fewer transfers
+  }
+  // If candidate has a different transfer count than all selected routes
+  else if (!selectedRoutes.some((r) => r.transfers === candidate.transfers)) {
     transferDiversity = 40; // Bonus for routes with unique transfer counts
   }
 
@@ -157,12 +167,12 @@ function calculateDiversityValue(
   // Calculate weighted diversity value
   // Weight formula gives higher importance to route quality and station diversity
   const weightedValue =
-    routeQualityScore * 0.35 + // 35% route quality (down from 40%)
-    diversityScore * 0.25 + // 25% station diversity (down from 35%)
-    lineDiversity * 0.2 + // 20% NEW line diversity score
-    durationDiversityScore * 0.1 + // 10% duration diversity (unchanged)
-    transferDiversity * 0.05 + // 5% transfer diversity (down from 10%)
-    walkRatioDiversity * 0.05; // 5% walk ratio diversity (unchanged)
+    routeQualityScore * 0.35 + // 35% route quality
+    diversityScore * 0.2 + // 20% station diversity (down from 25%)
+    lineDiversity * 0.15 + // 15% line diversity score (down from 20%)
+    durationDiversityScore * 0.1 + // 10% duration diversity
+    transferDiversity * 0.15 + // 15% transfer diversity (up from 5%)
+    walkRatioDiversity * 0.05; // 5% walk ratio diversity
 
   return weightedValue;
 }
