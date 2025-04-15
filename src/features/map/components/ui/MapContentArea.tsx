@@ -15,7 +15,6 @@ interface MapContentAreaProps {
   mapContainerRef?: React.RefObject<HTMLDivElement>;
   onStationSelect: (stationId: string | null) => void;
   selectedStation: string | null;
-  onResetFilters?: () => void;
 }
 
 const MapContentArea: React.FC<MapContentAreaProps> = ({
@@ -28,7 +27,6 @@ const MapContentArea: React.FC<MapContentAreaProps> = ({
   mapContainerRef,
   onStationSelect,
   selectedStation,
-  onResetFilters,
 }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -50,7 +48,6 @@ const MapContentArea: React.FC<MapContentAreaProps> = ({
           onStationSelect={onStationSelect}
           isFullscreen={isFullscreen}
           toggleFullscreen={toggleFullscreen}
-          onResetFilters={onResetFilters}
         />
       </div>
 

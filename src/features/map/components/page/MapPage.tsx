@@ -71,12 +71,6 @@ export default function MapPage() {
     }
   };
 
-  // Handle reset filters and view
-  const handleResetFilters = () => {
-    lineSelection.showAllLines();
-    lineSelection.setSelectedLineId('');
-  };
-
   // Handle line selection
   const handleSelectLine = (lineId: string | undefined) => {
     lineSelection.setSelectedLineId(lineId || '');
@@ -141,7 +135,6 @@ export default function MapPage() {
                     toggleFullscreen={mapControls.toggleFullscreen}
                     onStationSelect={handleStationSelect}
                     selectedStation={selectedStation}
-                    onResetFilters={handleResetFilters}
                   />
                 }
               />
