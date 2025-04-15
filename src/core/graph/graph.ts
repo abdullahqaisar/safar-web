@@ -42,6 +42,9 @@ export class TransitGraph {
   }
 
   initialize(stations: Station[], lines: TransitLine[]): void {
+    console.log(
+      `[Graph] Initializing graph with ${stations.length} stations and ${lines.length} lines`
+    );
     this.graph = new Graph({ multi: true, type: 'directed' });
     this.stations = {};
     this.lines = {};
@@ -69,6 +72,9 @@ export class TransitGraph {
     // Process lines and track which stations belong to which lines
     lines.forEach((line) => {
       this.lines[line.id] = line;
+      console.log(
+        `[Graph] Adding line: ${line.id} (${line.name}) with ${line.stations.length} stations`
+      );
 
       // Track which lines each station belongs to
       line.stations.forEach((stationId) => {
@@ -112,6 +118,10 @@ export class TransitGraph {
     this.identifyInterchangePoints();
     this.calculateWalkingShortcuts();
     this.buildConnectivityMatrix();
+
+    console.log(
+      `[Graph] Graph initialization complete with ${Object.keys(this.stations).length} stations, ${Object.keys(this.lines).length} lines, ${this.interchangePoints.length} interchanges, and ${this.walkingShortcuts.length} walking shortcuts`
+    );
   }
 
   /**
@@ -129,6 +139,9 @@ export class TransitGraph {
         this.interchangePoints.push(stationId);
         this.stations[stationId].isInterchange = true;
         this.graph.setNodeAttribute(stationId, 'isInterchange', true);
+        console.log(
+          `[Graph] Marked major interchange: ${stationId} (${this.stations[stationId].name})`
+        );
       }
     });
 
@@ -139,8 +152,15 @@ export class TransitGraph {
         this.interchangePoints.push(stationId);
         this.stations[stationId].isInterchange = true;
         this.graph.setNodeAttribute(stationId, 'isInterchange', true);
+        console.log(
+          `[Graph] Marked additional interchange: ${stationId} (${this.stations[stationId].name}) serving lines: ${lines.join(', ')}`
+        );
       }
     });
+
+    console.log(
+      `[Graph] Total interchange points identified: ${this.interchangePoints.length}`
+    );
   }
 
   /**
@@ -148,16 +168,25 @@ export class TransitGraph {
    */
   calculateWalkingShortcuts(): void {
     this.walkingShortcuts = [];
+    console.log('[Graph] Starting walking shortcuts calculation');
 
     // Use predefined walking shortcuts from metro-data.ts
     predefinedWalkingShortcuts.forEach((shortcut) => {
       const { from, to, priority } = shortcut;
+      console.log(
+        `[Graph] Processing walking shortcut: ${from} → ${to} (priority: ${priority})`
+      );
 
       // Get the station objects
       const fromStation = this.stations[from];
       const toStation = this.stations[to];
 
-      if (!fromStation || !toStation) return;
+      if (!fromStation || !toStation) {
+        console.warn(
+          `[Graph] Invalid shortcut stations: ${from}-${to}. Station not found.`
+        );
+        return;
+      }
 
       // Calculate the distance and duration
       const distance = calculateDistance(
@@ -168,7 +197,7 @@ export class TransitGraph {
       // If distance exceeds max walking distance, skip (shouldn't happen with predefined shortcuts)
       if (distance > WALKING_MAX_DISTANCE) {
         console.warn(
-          `Walking shortcut ${from}-${to} exceeds maximum walking distance (${Math.round(
+          `[Graph] Walking shortcut ${from}-${to} exceeds maximum walking distance (${Math.round(
             distance
           )}m)`
         );
@@ -177,6 +206,9 @@ export class TransitGraph {
 
       // Calculate walking time based on distance
       const walkingTime = calculateWalkingTime(distance);
+      console.log(
+        `[Graph] Shortcut ${from} (${fromStation.name}) → ${to} (${toStation.name}): distance=${Math.round(distance)}m, time=${Math.round(walkingTime)}s, priority=${priority}`
+      );
 
       // Create a walking shortcut
       const walkingShortcut: WalkingShortcut = {
@@ -191,6 +223,9 @@ export class TransitGraph {
 
       // Add the shortcut
       this.walkingShortcuts.push(walkingShortcut);
+      console.log(
+        `[Graph] Added walking shortcut: ${from} (${fromStation.name}) → ${to} (${toStation.name})`
+      );
 
       // Add bidirectional walking edges to graph (unless it's a one-way shortcut)
       this.graph.addEdge(from, to, {
@@ -211,6 +246,9 @@ export class TransitGraph {
       };
 
       this.walkingShortcuts.push(reverseShortcut);
+      console.log(
+        `[Graph] Added reverse walking shortcut: ${to} (${toStation.name}) → ${from} (${fromStation.name})`
+      );
 
       this.graph.addEdge(to, from, {
         type: 'walking',
@@ -218,6 +256,10 @@ export class TransitGraph {
         duration: walkingTime,
       });
     });
+
+    console.log(
+      `[Graph] Total walking shortcuts created: ${this.walkingShortcuts.length}`
+    );
   }
 
   /**
@@ -255,6 +297,10 @@ export class TransitGraph {
         this.connectivityMatrix[fromId][toId] = true;
       });
     });
+
+    console.log(
+      `[Graph] Built connectivity matrix for ${stationIds.length} stations`
+    );
   }
 
   /**

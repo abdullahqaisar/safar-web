@@ -68,6 +68,8 @@ export function pruneRoutes(
     }
   }
 
+  console.log(`[Route Pruning] Analyzing ${routes.length} routes`);
+
   // Step 1: Analyze all routes
   const analyzedRoutes = analyzeRoutes(routes, graph, destinationId);
 
@@ -81,6 +83,9 @@ export function pruneRoutes(
   );
 
   // Return the final set of routes
+  console.log(
+    `[Route Pruning] Pruned ${routes.length - filteredRoutes.length} routes`
+  );
   return filteredRoutes.map((ar) => ar.route);
 }
 
@@ -145,6 +150,9 @@ function markPreservedRoutes(analyzedRoutes: AnalyzedRoute[]): void {
   );
   fastestRoute.preserved = true;
   fastestRoute.issues.push('PRESERVED_ROUTE');
+  console.log(
+    `[Pruning] Preserved fastest route ${fastestRoute.route.id}: ${fastestRoute.route.totalDuration}s`
+  );
 
   // Find and mark route with least walking
   const routesWithWalking = analyzedRoutes.map((ar) => {
@@ -163,6 +171,9 @@ function markPreservedRoutes(analyzedRoutes: AnalyzedRoute[]): void {
     );
     leastWalkingRoute.analyzedRoute.preserved = true;
     leastWalkingRoute.analyzedRoute.issues.push('PRESERVED_ROUTE');
+    console.log(
+      `[Pruning] Preserved least walking route ${leastWalkingRoute.analyzedRoute.route.id}: ${leastWalkingRoute.walkingDistance}m`
+    );
   }
 
   // Find and mark simplest route (fewest segments)

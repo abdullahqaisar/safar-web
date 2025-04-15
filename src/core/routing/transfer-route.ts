@@ -26,6 +26,13 @@ export function findTransferRoutes(
   maxTransfers: number = MAX_TRANSFERS,
   durationThreshold?: number
 ): Route[] {
+  console.log(
+    `[Transfer Route] Searching for transfer routes from ${originId} (${graph.stations[originId]?.name || 'unknown'}) to ${destinationId} (${graph.stations[destinationId]?.name || 'unknown'})`
+  );
+  console.log(
+    `[Transfer Route] Max transfers: ${maxTransfers}, duration threshold: ${durationThreshold ? durationThreshold + 's' : 'none'}`
+  );
+
   // First try single transfer routes (most common and more efficient to find directly)
   const singleTransferRoutes = findSingleTransferRoutes(
     graph,
@@ -60,18 +67,35 @@ function findSingleTransferRoutes(
   durationThreshold?: number
 ): Route[] {
   const routes: Route[] = [];
+  console.log(
+    `[Transfer Route] Using optimized single-transfer route finder for ${originId} (${graph.stations[originId]?.name || 'unknown'}) to ${destinationId} (${graph.stations[destinationId]?.name || 'unknown'})`
+  );
 
   // Get origin and destination stations
   const origin = graph.stations[originId];
   const destination = graph.stations[destinationId];
 
   if (!origin || !destination) {
+    console.log(
+      `[Transfer Route] Origin or destination has no stations, cannot find transfer routes`
+    );
     return routes;
   }
 
   // Get all lines for origin and destination
   const originLines = graph.getStationLines(originId);
   const destinationLines = graph.getStationLines(destinationId);
+  console.log(`[Transfer Route] Origin lines: ${originLines.join(', ')}`);
+  console.log(
+    `[Transfer Route] Destination lines: ${destinationLines.join(', ')}`
+  );
+
+  if (originLines.length === 0 || destinationLines.length === 0) {
+    console.log(
+      `[Transfer Route] Origin or destination has no lines, cannot find transfer routes`
+    );
+    return routes;
+  }
 
   // Track line pairs to avoid duplicate strategies
   const processedLinePairs = new Map<string, Route>();
@@ -81,7 +105,12 @@ function findSingleTransferRoutes(
     // For each destination line
     destinationLines.forEach((destLineId) => {
       // Skip if lines are the same (would be a direct route)
-      if (originLineId === destLineId) return;
+      if (originLineId === destLineId) {
+        console.log(
+          `[Transfer Route] Skipping same line combination: ${originLineId} to ${destLineId}`
+        );
+        return;
+      }
 
       const originLine = graph.lines[originLineId];
       const destLine = graph.lines[destLineId];
@@ -101,7 +130,12 @@ function findSingleTransferRoutes(
       );
 
       // If no transfer stations, skip
-      if (transferStations.length === 0) return;
+      if (transferStations.length === 0) {
+        console.log(
+          `[Transfer Route] No transfer stations found between ${originLine.name} and ${destLine.name}, skipping`
+        );
+        return;
+      }
 
       // Find the best transfer option for this line pair
       const bestRoute = findBestTransferOption(
@@ -115,9 +149,15 @@ function findSingleTransferRoutes(
 
       // If we found a valid route, add it to our processed pairs
       if (bestRoute) {
+        console.log(
+          `[Transfer Route] Found valid transfer route from ${originLine.name} to ${destLine.name} with transfer at ${transferStations[0].name}, duration: ${bestRoute.totalDuration}s`
+        );
+
         // Only add if it passes the duration threshold check (if specified)
         if (durationThreshold && bestRoute.totalDuration >= durationThreshold) {
-          // Skip this route as it's not significantly better than direct options
+          console.log(
+            `[Transfer Route] Route exceeds duration threshold (${bestRoute.totalDuration}s > ${durationThreshold}s), skipping`
+          );
           return;
         }
 
@@ -127,6 +167,7 @@ function findSingleTransferRoutes(
     });
   });
 
+  console.log(`[Transfer Route] Found ${routes.length} single-transfer routes`);
   return routes;
 }
 
@@ -142,6 +183,10 @@ function findBestTransferOption(
   destinationId: string,
   transferStations: Station[]
 ): Route | null {
+  console.log(
+    `[Transfer Route] Finding best transfer option from ${originLine.name} to ${destLine.name}`
+  );
+
   const transferOptions: Route[] = [];
 
   // For each potential transfer station
@@ -471,6 +516,7 @@ function findMultiTransferRoutes(
     }
   }
 
+  console.log(`[Transfer Route] Found ${routes.length} multi-transfer routes`);
   return routes;
 }
 

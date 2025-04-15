@@ -3,8 +3,8 @@
  */
 export const ScoringWeights = {
   // Primary factors
-  TIME: 0.45, // Total journey time weight
-  TRANSFERS: 0.3, // Number of transfers weight
+  TIME: 0.4, // Total journey time weight (slightly reduced)
+  TRANSFERS: 0.35, // Number of transfers weight (increased)
   WALKING: 0.15, // Total walking distance weight
   STOPS: 0.05, // Number of transit stops weight
   COMPLEXITY: 0.05, // Route complexity weight
@@ -12,7 +12,7 @@ export const ScoringWeights = {
   // Penalties
   LONG_WALK_PENALTY: 0.1, // Penalty per segment for walks > 500m
   TRANSFER_DISTANCE_PENALTY: 0.08, // Penalty for long walking transfers
-  MULTIPLE_TRANSFER_PENALTY: 0.15, // Extra penalty for 2+ transfers
+  MULTIPLE_TRANSFER_PENALTY: 0.25, // Extra penalty for 2+ transfers (increased)
 };
 
 /**
