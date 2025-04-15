@@ -58,14 +58,18 @@ const mapStyles = `
     transform: translateX(-50%) translateY(0);
   }
   
+  /* Prevent browser zoom and improve map interaction on mobile */
+  .leaflet-container {
+    touch-action: none !important;
+  }
+  
   /* Disable map dragging by default on mobile ONLY */
   @media (max-width: 768px) {
     .leaflet-container {
-      touch-action: pan-x pan-y !important;
+      touch-action: none !important;
     }
     
     .leaflet-container.map-active {
-      touch-action: none !important;
       cursor: grab;
     }
     
@@ -102,6 +106,7 @@ const mapStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
+    touch-action: none;
   }
 
   /* Control panel styles - position controls in the right corner */
@@ -298,6 +303,22 @@ const TransitMapView: React.FC<
         setHintMessage('Use two fingers to navigate the map');
       }
     }
+
+    // Always invalidate map size when fullscreen changes to ensure proper rendering
+    if (mapRef.current) {
+      // Use setTimeout to ensure the DOM has updated with the new fullscreen state
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+
+        // Maintain the center point when toggling fullscreen
+        const currentCenter = mapRef.current?.getCenter();
+        if (currentCenter) {
+          mapRef.current?.setView(currentCenter, mapRef.current.getZoom(), {
+            animate: false,
+          });
+        }
+      }, 100);
+    }
   }, [isMobile, isFullscreen]);
 
   // Inject styles
@@ -349,6 +370,9 @@ const TransitMapView: React.FC<
     (e: React.TouchEvent) => {
       if (!isMobile || !mapRef.current) return;
 
+      // Prevent default to stop browser zoom/scroll behaviors
+      e.preventDefault();
+
       // Skip if in fullscreen mode (one finger dragging already enabled)
       if (isFullscreen) return;
 
@@ -371,6 +395,9 @@ const TransitMapView: React.FC<
         const initialY = e.touches[0].clientY;
 
         const handleTouchMove = (moveEvent: TouchEvent) => {
+          // Prevent default to stop browser behaviors
+          moveEvent.preventDefault();
+
           if (moveEvent.touches.length !== 1) return;
 
           const currentY = moveEvent.touches[0].clientY;
@@ -398,7 +425,7 @@ const TransitMapView: React.FC<
         };
 
         document.addEventListener('touchmove', handleTouchMove, {
-          passive: true,
+          passive: false, // Important to allow preventDefault
         });
         document.addEventListener('touchend', handleTouchEnd, { once: true });
       }
@@ -528,6 +555,9 @@ const TransitMapView: React.FC<
           doubleClickZoom={true}
           // Enable dragging by default on desktop, conditionally on mobile
           dragging={!isMobile || isFullscreen}
+          // Disable browser's behaviors that might interfere
+          preferCanvas={true}
+          worldCopyJump={false}
         >
           {/* Attribution positioned at bottom-left with proper spacing */}
           <AttributionControl position="bottomleft" prefix={false} />

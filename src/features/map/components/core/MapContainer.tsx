@@ -84,8 +84,23 @@ export default function MapContainer({
     } else if (mapRef.current) {
       mapRef.current.requestFullscreen();
     }
+
+    // Capture current map center and zoom before toggling fullscreen
+    const currentCenter = mapInstanceRef.current?.getCenter();
+    const currentZoom = mapInstanceRef.current?.getZoom();
+
+    // Toggle fullscreen state
     toggleFullscreen();
-    // Wait for mapRef to be available
+
+    // Use setTimeout to ensure the DOM has updated with the new fullscreen state
+    setTimeout(() => {
+      if (mapInstanceRef.current && currentCenter && currentZoom) {
+        mapInstanceRef.current.invalidateSize();
+        mapInstanceRef.current.setView(currentCenter, currentZoom, {
+          animate: false,
+        });
+      }
+    }, 150);
   }, [toggleFullscreen]);
 
   // Function to center map on default view
