@@ -1,5 +1,5 @@
 import React from 'react';
-import { Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-react';
+import { Maximize2, Minimize2, ZoomIn, ZoomOut, Locate } from 'lucide-react';
 
 interface ControlPanelProps {
   isFullscreen: boolean;
@@ -8,6 +8,7 @@ interface ControlPanelProps {
   showMobileControls?: boolean;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
+  onCenterMap?: () => void;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -16,6 +17,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   showMobileControls = false,
   onZoomIn = () => {},
   onZoomOut = () => {},
+  onCenterMap = () => {},
 }) => {
   // Common button styles for consistency
   const buttonClass =
@@ -100,6 +102,16 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         aria-label="Zoom out"
       >
         <ZoomOut className="h-5 w-5 text-gray-700" />
+      </button>
+
+      {/* Locate/Reset View Button */}
+      <button
+        className={`${buttonClass} h-10 w-10`}
+        onClick={onCenterMap}
+        title="Reset view"
+        aria-label="Center map"
+      >
+        <Locate className="h-5 w-5 text-gray-700" />
       </button>
     </div>
   );

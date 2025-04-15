@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useRef, useState, useCallback, useEffect } from 'react';
-import {
-  MapContainer,
-  TileLayer,
-  AttributionControl,
-  MapContainerProps,
-} from 'react-leaflet';
+import React, {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
+import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css';
@@ -25,76 +26,63 @@ import ResizeHandler from '../controls/ResizeHandler';
 import TileLoadTracker from './TileLoadTracker';
 import ZoomListener from '../controls/ZoomListener';
 import TransitRoute from '../route/TransitRoute';
-import { RotateCcw, ZoomIn } from 'lucide-react';
+import { Locate } from 'lucide-react';
 import StationMarkerList from '../stations/StationMarkerList';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-// Extend MapContainer props with gesture handling options
-interface ExtendedMapContainerProps extends MapContainerProps {
-  gestureHandling?: boolean;
-  gestureHandlingOptions?: {
-    text?: {
-      touch?: string;
-      scroll?: string;
-      scrollMac?: string;
-    };
-    duration?: number;
-  };
-}
-
-// Add clean, minimalist CSS for touch interactions
-const mapInteractionStyles = `
+// CSS for clean mobile UX
+const mapStyles = `
   /* Gesture hint styles */
   .gesture-hint {
     position: absolute;
-    top: 10px;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    width: fit-content;
-    max-width: 90%;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 11px;
+    padding: 6px 14px;
+    font-size: 12px;
     color: #555;
-    z-index: 1000;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    z-index: 900;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     white-space: nowrap;
     text-align: center;
     pointer-events: none;
     opacity: 0;
-    transform: translateY(-5px);
-    animation: fadeIn 0.3s forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 210px;
   }
   
-  @keyframes fadeIn {
-    to {
-      opacity: 1;
-      transform: translateY(0);
+  .gesture-hint.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  /* Disable map dragging by default on mobile ONLY */
+  @media (max-width: 768px) {
+    .leaflet-container {
+      touch-action: pan-x pan-y !important;
+    }
+    
+    .leaflet-container.map-active {
+      touch-action: none !important;
+      cursor: grab;
+    }
+    
+    .leaflet-container.fullscreen-mode {
+      touch-action: none !important;
     }
   }
   
-  .gesture-hint.hide {
-    animation: fadeOut 0.3s forwards;
-  }
-  
-  @keyframes fadeOut {
-    to {
-      opacity: 0;
-      transform: translateY(-5px);
+  /* Desktop - normal map behavior */
+  @media (min-width: 769px) {
+    .leaflet-container {
+      cursor: grab;
     }
-  }
-  
-  /* Override Leaflet gesture handling text */
-  .leaflet-gesture-handling-touch-warning,
-  .leaflet-gesture-handling-scroll-warning {
-    display: none !important;
-  }
-  
-  /* Improve touch feedback */
-  .transit-map-leaflet .leaflet-interactive {
-    cursor: pointer;
+    
+    .leaflet-container:active {
+      cursor: grabbing;
+    }
   }
   
   /* Smoother touch interactions */
@@ -102,8 +90,112 @@ const mapInteractionStyles = `
     -webkit-tap-highlight-color: transparent;
   }
   
-  .transit-map-leaflet.interacting {
-    cursor: grabbing;
+  /* Map overlay for touch control */
+  .map-touch-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Control panel styles - position controls in the right corner */
+  .map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  /* Desktop positioning - adjust for fullscreen button */
+  @media (min-width: 769px) {
+    .map-controls {
+      right: 60px; /* Move right controls away from fullscreen button */
+      flex-direction: row; /* Place buttons in a row for desktop */
+      gap: 8px; /* Slightly larger gap for horizontal layout */
+    }
+  }
+  
+  .map-control-button {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.05);
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease;
+  }
+  
+  .map-control-button:hover {
+    background: #f9f9f9;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  }
+  
+  /* Action buttons in bottom left */
+  .map-action-buttons {
+    position: absolute;
+    bottom: 45px;
+    left: 10px;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .map-action-button {
+    background: white;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.05);
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .map-action-button:hover {
+    background: #f9f9f9;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  }
+  
+  .map-action-button .icon {
+    color: #10b981;
+  }
+
+  /* Properly style attribution */
+  .leaflet-control-attribution {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0 5px !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    border-radius: 3px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  }
+
+  /* Don't hide any attribution links */
+  .leaflet-control-attribution.leaflet-control a {
+    display: inline !important;
   }
 `;
 
@@ -131,78 +223,44 @@ interface TransitMapViewProps {
   onMapInstance?: (map: L.Map) => void;
 }
 
-// Gesture Hint Component with clean design
-const GestureHint: React.FC<{ visible: boolean; onClose: () => void }> = ({
-  visible,
-  onClose,
-}) => {
-  useEffect(() => {
-    if (visible) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 5000); // Show for 5 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [visible, onClose]);
-
+// Simple gesture hint component
+const GestureHint: React.FC<{
+  visible: boolean;
+  message: string;
+}> = ({ visible, message }) => {
   return (
-    <div className={`gesture-hint ${visible ? '' : 'hide'}`}>
-      Use two fingers to navigate the map
-    </div>
+    <div className={`gesture-hint ${visible ? 'visible' : ''}`}>{message}</div>
   );
 };
 
+// New control panel component with better positioning
 const ControlPanel: React.FC<{
-  zoomLevel: number;
-  isSelectionActive: boolean;
-  onReset: () => void;
-  onZoomToDetails: () => void;
-  onResetFilters?: () => void;
-}> = ({
-  zoomLevel,
-  isSelectionActive,
-  onReset,
-  onZoomToDetails,
-  onResetFilters,
-}) => {
-  const handleFullReset = () => {
-    onReset();
-    if (onResetFilters) {
-      onResetFilters();
-    }
-  };
+  onCenterMap: () => void;
+}> = ({ onCenterMap }) => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Only show this control panel on mobile, as desktop now uses the external one
+  if (!isMobile) {
+    return null;
+  }
 
   return (
-    <div className="absolute top-3 left-3 z-[999] flex flex-col gap-2 min-w-[150px]">
-      {zoomLevel < 12 && (
-        <button
-          className="bg-white rounded-md shadow-md px-3 py-2 flex items-center gap-2 w-full text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-[rgba(var(--color-accent-rgb),0.2)]"
-          onClick={onZoomToDetails}
-          aria-label="Zoom in for more details"
-        >
-          <ZoomIn size={14} className="text-emerald-500" />
-          <span>Zoom for details</span>
-        </button>
-      )}
-
-      {isSelectionActive && (
-        <button
-          className="bg-white rounded-md shadow-md px-3 py-2 flex items-center gap-2 w-full text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors border border-[rgba(var(--color-accent-rgb),0.2)]"
-          onClick={handleFullReset}
-          aria-label="Reset map view and filters"
-        >
-          <RotateCcw size={14} className="text-emerald-500" />
-          <span>Reset View</span>
-        </button>
-      )}
+    <div className="map-controls">
+      {/* Center map button - always visible on mobile */}
+      <button
+        className="map-control-button"
+        onClick={onCenterMap}
+        aria-label="Center map"
+      >
+        <Locate size={18} />
+      </button>
     </div>
   );
 };
 
 const TransitMapView: React.FC<
   TransitMapViewProps & {
-    onResetFilters?: () => void;
+    isFullscreen?: boolean;
   }
 > = ({
   metroLines,
@@ -212,7 +270,7 @@ const TransitMapView: React.FC<
   onStationSelect = () => {},
   onMapReady = () => {},
   onMapInstance = () => {},
-  onResetFilters,
+  isFullscreen = false,
 }) => {
   const [zoomLevel, setZoomLevel] = useState(12);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -221,13 +279,31 @@ const TransitMapView: React.FC<
   const hasInitializedRef = useRef(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [showGestureHint, setShowGestureHint] = useState(false);
-  const [isInteracting, setIsInteracting] = useState(false);
-  const interactingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hintMessage, setHintMessage] = useState(
+    'Use two fingers to navigate the map'
+  );
+  const [mapActive, setMapActive] = useState(false);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Inject CSS styles for mobile map manipulation
+  // Track touch points for multitouch detection
+  const touchPointsRef = useRef<number>(0);
+
+  // Update hint message when fullscreen mode changes
+  useEffect(() => {
+    if (isMobile) {
+      if (isFullscreen) {
+        setHintMessage('You can drag the map with one finger');
+      } else {
+        setHintMessage('Use two fingers to navigate the map');
+      }
+    }
+  }, [isMobile, isFullscreen]);
+
+  // Inject styles
   useEffect(() => {
     const styleElement = document.createElement('style');
-    styleElement.textContent = mapInteractionStyles;
+    styleElement.textContent = mapStyles;
     document.head.appendChild(styleElement);
 
     return () => {
@@ -235,78 +311,128 @@ const TransitMapView: React.FC<
     };
   }, []);
 
-  // Show gesture hint after a short delay when map is ready on mobile
+  // Handle initial hint
   useEffect(() => {
-    if (isMobile && tilesLoaded) {
+    if (isMobile && tilesLoaded && !hasInitializedRef.current) {
+      // Show initial hint after a delay
       const timer = setTimeout(() => {
         setShowGestureHint(true);
-      }, 500);
 
-      return () => clearTimeout(timer);
+        // Auto-hide after 4 seconds
+        hintTimeoutRef.current = setTimeout(() => {
+          setShowGestureHint(false);
+        }, 4000);
+      }, 1000);
+
+      return () => {
+        clearTimeout(timer);
+        if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
+      };
     }
   }, [isMobile, tilesLoaded]);
 
-  // Handle map interaction state
+  // Handle dragging based on fullscreen mode
   useEffect(() => {
-    const handleMapInteractionStart = () => {
-      setIsInteracting(true);
-
-      if (interactingTimeoutRef.current) {
-        clearTimeout(interactingTimeoutRef.current);
+    if (mapRef.current && isMobile) {
+      if (isFullscreen) {
+        // In fullscreen, enable dragging with one finger
+        mapRef.current.dragging.enable();
+      } else {
+        // Otherwise, disable dragging (will be enabled with multi-touch)
+        mapRef.current.dragging.disable();
       }
-    };
+    }
+  }, [isMobile, isFullscreen]);
 
-    const handleMapInteractionEnd = () => {
-      interactingTimeoutRef.current = setTimeout(() => {
-        setIsInteracting(false);
-      }, 500);
-    };
+  // Touch event handlers for mobile
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isMobile || !mapRef.current) return;
 
-    if (mapRef.current) {
-      mapRef.current.on('movestart', handleMapInteractionStart);
-      mapRef.current.on('zoomstart', handleMapInteractionStart);
-      mapRef.current.on('moveend', handleMapInteractionEnd);
-      mapRef.current.on('zoomend', handleMapInteractionEnd);
+      // Skip if in fullscreen mode (one finger dragging already enabled)
+      if (isFullscreen) return;
+
+      const touchCount = e.touches.length;
+      touchPointsRef.current = touchCount;
+
+      if (touchCount >= 2) {
+        // Multi-touch - enable map interactions
+        e.stopPropagation();
+        setMapActive(true);
+        mapRef.current.dragging.enable();
+
+        // Hide any hint
+        setShowGestureHint(false);
+        if (hintTimeoutRef.current) {
+          clearTimeout(hintTimeoutRef.current);
+        }
+      } else if (touchCount === 1) {
+        // Single touch - detect if user is trying to drag the map
+        const initialY = e.touches[0].clientY;
+
+        const handleTouchMove = (moveEvent: TouchEvent) => {
+          if (moveEvent.touches.length !== 1) return;
+
+          const currentY = moveEvent.touches[0].clientY;
+          const deltaY = Math.abs(currentY - initialY);
+
+          // If user is trying to scroll vertically, show hint
+          if (deltaY > 10 && !showGestureHint) {
+            setHintMessage('Use two fingers to move the map');
+            setShowGestureHint(true);
+
+            // Auto-hide hint after 3 seconds
+            if (hintTimeoutRef.current) {
+              clearTimeout(hintTimeoutRef.current);
+            }
+
+            hintTimeoutRef.current = setTimeout(() => {
+              setShowGestureHint(false);
+            }, 3000);
+          }
+        };
+
+        const handleTouchEnd = () => {
+          document.removeEventListener('touchmove', handleTouchMove);
+          document.removeEventListener('touchend', handleTouchEnd);
+        };
+
+        document.addEventListener('touchmove', handleTouchMove, {
+          passive: true,
+        });
+        document.addEventListener('touchend', handleTouchEnd, { once: true });
+      }
+    },
+    [isMobile, showGestureHint, isFullscreen]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isMobile || !mapRef.current || isFullscreen) return;
+
+    // If we were in multi-touch mode, set a timeout to disable dragging
+    if (touchPointsRef.current >= 2) {
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
+
+      touchTimeoutRef.current = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.dragging.disable();
+          setMapActive(false);
+        }
+      }, 1000); // Keep map interactive for 1 second after touch ends
     }
 
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.off('movestart', handleMapInteractionStart);
-        mapRef.current.off('zoomstart', handleMapInteractionStart);
-        mapRef.current.off('moveend', handleMapInteractionEnd);
-        mapRef.current.off('zoomend', handleMapInteractionEnd);
-      }
+    touchPointsRef.current = 0;
+  }, [isMobile, isFullscreen]);
 
-      if (interactingTimeoutRef.current) {
-        clearTimeout(interactingTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Notify parent about map ready state - only once when both map and tiles are loaded
+  // Notify parent about map ready state
   useEffect(() => {
     if (tilesLoaded && mapRef.current && !hasInitializedRef.current) {
       hasInitializedRef.current = true;
       onMapReady();
     }
   }, [tilesLoaded, onMapReady]);
-
-  // Force map refresh when window loads fully
-  useEffect(() => {
-    const handleLoad = () => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    };
-
-    // Handle window.load event
-    if (document.readyState === 'complete') {
-      handleLoad();
-    } else {
-      window.addEventListener('load', handleLoad);
-      return () => window.removeEventListener('load', handleLoad);
-    }
-  }, []);
 
   // Handle tiles loaded
   const handleTilesLoaded = useCallback(() => {
@@ -320,25 +446,26 @@ const TransitMapView: React.FC<
     }
   }, []);
 
-  // Reset the view
-  const handleReset = useCallback(() => {
-    if (onStationSelect) {
-      onStationSelect(null);
-    }
-    if (mapRef.current) {
-      mapRef.current.setView([33.6861871107659, 73.048283867797], 12);
-    }
-  }, [onStationSelect]);
-
   // Handle zoom change
   const handleZoomChange = useCallback((zoom: number) => {
     setZoomLevel(zoom);
   }, []);
 
+  // Default center coordinates
+  const defaultCenter = useMemo<[number, number]>(
+    () => [33.6861871107659, 73.048283867797],
+    []
+  );
+
+  // Center the map function
+  const handleCenterMap = useCallback(() => {
+    if (mapRef.current) {
+      mapRef.current.setView(defaultCenter, 12);
+    }
+  }, [defaultCenter]);
+
   // Get map center based on selection
   const getMapCenter = useCallback((): [number, number] => {
-    const defaultCenter: [number, number] = [33.6861871107659, 73.048283867797];
-
     if (selectedStation) {
       return getStationCoordinates(selectedStation);
     }
@@ -354,17 +481,7 @@ const TransitMapView: React.FC<
     }
 
     return defaultCenter;
-  }, [selectedStation, selectedLine, metroLines]);
-
-  // Zoom to details
-  const handleZoomToDetails = useCallback(() => {
-    if (mapRef.current) {
-      mapRef.current.flyTo(getMapCenter(), Math.min(14, zoomLevel + 2), {
-        duration: 1.2,
-        animate: true,
-      });
-    }
-  }, [getMapCenter, zoomLevel]);
+  }, [selectedStation, selectedLine, metroLines, defaultCenter]);
 
   // Prepare data for rendering
   const linesToDraw = organizeLinesToDraw(metroLines, selectedLine);
@@ -395,53 +512,34 @@ const TransitMapView: React.FC<
       aria-label="Interactive transit map"
     >
       <div className="map-container-wrapper relative">
-        {/* Cast MapContainer to our extended type with gesture handling */}
-        {React.createElement(
-          MapContainer as React.ComponentType<ExtendedMapContainerProps>,
-          {
-            center: getMapCenter(),
-            zoom: zoomLevel,
-            className: `transit-map-leaflet ${isInteracting ? 'interacting' : ''}`,
-            whenReady: handleMapReady,
-            zoomControl: false,
-            attributionControl: false,
-            style: { height: '100%', width: '100%' },
-            maxBoundsViscosity: 1.0,
-            minZoom: 9,
-            maxZoom: 18,
-            scrollWheelZoom: true,
-            touchZoom: true,
-            doubleClickZoom: true,
-            gestureHandling: isMobile,
-            gestureHandlingOptions: {
-              text: {
-                touch: 'Use two fingers to move the map',
-                scroll: 'Use ctrl + scroll to zoom the map',
-                scrollMac: 'Use \u2318 + scroll to zoom the map',
-              },
-              duration: 1000,
-            },
-          },
-          // Attribution positioned at bottom-left
-          <AttributionControl
-            key="attribution"
-            position="bottomleft"
-            prefix={false}
-          />,
+        <MapContainer
+          center={getMapCenter()}
+          zoom={zoomLevel}
+          className={`transit-map-leaflet ${mapActive ? 'map-active' : ''} ${isFullscreen ? 'fullscreen-mode' : ''}`}
+          whenReady={handleMapReady}
+          zoomControl={false}
+          attributionControl={false}
+          style={{ height: '100%', width: '100%' }}
+          maxBoundsViscosity={1.0}
+          minZoom={9}
+          maxZoom={18}
+          scrollWheelZoom={true}
+          touchZoom={true}
+          doubleClickZoom={true}
+          // Enable dragging by default on desktop, conditionally on mobile
+          dragging={!isMobile || isFullscreen}
+        >
+          {/* Attribution positioned at bottom-left with proper spacing */}
+          <AttributionControl position="bottomleft" prefix={false} />
 
           <TileLayer
-            key="tileLayer"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />,
+          />
 
-          <TileLoadTracker
-            key="tileTracker"
-            onTilesLoaded={handleTilesLoaded}
-          />,
-          <ZoomListener key="zoomListener" onZoomChange={handleZoomChange} />,
+          <TileLoadTracker onTilesLoaded={handleTilesLoaded} />
+          <ZoomListener onZoomChange={handleZoomChange} />
           <ResizeHandler
-            key="resizeHandler"
             setMapRef={(map) => {
               mapRef.current = map;
               if (map) {
@@ -449,15 +547,11 @@ const TransitMapView: React.FC<
               }
             }}
             onMapReady={handleMapReady}
-          />,
-          <ViewController
-            key="viewController"
-            selectedLine={selectedLine}
-            metroLines={metroLines}
-          />,
+          />
+          <ViewController selectedLine={selectedLine} metroLines={metroLines} />
 
-          // Add metro lines as polylines
-          ...linesToDraw.map((line) => (
+          {/* Add metro lines as polylines */}
+          {linesToDraw.map((line) => (
             <TransitRoute
               key={line.id}
               stations={line.stations}
@@ -469,36 +563,35 @@ const TransitMapView: React.FC<
               lineId={line.id}
               parallelLineGroups={parallelLineGroups}
             />
-          )),
+          ))}
 
-          // Station markers
+          {/* Station markers */}
           <StationMarkerList
-            key="stationList"
             stations={stationsToDisplay}
             selectedStation={selectedStation || null}
             onStationSelect={handleStationSelect}
             zoomLevel={zoomLevel}
             getLineName={getLineName}
           />
+        </MapContainer>
+
+        {/* Only show touch overlay when not in fullscreen mode on mobile */}
+        {isMobile && !isFullscreen && (
+          <div
+            className="map-touch-overlay"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          />
         )}
       </div>
 
-      {/* Simple, clean gesture hint at the top */}
+      {/* Gesture hint only on mobile */}
       {isMobile && (
-        <GestureHint
-          visible={showGestureHint}
-          onClose={() => setShowGestureHint(false)}
-        />
+        <GestureHint visible={showGestureHint} message={hintMessage} />
       )}
 
-      {/* Action buttons in top-left corner */}
-      <ControlPanel
-        zoomLevel={zoomLevel}
-        isSelectionActive={Boolean(selectedLine || selectedStation)}
-        onReset={handleReset}
-        onZoomToDetails={handleZoomToDetails}
-        onResetFilters={onResetFilters}
-      />
+      {/* Action buttons with better positioning */}
+      <ControlPanel onCenterMap={handleCenterMap} />
     </div>
   );
 };

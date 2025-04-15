@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { TransitLine } from '@/core/types/graph';
 import dynamic from 'next/dynamic';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -22,7 +22,6 @@ interface MapContainerProps {
   onStationSelect: (stationId: string | null) => void;
   isFullscreen?: boolean;
   toggleFullscreen?: () => void;
-  onResetFilters?: () => void;
 }
 
 export default function MapContainer({
@@ -32,7 +31,6 @@ export default function MapContainer({
   onStationSelect,
   isFullscreen = false,
   toggleFullscreen = () => {},
-  onResetFilters,
 }: MapContainerProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
@@ -41,10 +39,10 @@ export default function MapContainer({
   const mapHeight = isMobile
     ? '500px'
     : isTablet
-    ? '550px'
-    : isFullscreen
-    ? '100vh'
-    : '600px';
+      ? '550px'
+      : isFullscreen
+        ? '100vh'
+        : '600px';
 
   const [isMapReady, setIsMapReady] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -72,23 +70,34 @@ export default function MapContainer({
     };
   }, []);
 
+  // Default center coordinates for Islamabad
+  const defaultCenter = useMemo<[number, number]>(
+    () => [33.6861871107659, 73.048283867797],
+    []
+  );
+
   // Function to handle fullscreen mode
   const enterFullScreen = useCallback(() => {
-    if (mapRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        mapRef.current.requestFullscreen();
-      }
-      toggleFullscreen();
+    // Toggle fullscreen on the map container
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else if (mapRef.current) {
+      mapRef.current.requestFullscreen();
     }
+    toggleFullscreen();
+    // Wait for mapRef to be available
   }, [toggleFullscreen]);
 
-  // Zoom handlers
+  // Function to center map on default view
+  const handleCenterMap = useCallback(() => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView(defaultCenter, 12);
+    }
+  }, [defaultCenter]);
+
   const handleZoomIn = useCallback(() => {
-    const map = mapInstanceRef.current;
-    if (map) {
-      map.setZoom(map.getZoom() + 1);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomIn();
     }
   }, []);
 
@@ -118,7 +127,7 @@ export default function MapContainer({
           onMapInstance={(map) => {
             mapInstanceRef.current = map;
           }}
-          onResetFilters={onResetFilters}
+          isFullscreen={isFullscreen}
         />
 
         {/* Map controls */}
@@ -129,6 +138,7 @@ export default function MapContainer({
             showMobileControls={isMobile}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
+            onCenterMap={handleCenterMap}
           />
         )}
       </div>
