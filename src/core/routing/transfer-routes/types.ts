@@ -46,8 +46,3 @@ export interface TransferOption {
   score: number;
   transferStationId: string;
 }
-
-/**
- * Constants used in transfer route finding algorithms
- */
-export const MAX_TRANSFERS = 3; 
