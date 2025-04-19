@@ -940,11 +940,6 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.70111705902934, lng: 73.04339413265878 },
   },
   {
-    id: 'chamanMetro',
-    name: 'Chaman Metro Station',
-    coordinates: { lat: 33.6916525128973, lng: 73.04370720115476 },
-  },
-  {
     id: 'g94Park',
     name: 'G-9/4 Park',
     coordinates: { lat: 33.689029481190204, lng: 73.03706184193007 },
