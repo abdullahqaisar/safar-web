@@ -36,6 +36,7 @@ export class TransitGraph {
   spatialIndex: SpatialIndex = new Map();
   stationLines: Record<string, string[]> = {}; // Track which lines each station belongs to
   transferStations: Map<string, string[]> = new Map(); // NEW: Track stations that serve as transfer points
+  lineConnectivityMatrix: Record<string, Record<string, number>> = {}; // NEW: Store min transfers between lines
 
   constructor() {
     this.graph = new Graph({ multi: true, type: 'directed' });
@@ -54,6 +55,7 @@ export class TransitGraph {
     this.spatialIndex = new Map();
     this.stationLines = {};
     this.transferStations = new Map(); // Reset transfer stations
+    this.lineConnectivityMatrix = {}; // Reset line connectivity matrix
 
     // Add stations to the graph
     stations.forEach((station) => {
@@ -118,6 +120,7 @@ export class TransitGraph {
     this.identifyInterchangePoints();
     this.calculateWalkingShortcuts();
     this.buildConnectivityMatrix();
+    this.calculateLineConnectivity(); // Calculate line connectivity matrix
 
     console.log(
       `[Graph] Graph initialization complete with ${Object.keys(this.stations).length} stations, ${Object.keys(this.lines).length} lines, ${this.interchangePoints.length} interchanges, and ${this.walkingShortcuts.length} walking shortcuts`
@@ -353,5 +356,140 @@ export class TransitGraph {
    */
   getStationLines(stationId: string): string[] {
     return this.stationLines[stationId] || [];
+  }
+
+  /**
+   * Get information about a major interchange point
+   * @param stationId The ID of the interchange station
+   * @returns Interchange information or undefined if not a major interchange
+   */
+  getMajorInterchangeInfo(stationId: string): { stationId: string; lines: string[] } | undefined {
+    const interchange = MAJOR_INTERCHANGES.find(item => item.stationId === stationId);
+    return interchange;
+  }
+  
+  /**
+   * Get all major interchanges defined in the system
+   * @returns Array of all major interchange definitions
+   */
+  getMajorInterchanges(): Array<{ stationId: string; lines: string[] }> {
+    return [...MAJOR_INTERCHANGES];
+  }
+
+  /**
+   * Calculate the minimum number of transfers needed between any two lines in the network
+   * This helps with route planning by identifying the most efficient transfer paths
+   */
+  calculateLineConnectivity(): void {
+    const lineIds = Object.keys(this.lines);
+    console.log(`[Graph] Calculating line connectivity for ${lineIds.length} lines`);
+    
+    // Initialize the line connectivity matrix with Infinity values
+    lineIds.forEach(fromLineId => {
+      this.lineConnectivityMatrix[fromLineId] = {};
+      lineIds.forEach(toLineId => {
+        // Set to 0 for same line, Infinity for different lines
+        this.lineConnectivityMatrix[fromLineId][toLineId] = 
+          fromLineId === toLineId ? 0 : Infinity;
+      });
+    });
+    
+    // Find direct connections through shared stations (transfers)
+    for (const stationId of Object.keys(this.stations)) {
+      const stationLines = this.stationLines[stationId] || [];
+      
+      // If station serves multiple lines, it's a transfer point
+      if (stationLines.length > 1) {
+        // For each pair of lines at this station
+        for (let i = 0; i < stationLines.length; i++) {
+          for (let j = i + 1; j < stationLines.length; j++) {
+            const lineA = stationLines[i];
+            const lineB = stationLines[j];
+            
+            // Direct transfer (1 transfer) between these lines at this station
+            this.lineConnectivityMatrix[lineA][lineB] = 1;
+            this.lineConnectivityMatrix[lineB][lineA] = 1;
+          }
+        }
+      }
+    }
+    
+    // Apply special handling for major interchanges to ensure their transfers are prioritized
+    for (const interchange of this.getMajorInterchanges()) {
+      const interchangeLines = interchange.lines;
+      
+      for (let i = 0; i < interchangeLines.length; i++) {
+        for (let j = i + 1; j < interchangeLines.length; j++) {
+          const lineA = interchangeLines[i];
+          const lineB = interchangeLines[j];
+          
+          // Ensure major interchange transfers are always set to 1
+          this.lineConnectivityMatrix[lineA][lineB] = 1;
+          this.lineConnectivityMatrix[lineB][lineA] = 1;
+        }
+      }
+    }
+    
+    // Floyd-Warshall algorithm to find minimum transfers between all line pairs
+    for (const intermediateLineId of lineIds) {
+      for (const fromLineId of lineIds) {
+        for (const toLineId of lineIds) {
+          const throughIntermediate = 
+            this.lineConnectivityMatrix[fromLineId][intermediateLineId] + 
+            this.lineConnectivityMatrix[intermediateLineId][toLineId];
+            
+          if (throughIntermediate < this.lineConnectivityMatrix[fromLineId][toLineId]) {
+            this.lineConnectivityMatrix[fromLineId][toLineId] = throughIntermediate;
+          }
+        }
+      }
+    }
+    
+    // Log some statistics about line connectivity
+    let maxTransfers = 0;
+    let disconnectedPairs = 0;
+    
+    for (const fromLineId of lineIds) {
+      for (const toLineId of lineIds) {
+        if (fromLineId === toLineId) continue;
+        
+        const transfers = this.lineConnectivityMatrix[fromLineId][toLineId];
+        if (transfers === Infinity) {
+          disconnectedPairs++;
+        } else if (transfers > maxTransfers) {
+          maxTransfers = transfers;
+        }
+      }
+    }
+    
+    console.log(
+      `[Graph] Line connectivity matrix calculated. Maximum transfers: ${maxTransfers}, ` +
+      `Disconnected line pairs: ${disconnectedPairs}`
+    );
+  }
+  
+  /**
+   * Get the minimum number of transfers needed to go from one line to another
+   * Returns Infinity if there is no path between the lines
+   */
+  getMinTransfersBetweenLines(fromLineId: string, toLineId: string): number {
+    if (!this.lineConnectivityMatrix[fromLineId] || 
+        this.lineConnectivityMatrix[fromLineId][toLineId] === undefined) {
+      return Infinity;
+    }
+    return this.lineConnectivityMatrix[fromLineId][toLineId];
+  }
+  
+  /**
+   * Find all lines that can be reached from a given line with exactly N transfers
+   */
+  getLinesReachableWithNTransfers(lineId: string, transfers: number): string[] {
+    if (!this.lineConnectivityMatrix[lineId]) return [];
+    
+    return Object.entries(this.lineConnectivityMatrix[lineId])
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .filter(([_, transferCount]) => transferCount === transfers)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(([reachableLineId, _]) => reachableLineId);
   }
 }

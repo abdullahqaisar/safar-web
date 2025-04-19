@@ -7,6 +7,9 @@ interface EmailTemplateProps {
 
 // Email template optimized for Resend
 export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
+  // Define accent color to match the app's theme
+  const accentColor = '#1AB56F';
+
   return (
     <div
       style={{
@@ -26,7 +29,7 @@ export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
             <td style={{ padding: '30px 0 20px 0', textAlign: 'center' }}>
               <h1
                 style={{
-                  color: '#10b981',
+                  color: accentColor,
                   fontSize: '24px',
                   margin: '0 0 15px 0',
                   fontWeight: 'bold',
@@ -44,6 +47,7 @@ export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
                 padding: '20px',
                 borderRadius: '8px',
                 marginBottom: '20px',
+                border: '1px solid #eaeaea',
               }}
             >
               <h2
@@ -81,9 +85,10 @@ export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
           <tr>
             <td
               style={{
-                backgroundColor: '#f0fdf4',
+                backgroundColor: `rgba(26, 181, 111, 0.05)`,
                 padding: '20px',
                 borderRadius: '8px',
+                border: `1px solid rgba(26, 181, 111, 0.1)`,
               }}
             >
               <h2
@@ -115,6 +120,9 @@ export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
                       color: '#4b5563',
                       fontSize: '14px',
                       lineHeight: '1.5',
+                      padding: '10px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                      borderRadius: '6px',
                     }}
                   >
                     {data.routeDetails}
@@ -140,6 +148,9 @@ export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
                       color: '#4b5563',
                       fontSize: '14px',
                       lineHeight: '1.5',
+                      padding: '10px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                      borderRadius: '6px',
                     }}
                   >
                     {data.stationDetails}
@@ -164,6 +175,9 @@ export const ContributionEmailTemplate = ({ data }: EmailTemplateProps) => {
                     color: '#4b5563',
                     fontSize: '14px',
                     lineHeight: '1.5',
+                    padding: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    borderRadius: '6px',
                   }}
                 >
                   {data.description}

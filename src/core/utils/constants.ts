@@ -15,4 +15,4 @@ export const DISTANCE_MATRIX_API_URL =
   'https://maps.googleapis.com/maps/api/distancematrix/json';
 
 // Maximum allowed transfers (we could make this configurable later)
-export const MAX_TRANSFERS = 5;
+export const MAX_TRANSFERS = 7;

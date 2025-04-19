@@ -3,7 +3,6 @@ import { Route } from '../types/route';
 import { WALKING_MAX_DISTANCE } from '../utils/constants';
 import { calculateDistance } from '../utils/geo-utils';
 import { findDirectRoutes } from './direct-route';
-import { findTransferRoutes } from './transfer-route';
 import {
   findDirectWalkingRoute as findDirectWalk,
   createInitialWalkingRoutes,
@@ -13,6 +12,7 @@ import {
 import { validateAndOptimizeRoutes } from './route-validator';
 import { consolidateRoutesByPath } from '../utils/route-signature';
 import { filterIrrationalRoutes } from './route-rationalization';
+import { findTransferRoutes } from './transfer-routes/finders';
 
 // Direct route quality threshold - how much better a transfer route must be to be included
 const DIRECT_ROUTE_QUALITY_THRESHOLD = 0.15; // 15% improvement needed
@@ -268,10 +268,10 @@ export function discoverAllRoutes(
       `[Discovery] After final rationality filter: ${allRoutes.length} routes remain`
     );
 
-    allRoutes = consolidateRoutesByPath(allRoutes);
-    console.log(
-      `[Discovery] After final consolidation: ${allRoutes.length} routes remain`
-    );
+    // allRoutes = consolidateRoutesByPath(allRoutes);
+    // console.log(
+    //   `[Discovery] After final consolidation: ${allRoutes.length} routes remain`
+    // );
 
     return allRoutes;
   }

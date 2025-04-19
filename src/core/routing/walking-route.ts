@@ -2,13 +2,14 @@ import { TransitGraph } from '../graph/graph';
 import { Route, RouteStation } from '../types/route';
 
 import { WALKING_MAX_DISTANCE } from '../utils/constants';
-import { findTransferRoutes } from './transfer-route';
+
 import { findDirectRoutes } from './direct-route';
 import { calculateWalkingTime } from '../utils/time-utils';
 import { findNearbyStations, haveCommonLines } from '../utils/station-utils';
 import { isRouteDuplicate } from '../utils/route-comparison';
 import { createRoute, createWalkingSegment } from '../utils/route-builder';
 import { calculateDistance } from '../utils/geo-utils';
+import { findTransferRoutes } from './transfer-routes/finders';
 
 /**
  * Find a direct walking route between two stations if they're within walking distance
