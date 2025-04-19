@@ -1096,12 +1096,6 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.73703088835968, lng: 72.79873380570724 },
   },
 
-  // FR-11 stations
-  {
-    id: 'golraMorhChowkFr11',
-    name: 'Golra Morh Chowk',
-    coordinates: { lat: 33.62453490375513, lng: 72.97031033508682 },
-  },
   {
     id: 'imcgI14',
     name: 'IMCG I-14',
