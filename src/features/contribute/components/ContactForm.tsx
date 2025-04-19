@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { sendContactEmail } from '@/features/contribute/services/contactEmailService';
 
 export default function ContactForm() {
@@ -76,8 +76,8 @@ export default function ContactForm() {
   if (isSuccess) {
     return (
       <div className="max-w-xl mx-auto">
-        <div className="bg-green-50 border border-green-100 rounded-xl p-8 text-center transform transition-all duration-500 animate-fade-in-up">
-          <div className="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-5">
+        <div className="bg-[color:var(--color-accent)]/5 border border-[color:var(--color-accent)]/20 rounded-xl p-8 text-center transform transition-all duration-500 animate-fade-in-up">
+          <div className="w-16 h-16 mx-auto bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] rounded-full flex items-center justify-center mb-5">
             <CheckCircle size={32} strokeWidth={2.5} />
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-3">
@@ -89,9 +89,10 @@ export default function ContactForm() {
           </p>
           <button
             onClick={() => setIsSuccess(false)}
-            className="px-6 py-2.5 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white font-medium rounded-lg transition-all duration-300 shadow-sm hover:shadow"
+            className="px-6 py-2.5 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white font-medium rounded-lg transition-all duration-300 shadow-sm hover:shadow flex items-center mx-auto gap-2 hover:gap-3"
           >
-            Send Another Message
+            <span>Send Another Message</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </div>
@@ -165,26 +166,26 @@ export default function ContactForm() {
             >
               Topic
             </label>
-            <select
-              id="subject"
-              name="subject"
-              value={formData.subject}
-              onChange={handleChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className={`${inputClasses(
-                'subject'
-              )} cursor-pointer appearance-none bg-white`}
-            >
-              <option value="">Select a topic</option>
-              {topics.map((topic) => (
-                <option key={topic.value} value={topic.value}>
-                  {topic.label}
-                </option>
-              ))}
-            </select>
             <div className="relative">
-              <div className="absolute inset-y-0 right-3 -top-9 flex items-center pointer-events-none">
+              <select
+                id="subject"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className={`${inputClasses(
+                  'subject'
+                )} cursor-pointer appearance-none bg-white pr-10`}
+              >
+                <option value="">Select a topic</option>
+                {topics.map((topic) => (
+                  <option key={topic.value} value={topic.value}>
+                    {topic.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                 <svg
                   className="w-4 h-4 text-gray-500"
                   fill="none"
@@ -238,7 +239,7 @@ export default function ContactForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
+              className="w-full px-6 py-3 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] group"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
@@ -246,7 +247,10 @@ export default function ContactForm() {
                   Sending...
                 </span>
               ) : (
-                'Send Message'
+                <span className="flex items-center justify-center gap-1 group-hover:gap-2 transition-all">
+                  <span>Send Message</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </span>
               )}
             </button>
             <p className="text-xs text-gray-500 text-center mt-3">

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useContributionForm } from '../hooks/useContributionForm';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils/formatters';
 import { ContributionFormData } from '../types';
 
@@ -66,7 +66,7 @@ export default function ContributionForm() {
   // Improve the helper function for field error classes with error tooltips
   const getInputClasses = (fieldName: string) => {
     const baseClasses =
-      'w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)] transition-colors';
+      'w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[color:var(--color-accent)]/30 focus:border-[color:var(--color-accent)] transition-all';
 
     if (shouldShowError(fieldName)) {
       // Field is invalid - check if it has value
@@ -140,9 +140,11 @@ export default function ContributionForm() {
   // Success state rendering
   if (formState.isSuccess) {
     return (
-      <div className="bg-green-50 border border-green-100 rounded-lg p-6 text-center">
+      <div className="bg-[color:var(--color-accent)]/5 border border-[color:var(--color-accent)]/20 rounded-lg p-8 text-center transform transition-all">
         <div className="flex justify-center mb-4">
-          <CheckCircle size={48} className="text-emerald-500" />
+          <div className="w-16 h-16 bg-[color:var(--color-accent)]/10 rounded-full flex items-center justify-center mb-2">
+            <CheckCircle size={36} className="text-[color:var(--color-accent)]" />
+          </div>
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
           Thank You for Your Contribution!
@@ -153,9 +155,10 @@ export default function ContributionForm() {
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors"
+          className="px-6 py-2.5 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white font-medium rounded-lg transition-all flex items-center mx-auto gap-2 hover:gap-3"
         >
-          Submit Another Contribution
+          <span>Submit Another Contribution</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
     );
@@ -164,12 +167,12 @@ export default function ContributionForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 bg-white p-6 rounded-lg shadow-sm"
+      className="space-y-6"
     >
       {/* Error message display */}
       {formState.error && (
-        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg p-3 animate-fade-in-up">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg p-4 animate-in fade-in-50 duration-300">
+          <AlertCircle size={18} />
           <span>{formState.error}</span>
         </div>
       )}
@@ -179,7 +182,7 @@ export default function ContributionForm() {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Name <span className="text-red-500">*</span>
           </label>
@@ -200,7 +203,7 @@ export default function ContributionForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Email <span className="text-red-500">*</span>
           </label>
@@ -223,30 +226,30 @@ export default function ContributionForm() {
       <div>
         <label
           htmlFor="contributionType"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 mb-1.5"
         >
           Contribution Type <span className="text-red-500">*</span>
         </label>
-        <select
-          id="contributionType"
-          name="contributionType"
-          value={formData.contributionType}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className={cn(
-            getInputClasses('contributionType'),
-            'cursor-pointer appearance-none pr-10'
-          )}
-          required
-        >
-          {CONTRIBUTION_TYPES.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
         <div className="relative">
-          <div className="absolute inset-y-0 right-3 -top-9 flex items-center pointer-events-none">
+          <select
+            id="contributionType"
+            name="contributionType"
+            value={formData.contributionType}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={cn(
+              getInputClasses('contributionType'),
+              'cursor-pointer appearance-none pr-10'
+            )}
+            required
+          >
+            {CONTRIBUTION_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
             <svg
               className="w-4 h-4 text-gray-500"
               fill="none"
@@ -268,10 +271,10 @@ export default function ContributionForm() {
 
       {/* Conditional Fields */}
       {showRouteField && (
-        <div>
+        <div className="animate-in fade-in-50 duration-300">
           <label
             htmlFor="routeDetails"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Route Details <span className="text-red-500">*</span>
           </label>
@@ -295,10 +298,10 @@ export default function ContributionForm() {
       )}
 
       {showStationField && (
-        <div>
+        <div className="animate-in fade-in-50 duration-300">
           <label
             htmlFor="stationDetails"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
           >
             Station Details <span className="text-red-500">*</span>
           </label>
@@ -325,7 +328,7 @@ export default function ContributionForm() {
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-gray-700 mb-1.5"
         >
           Description <span className="text-red-500">*</span>
         </label>
@@ -344,7 +347,7 @@ export default function ContributionForm() {
       </div>
 
       {/* Terms Agreement */}
-      <div className="flex items-start">
+      <div className="flex items-start p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
         <div className="flex items-center h-5">
           <input
             id="isAgreedToTerms"
@@ -353,7 +356,7 @@ export default function ContributionForm() {
             checked={formData.isAgreedToTerms}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+            className="h-4 w-4 text-[color:var(--color-accent)] focus:ring-[color:var(--color-accent)]/30 border-gray-300 rounded"
           />
         </div>
         <div className="ml-3 text-sm">
@@ -378,7 +381,7 @@ export default function ContributionForm() {
         <button
           type="submit"
           disabled={formState.isSubmitting}
-          className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
+          className="w-full px-6 py-3 bg-[color:var(--color-accent)] hover:bg-[color:var(--color-accent-dark)] text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] group"
         >
           {formState.isSubmitting ? (
             <span className="flex items-center justify-center">
@@ -386,7 +389,10 @@ export default function ContributionForm() {
               Submitting...
             </span>
           ) : (
-            'Submit Contribution'
+            <span className="flex items-center justify-center gap-1 group-hover:gap-2 transition-all">
+              <span>Submit Contribution</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </span>
           )}
         </button>
       </div>
