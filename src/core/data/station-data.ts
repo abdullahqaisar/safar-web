@@ -28,12 +28,12 @@ export const stationData: Station[] = [
   },
   {
     id: 'pims',
-    name: 'PIMS Metro',
+    name: 'PIMS Metro Station',
     coordinates: { lat: 33.705651018012496, lng: 73.04834774622357 },
   },
   {
     id: 'pims_children_hospital',
-    name: 'PIMS Children Hospital',
+    name: 'Children Hospital',
     coordinates: { lat: 33.70536521386618, lng: 73.05558474212248 },
   },
   {
@@ -46,15 +46,15 @@ export const stationData: Station[] = [
     name: 'Kachehry',
     coordinates: { lat: 33.702506917209504, lng: 73.04205536965178 },
   },
-  {
+    {
     id: 'ibnESina',
-    name: 'Ibn-e-Sina',
-    coordinates: { lat: 33.696377646408166, lng: 73.03860710034219 },
+    name: 'Ibn-e-Sina Metro Station',
+    coordinates: { lat: 33.6969193397371, lng: 73.03936631253862 },
   },
   {
     id: 'chaman',
-    name: 'Chaman',
-    coordinates: { lat: 33.6916525128973, lng: 73.04370720115476 },
+    name: 'Chaman Metro Station',
+    coordinates: { lat: 33.69018093106195, lng: 73.04354130034186 },
   },
 
   {
@@ -84,13 +84,13 @@ export const stationData: Station[] = [
   },
   {
     id: 'faizabad',
-    name: 'Faizabad',
-    coordinates: { lat: 33.66128301347426, lng: 73.08280889714392 },
+    name: 'Faizabad Metro Station',
+    coordinates: { lat: 33.66179723057342, lng: 73.08263846897361 },
   },
   {
     id: 'faizabadInterchange',
     name: 'Faizabad Interchange',
-    coordinates: { lat: 33.66759746642817, lng: 73.08500395546888 },
+    coordinates: { lat: 33.66680353664873, lng: 73.08686444425969 },
   },
 
   {
@@ -155,8 +155,8 @@ export const stationData: Station[] = [
   },
   {
     id: 'nust',
-    name: 'NUST/G-12 Metro',
-    coordinates: { lat: 33.656849307605924, lng: 72.99287088019028 },
+    name: 'NUST/G-12 Metro Station',
+    coordinates: { lat: 33.655842834296756, lng: 72.9944410596861 },
   },
   {
     id: 'g13',
@@ -165,8 +165,8 @@ export const stationData: Station[] = [
   },
   {
     id: 'golraMorr',
-    name: 'Golra Morr',
-    coordinates: { lat: 33.64147190105308, lng: 72.96244138520534 },
+    name: 'Golra Morh Metro Station',
+    coordinates: { lat: 33.641904341771834, lng: 72.96182620577217 },
   },
   {
     id: 'n5',
@@ -201,7 +201,7 @@ export const stationData: Station[] = [
   {
     id: 'cda',
     name: 'CDA',
-    coordinates: { lat: 33.70069062293746, lng: 73.07779843850173 },
+    coordinates: { lat: 33.70026269568505, lng: 73.07816222598147 },
   },
   {
     id: 'aabpara',
@@ -216,12 +216,12 @@ export const stationData: Station[] = [
   {
     id: 'lakeviewPark',
     name: 'Lakeview Park',
-    coordinates: { lat: 33.7230059572911, lng: 73.13539361588158 },
+    coordinates: { lat: 33.722976487653156, lng: 73.13603676170497 },
   },
   {
     id: 'malpur',
     name: 'Malpur',
-    coordinates: { lat: 33.729778587260185, lng: 73.14452185146958 },
+    coordinates: { lat: 33.72890202020245, lng: 73.14401048824537 },
   },
   {
     id: 'shahdara',
@@ -230,7 +230,7 @@ export const stationData: Station[] = [
   },
   {
     id: 'bharakau',
-    name: 'Jillani, Barakahu',
+    name: 'Jillani, Bharakau',
     coordinates: { lat: 33.73545586140734, lng: 73.16561725338322 },
   },
   {
@@ -240,7 +240,7 @@ export const stationData: Station[] = [
   },
   {
     id: 'i8ParadeGround',
-    name: 'I-8/Parade Ground',
+    name: 'I-8 / Parade Ground',
     coordinates: { lat: 33.67346776963855, lng: 73.08071602570564 },
   },
   {
@@ -266,22 +266,22 @@ export const stationData: Station[] = [
   {
     id: 'khannaPul',
     name: 'Khanna Pul',
-    coordinates: { lat: 33.62688749823069, lng: 73.11586057018127 },
+    coordinates: { lat: 33.62590232848509, lng: 73.11562802623453 },
   },
   {
     id: 'fazaia',
     name: 'Fazaia',
-    coordinates: { lat: 33.620608084040946, lng: 73.1203296051799 },
+    coordinates: { lat: 33.62094759803972, lng: 73.11937715608676 },
   },
   {
     id: 'gangal',
     name: 'Gangal',
-    coordinates: { lat: 33.61288497429886, lng: 73.12619087428027 },
+    coordinates: { lat: 33.61244250465781, lng: 73.12606611655178 },
   },
   {
     id: 'koralChowk',
     name: 'Koral Chowk',
-    coordinates: { lat: 33.603344650829285, lng: 73.13318643258594 },
+    coordinates: { lat: 33.603225129723704, lng: 73.13299865331676 },
   },
 
   {
@@ -296,42 +296,42 @@ export const stationData: Station[] = [
   {
     id: 'mciModelSchool',
     name: 'MCI Model School',
-    coordinates: { lat: 33.659159131533464, lng: 73.0613440382677 },
+    coordinates: { lat: 33.65951465571323, lng: 73.06099689064511 },
   },
 
   {
     id: 'cdaComplaintCenter',
     name: 'CDA Complaint Center',
-    coordinates: { lat: 33.65719367414252, lng: 73.05651945767264 },
+    coordinates: { lat: 33.65723774478961, lng: 73.05655377485694 },
   },
 
   {
     id: 'ogtiStop',
     name: 'OGTI Stop',
-    coordinates: { lat: 33.65537653473376, lng: 73.05289127116367 },
+    coordinates: { lat: 33.65535451652978, lng: 73.05287583669208 },
   },
   {
     id: 'suiGasStop',
-    name: 'SUI Gas Stop',
-    coordinates: { lat: 33.65319183655144, lng: 73.04885163558183 },
+    name: 'Sui Gas Stop',
+    coordinates: { lat: 33.65324248398362, lng: 73.04894563370708 },
   },
 
   {
     id: 'ptclI10',
     name: 'PTCL I-10',
-    coordinates: { lat: 33.649109603226506, lng: 73.04118072883632 },
+    coordinates: { lat: 33.64918819917516, lng: 73.04123377088366 },
   },
 
   {
     id: 'iescoI10Markaz',
-    name: 'IESCO I10 Markaz',
-    coordinates: { lat: 33.64765353433309, lng: 73.03828745767262 },
+    name: 'IESCO I-10 Markaz',
+    coordinates: { lat: 33.64763267250401, lng: 73.03822716927883 },
   },
 
   {
     id: 'korangRoad',
     name: 'Korang Road',
-    coordinates: { lat: 33.64439167082158, lng: 73.0320577288363 },
+    coordinates: { lat: 33.64435948823161, lng: 73.03198014085346 },
   },
 
   {
@@ -343,23 +343,9 @@ export const stationData: Station[] = [
   {
     id: 'metroCashAndCarry',
     name: 'Metro Cash and Carry',
-    coordinates: { lat: 33.6403817376959, lng: 73.023893 },
+    coordinates: { lat: 33.640109402240164, lng: 73.02457062222251 },
   },
-  {
-    id: 'islamabadMedicalComplex',
-    name: 'Islamabad Medical Complex',
-    coordinates: { lat: 33.64916146878899, lng: 73.0169299832297 },
-  },
-  {
-    id: 'policeLines',
-    name: 'Police Lines',
-    coordinates: { lat: 33.65512728880789, lng: 73.01064288525129 },
-  },
-  {
-    id: 'faqirIpiRoadNorth',
-    name: 'Faqir Ipi Road North',
-    coordinates: { lat: 33.66064546276081, lng: 73.00657372808679 },
-  },
+
   {
     id: 'faisalMasjid',
     name: 'Faisal Masjid',
@@ -378,18 +364,14 @@ export const stationData: Station[] = [
   {
     id: 'noriHospital',
     name: 'NORI Hospital',
-    coordinates: { lat: 33.69842279164091, lng: 73.05373323627414 },
+    coordinates: { lat: 33.6984546848535, lng: 73.05351399999998 },
   },
   {
     id: 'g8Markaz',
     name: 'G-8 Markaz',
     coordinates: { lat: 33.69893057226533, lng: 73.04743123519675 },
   },
-  {
-    id: 'g9_4_Park',
-    name: 'G-9/4 Park',
-    coordinates: { lat: 33.689029481190204, lng: 73.03706184193007 },
-  },
+
   {
     id: 'karachiCompany',
     name: 'Karachi Company',
@@ -399,11 +381,6 @@ export const stationData: Station[] = [
     id: 'g9Markaz',
     name: 'G-9 Markaz',
     coordinates: { lat: 33.689868075718174, lng: 73.03027449821184 },
-  },
-  {
-    id: 'g11Markaz',
-    name: 'G-11 Markaz',
-    coordinates: { lat: 33.66969510074861, lng: 72.99816428576455 },
   },
   {
     id: 'pirWadhaiMorh',
@@ -416,20 +393,10 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.64478531910373, lng: 73.16386625128888 },
   },
   {
-    id: 'taxila',
-    name: 'Taxila',
-    coordinates: { lat: 33.737264694938766, lng: 72.799241 },
-  },
-  {
-    id: 'bharakauBazar',
-    name: 'Barakahu Bazar',
-    coordinates: { lat: 33.739916429962506, lng: 73.18007871699487 },
-  },
-  {
     id: 'satraMeel',
     name: 'Satra Meel',
     coordinates: { lat: 33.7635533842201, lng: 73.21935274484308 },
-  },
+  }, 
   {
     id: 'tChowk',
     name: 'T Chowk',
@@ -449,13 +416,13 @@ export const stationData: Station[] = [
   },
   {
     id: 'raviGateF9',
-    name: 'Ravi Gate F-9 Park',
+    name: 'F-9 Park Ravi Gate',
     coordinates: { lat: 33.70974193464229, lng: 73.02849517683904 },
   },
   {
     id: 'shaheenChowk',
     name: 'Shaheen Chowk',
-    coordinates: { lat: 33.71212235187223, lng: 73.02668358154814 },
+    coordinates: { lat: 33.71221788337962, lng: 73.02662096619524 },
   },
   {
     id: 'bahriaUniversity',
@@ -621,7 +588,7 @@ export const stationData: Station[] = [
     id: 'developmentPark',
     name: 'Development Park',
     coordinates: { lat: 33.69543926688337, lng: 73.04783135441295 },
-  },
+  }, 
   {
     id: 'policeFlats',
     name: 'Police Flats',
@@ -651,7 +618,7 @@ export const stationData: Station[] = [
     id: 'greenbeltG10G11',
     name: 'Greenbelt G-10/G-11',
     coordinates: { lat: 33.672832660219, lng: 73.00745473760108 },
-  },
+  }, 
   {
     id: 'instituteOfModernStudies',
     name: 'Institute of Modern Studies',
@@ -661,7 +628,7 @@ export const stationData: Station[] = [
     id: 'mehrabad',
     name: 'Mehrabad',
     coordinates: { lat: 33.66632817533121, lng: 72.9898202178619 },
-  },
+  }, 
 
   // FR-8A & FR-8C Additional Stations
   {
@@ -768,7 +735,7 @@ export const stationData: Station[] = [
   {
     id: 'cdaStop',
     name: 'CDA Stop, I10',
-    coordinates: { lat: 33.64158453401826, lng: 73.04329454232742 },
+    coordinates: { lat: 33.64131344183006, lng: 73.04417551992854 },
   },
   {
     id: 'mandiMorh',
@@ -786,14 +753,14 @@ export const stationData: Station[] = [
     coordinates: { lat: 33.62996786752527, lng: 73.02257762644807 },
   },
   {
-    id: 'westridge',
-    name: 'Westridge',
-    coordinates: { lat: 33.62345821578825, lng: 73.01011063762535 },
-  },
-  {
     id: 'ctti',
     name: 'CTTI',
     coordinates: { lat: 33.6263509657773, lng: 73.01570560939274 },
+  },
+  {
+    id: 'westridge',
+    name: 'Westridge',
+    coordinates: { lat: 33.62345821578825, lng: 73.01011063762535 },
   },
   {
     id: 'socialSecurityHospital',
@@ -825,12 +792,12 @@ export const stationData: Station[] = [
   {
     id: 'colAmmanullahRoad',
     name: 'Col. Ammanullah Road',
-    coordinates: { lat: 33.73699830810451, lng: 73.17442209478754 },
-  },
+    coordinates: { lat: 33.73727629910715, lng: 73.17513287667903 },
+  }, 
   {
     id: 'athalChowk',
     name: 'Athal Chowk',
-    coordinates: { lat: 33.738945735888464, lng: 73.17808697438785 },
+    coordinates: { lat: 33.73898869538702, lng: 73.17817418650887 },
   },
   {
     id: 'gardenAvenue',
@@ -938,5 +905,246 @@ export const stationData: Station[] = [
     id: 'suparco',
     name: 'Suparco',
     coordinates: { lat: 33.51869673088975, lng: 73.17934846482159 },
+  },
+  // New stations for FR-1
+  {
+    id: 'islamabadMedicalComplex',
+    name: 'Islamabad Medical Complex',
+    coordinates: { lat: 33.64850620272623, lng: 73.0171616493491 },
+  },
+  {
+    id: 'islamicInternationalUniversity',
+    name: 'Islamic International University',
+    coordinates: { lat: 33.65791885112651, lng: 73.0175124668469 },
+  },
+  {
+    id: 'fastUniversity',
+    name: 'FAST University',
+    coordinates: { lat: 33.65674021280575, lng: 73.01488516625125 },
+  },
+  {
+    id: 'policeLines',
+    name: 'Police Lines',
+    coordinates: { lat: 33.655181555328944, lng: 73.01069146182894 },
+  },
+  {
+    id: 'faqirIpiRoadNorth',
+    name: 'Faqir Ipi Road North',
+    coordinates: { lat: 33.66040409375477, lng: 73.00678717309916 },
+  },
+
+  // FR-6 stations
+  {
+    id: 'tipuMarket',
+    name: 'Tipu Market',
+    coordinates: { lat: 33.70111705902934, lng: 73.04339413265878 },
+  },
+  {
+    id: 'chamanMetro',
+    name: 'Chaman Metro Station',
+    coordinates: { lat: 33.6916525128973, lng: 73.04370720115476 },
+  },
+  {
+    id: 'g94Park',
+    name: 'G-9/4 Park',
+    coordinates: { lat: 33.689029481190204, lng: 73.03706184193007 },
+  },
+  {
+    id: 'iescoGridStationG9',
+    name: 'IESCO Grid Station G-9',
+    coordinates: { lat: 33.6941801180135, lng: 73.03038650401724 },
+  },
+  {
+    id: 'ibnESinaRoadG9',
+    name: 'Ibn-e-Sina Road G-9',
+    coordinates: { lat: 33.6977826133815, lng: 73.03624640085515 },
+  },
+  {
+    id: 'f9KhyberGate',
+    name: 'F-9 Khyber Gate',
+    coordinates: { lat: 33.71019049806502, lng: 73.0213783756854 },
+  },
+  {
+    id: 'pafHospital',
+    name: 'PAF Hospital',
+    coordinates: { lat: 33.70779316847395, lng: 73.01683258287974 },
+  },
+  {
+    id: 'pakistanGateDci',
+    name: 'Pakistan Gate DCI',
+    coordinates: { lat: 33.703787048437384, lng: 73.00923609217398 },
+  },
+  {
+    id: 'maroofInternationalHospital',
+    name: 'Maroof International Hospital',
+    coordinates: { lat: 33.6978714677829, lng: 73.01242545822963 },
+  },
+  {
+    id: 'f10Markaz',
+    name: 'F-10 Markaz',
+    coordinates: { lat: 33.6940732331234, lng: 73.0122905950725 },
+  },
+  {
+    id: 'imcbF104',
+    name: 'IMCB F-10/4',
+    coordinates: { lat: 33.69082443404072, lng: 73.00604869908035 },
+  },
+  {
+    id: 'f10f11Greenbelt',
+    name: 'F-10/ F-11 Greenbelt',
+    coordinates: { lat: 33.6867382488069, lng: 72.99695637289088 },
+  },
+  {
+    id: 'barkiRoadF11',
+    name: 'Barki Road F-11',
+    coordinates: { lat: 33.68442867559032, lng: 72.99176384568337 },
+  },
+  {
+    id: 'f11Markaz',
+    name: 'F-11 Markaz',
+    coordinates: { lat: 33.68257679807944, lng: 72.98898530444804 },
+  },
+  {
+    id: 'opf',
+    name: 'OPF',
+    coordinates: { lat: 33.686589817806855, lng: 72.98392493433607 },
+  },
+  {
+    id: 'golraShareefE11',
+    name: 'Golra Shareef E-11',
+    coordinates: { lat: 33.68795044931452, lng: 72.97606218645804 },
+  },
+  // FR-10 stations
+  {
+    id: 'g13Metro',
+    name: 'G-13 Metro Station',
+    coordinates: { lat: 33.650159093947444, lng: 72.97978329004847 },
+  },
+  {
+    id: 'akBrohiRoad',
+    name: 'A. K. Brohi Road',
+    coordinates: { lat: 33.66231778993181, lng: 73.00241462628772 },
+  },
+  {
+    id: 'g11Markaz',
+    name: 'G-11 Markaz',
+    coordinates: { lat: 33.66969510074861, lng: 72.99816428576455 },
+  },
+  {
+    id: 'fgcF11',
+    name: 'Federal Government College F-11',
+    coordinates: { lat: 33.679044776104455, lng: 72.99597332242989 },
+  },
+  {
+    id: 'golraShareefF11',
+    name: 'Golra Shareef F-11',
+    coordinates: { lat: 33.68939564615919, lng: 72.98183642607586 },
+  },
+  {
+    id: 'npfSocietyGate',
+    name: 'NPF Society Gate',
+    coordinates: { lat: 33.70114860740218, lng: 72.9852379280027 },
+  },
+  {
+    id: 'multyGate',
+    name: 'Multy Gate',
+    coordinates: { lat: 33.70496785827193, lng: 72.98237324301375 },
+  },
+  {
+    id: 'islamabadInternationalHospital',
+    name: 'Islamabad International Hospital (E-11/2)',
+    coordinates: { lat: 33.70240336065897, lng: 72.9674196479744 },
+  },
+  {
+    id: 'd12ServiceRoad',
+    name: 'D-12 Service Road',
+    coordinates: { lat: 33.70052901113156, lng: 72.96098793113079 },
+  },
+  {
+    id: 'iescoD12',
+    name: 'IESCO D-12',
+    coordinates: { lat: 33.69721694133854, lng: 72.9533507072443 },
+  },
+  {
+    id: 'd12Markaz',
+    name: 'D-12 Markaz',
+    coordinates: { lat: 33.70271500141365, lng: 72.94919560358905 },
+  },
+  {
+    id: 'b17Gate1',
+    name: 'B-17 Gate No. 1',
+    coordinates: { lat: 33.687061147524815, lng: 72.84022133694155 },
+  },
+  {
+    id: 'b17Gate2',
+    name: 'B-17 Gate No. 2',
+    coordinates: { lat: 33.694495272949354, lng: 72.83487036309383 },
+  },
+  {
+    id: 'taxillaBypass',
+    name: 'Taxilla Bypass',
+    coordinates: { lat: 33.711887435424394, lng: 72.81307736933677 },
+  },
+  {
+    id: 'wahdatColony',
+    name: 'Wahdat Colony',
+    coordinates: { lat: 33.725451413567285, lng: 72.80505867137867 },
+  },
+  {
+    id: 'timberMarket',
+    name: 'Timber Market',
+    coordinates: { lat: 33.73077742467561, lng: 72.80433865475618 },
+  },
+  {
+    id: 'taxillaHighwayStop',
+    name: 'Taxilla Highway Stop',
+    coordinates: { lat: 33.73703088835968, lng: 72.79873380570724 },
+  },
+
+  // FR-11 stations
+  {
+    id: 'golraMorhChowkFr11',
+    name: 'Golra Morh Chowk',
+    coordinates: { lat: 33.62453490375513, lng: 72.97031033508682 },
+  },
+  {
+    id: 'imcgI14',
+    name: 'IMCG I-14',
+    coordinates: { lat: 33.62148128361683, lng: 72.97073327599163 },
+  },
+  {
+    id: 'riphahIntUniversity',
+    name: 'Riphah Int University',
+    coordinates: { lat: 33.61705966046823, lng: 72.96978352380201 },
+  },
+  {
+    id: 'mainRoadSt32Chowk',
+    name: 'Main Road - St 32 Chowk',
+    coordinates: { lat: 33.611383452378426, lng: 72.97019287264614 },
+  },
+  {
+    id: 'mianChowk',
+    name: 'Mian Chowk',
+    coordinates: { lat: 33.61084178957691, lng: 72.96540397647514 },
+  },
+  {
+    id: 'shaheedChowkI14',
+    name: 'Shaheed Chowk I-14',
+    coordinates: { lat: 33.60661955255584, lng: 72.960699244066 },
+  },
+  {
+    id: 'ranaChowk',
+    name: 'Rana Chowk',
+    coordinates: { lat: 33.59783193368065, lng: 72.94008539521298 },
+  },
+  {
+    id: 'phaFlatsFr11',
+    name: 'PHA Flats',
+    coordinates: { lat: 33.595030873588314, lng: 72.93483279963884 },
+  },
+  {
+    id: 'noon',
+    name: 'Noon (S. R. W. I-16)',
+    coordinates: { lat: 33.59009216574418, lng: 72.92551558796785 },
   },
 ];

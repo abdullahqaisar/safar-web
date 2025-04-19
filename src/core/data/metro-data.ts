@@ -49,7 +49,6 @@ export const metroLines: TransitLine[] = [
       'g13',
       'golraMorr',
       'n5',
-      // 'airport',
     ],
     frequency: 'Every 04-08 minutes',
     schedule: {
@@ -143,9 +142,12 @@ export const metroLines: TransitLine[] = [
       'ptclI10',
       'iescoI10Markaz',
       'korangRoad',
-      'shamaPark',
+      'mandiMorh',
+      // 'shamaPark',
       'metroCashAndCarry',
       'islamabadMedicalComplex',
+      'islamicInternationalUniversity',
+      'fastUniversity',
       'policeLines',
       'faqirIpiRoadNorth',
       'nust',
@@ -235,6 +237,40 @@ export const metroLines: TransitLine[] = [
     ticketCost: 50,
   },
   {
+    id: 'fr_6',
+    name: 'FR-6',
+    stations: [
+      'pims_gate',
+      'tipuMarket',
+      'ibnESina',
+      'chaman',
+      'g94Park',
+      'g9Markaz',
+      'iescoGridStationG9',
+      'ibnESinaRoadG9',
+      'raviGateF9',
+      'shaheenChowk',
+      'f9KhyberGate',
+      'pafHospital',
+      'pakistanGateDci',
+      'maroofInternationalHospital',
+      'f10Markaz',
+      'imcbF104',
+      'f10f11Greenbelt',
+      'barkiRoadF11',
+      'f11Markaz',
+      'opf',
+      'golraShareefF11',
+      'golraShareefE11'
+    ],
+    frequency: 'Every 60 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
+  },
+  {
     id: 'fr_7',
     name: 'FR-7',
     stations: [
@@ -245,7 +281,7 @@ export const metroLines: TransitLine[] = [
       'g8Markaz',
       'developmentPark',
       'chaman',
-      'g9_4_Park',
+      'g94Park',
       'karachiCompany',
       'g9Markaz',
       'policeFlats',
@@ -371,6 +407,61 @@ export const metroLines: TransitLine[] = [
     ticketCost: 50,
   },
   {
+    id: 'fr_10',
+    name: 'FR-10',
+    stations: [
+      'golraMorr',
+      'g13Metro',
+      'nust',
+      'akBrohiRoad',
+      'g11Markaz',
+      'fgcF11',
+      'f11Markaz',
+      'opf',
+      'golraShareefF11',
+      'npfSocietyGate',
+      'multyGate',
+      'islamabadInternationalHospital',
+      'd12ServiceRoad',
+      'iescoD12',
+      'd12Markaz',
+      'b17Gate1',
+      'b17Gate2',
+      'taxillaBypass',
+      'wahdatColony',
+      'timberMarket',
+      'taxillaHighwayStop'
+    ],
+    frequency: 'Every 60 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
+  },
+  {
+    id: 'fr_11',
+    name: 'FR-11',
+    stations: [
+      'golraMorr',
+      'golraMorhChowk',
+      'imcgI14',
+      'riphahIntUniversity',
+      'mainRoadSt32Chowk',
+      'mianChowk',
+      'shaheedChowkI14',
+      'ranaChowk',
+      'phaFlatsFr11',
+      'noon'
+    ],
+    frequency: 'Every 60 minutes',
+    schedule: {
+      first: '6:30 AM',
+      last: '10:00 PM',
+    },
+    ticketCost: 50,
+  },
+  {
     id: 'fr_14',
     name: 'FR-14',
     stations: [
@@ -407,7 +498,7 @@ export const metroLines: TransitLine[] = [
       'bharakau',
       'colAmmanullahRoad',
       'athalChowk',
-      'bharakauBazar',
+      // 'bharakauBazar',
       'ghugi',
       'bheraPul',
       'imtiazMart',
@@ -463,22 +554,26 @@ export const metroLines: TransitLine[] = [
 export const walkingShortcuts: Array<{
   from: string;
   to: string;
-  priority: number; // Higher number means higher priority (0-10, 10 being highest)
+  priority: number;
+  distance: number;
 }> = [
   {
     from: 'sohan',
     to: 'faizabad',
-    priority: 7, // High priority
+    priority: 7,
+    distance: 200,
   },
   {
     from: 'faizabadInterchange',
     to: 'faizabad',
-    priority: 10, // High priority
+    priority: 10,
+    distance: 70,
   },
   {
     from: 'pims',
     to: 'pims_gate',
     priority: 10,
+    distance: 40,
   },
 ];
 
@@ -550,5 +645,9 @@ export const MAJOR_INTERCHANGES = [
   {
     stationId: 'foreignOffice',
     lines: ['green', 'fr_4'],
+  },
+  {
+    stationId: 'n5',
+    lines: ['orange', 'orangeAirportExpress'],
   },
 ];

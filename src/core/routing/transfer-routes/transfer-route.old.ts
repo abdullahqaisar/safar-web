@@ -1,9 +1,12 @@
-import { TransitGraph } from '../graph/graph';
-import { Station, TransitLine } from '../types/graph';
-import { Route, TransitRouteSegment } from '../types/route';
-import { INTERCHANGE_WALKING_TIME, MAX_TRANSFERS } from '../utils/constants';
-import { createRoute, createTransitSegment } from '../utils/route-builder';
-import { calculateDistance } from '../utils/geo-utils';
+import { TransitGraph } from "@/core/graph/graph";
+import { MAX_TRANSFERS } from "./types";
+import { Route, TransitRouteSegment } from "@/core/types/route";
+import { calculateDistance } from "@/core/utils/geo-utils";
+import { Station } from "@/types/station";
+import { INTERCHANGE_WALKING_TIME } from "@/core/utils/constants";
+import { createRoute, createTransitSegment } from "@/core/utils/route-builder";
+import { TransitLine } from "@/core/types/graph";
+
 
 interface TransferState {
   stationId: string;
@@ -174,6 +177,13 @@ function findSingleTransferRoutes(
 /**
  * Find the best transfer option among multiple possible transfer stations
  * for the same pair of lines
+ *
+ * This function evaluates all potential transfer stations between two lines
+ * and selects the optimal one based on multiple factors including:
+ * - Total journey time
+ * - Transfer station quality
+ * - Platform distance at transfer stations
+ * - Position of transfer station relative to origin and destination
  */
 function findBestTransferOption(
   graph: TransitGraph,
@@ -187,7 +197,25 @@ function findBestTransferOption(
     `[Transfer Route] Finding best transfer option from ${originLine.name} to ${destLine.name}`
   );
 
-  const transferOptions: Route[] = [];
+  const transferOptions: Array<{
+    route: Route;
+    score: number;
+    transferStationId: string;
+  }> = [];
+
+  // Get origin and destination stations for distance calculations
+  const originStation = graph.stations[originId];
+  const destinationStation = graph.stations[destinationId];
+
+  if (!originStation || !destinationStation) {
+    return null;
+  }
+
+  // Calculate direct distance from origin to destination for reference
+  const directDistance = calculateDistance(
+    originStation.coordinates,
+    destinationStation.coordinates
+  );
 
   // For each potential transfer station
   transferStations.forEach((transferStation) => {
@@ -213,7 +241,7 @@ function findBestTransferOption(
     // Skip if either segment couldn't be created
     if (!firstSegment || !secondSegment) return;
 
-    // Calculate transfer time
+    // Calculate transfer time - use standard interchange time
     const transferTime = INTERCHANGE_WALKING_TIME;
 
     // Adjust second segment duration to include transfer time
@@ -222,7 +250,46 @@ function findBestTransferOption(
     // Create complete route
     try {
       const route = createRoute([firstSegment, secondSegment]);
-      transferOptions.push(route);
+
+      // Calculate a score for this transfer option based on multiple factors
+      let score = route.totalDuration; // Base score is the total duration
+
+      // Factor 1: Position of transfer station relative to journey
+      // Calculate how much of a detour this transfer represents
+      const transferDistance = calculateDistance(
+        originStation.coordinates,
+        transferStation.coordinates
+      ) + calculateDistance(
+        transferStation.coordinates,
+        destinationStation.coordinates
+      );
+
+      const detourFactor = transferDistance / directDistance;
+      // Penalize transfers that represent significant detours
+      if (detourFactor > 1.5) {
+        score += (detourFactor - 1.5) * 300; // Add 300 seconds per 1.0 detour factor above 1.5
+      }
+
+      // Factor 2: Transfer station quality
+      // Check if this is a major interchange (preferred for transfers)
+      const isMajorInterchange = graph.interchangePoints.includes(transferStation.id);
+      if (isMajorInterchange) {
+        score -= 60; // Reduce score by 60 seconds (prefer major interchanges)
+      }
+
+      // Factor 3: Number of lines at transfer station (more lines = better transfer options)
+      const transferStationLines = graph.getStationLines(transferStation.id);
+      if (transferStationLines.length > 2) {
+        score -= (transferStationLines.length - 2) * 20; // 20 seconds bonus per additional line
+      }
+
+      // Add this option to our list
+      transferOptions.push({
+        route,
+        score,
+        transferStationId: transferStation.id
+      });
+
     } catch (error) {
       console.error('Error creating route:', error);
     }
@@ -231,8 +298,20 @@ function findBestTransferOption(
   // If no valid options, return null
   if (transferOptions.length === 0) return null;
 
-  // Return the best option based on duration
-  return transferOptions.sort((a, b) => a.totalDuration - b.totalDuration)[0];
+  // Sort options by score (lower is better)
+  transferOptions.sort((a, b) => a.score - b.score);
+
+  // Log the top transfer options for debugging
+  transferOptions.slice(0, Math.min(3, transferOptions.length)).forEach((option, index) => {
+    const station = graph.stations[option.transferStationId];
+    console.log(
+      `[Transfer Route] Option ${index + 1}: Transfer at ${station.name}, ` +
+      `duration: ${option.route.totalDuration}s, score: ${option.score}`
+    );
+  });
+
+  // Return the route with the best score
+  return transferOptions[0].route;
 }
 
 /**
@@ -279,9 +358,23 @@ function findMultiTransferRoutes(
   const visitedStates = new Set<string>();
   const queue: TransferState[] = [];
 
+  console.log(
+    `[Transfer Route] Finding multi-transfer routes from ${originId} (${graph.stations[originId]?.name || 'unknown'}) to ${destinationId} (${graph.stations[destinationId]?.name || 'unknown'})`
+  );
+
   // Initialize queue with all lines at the origin station
   const originLines = graph.getStationLines(originId);
   if (!originLines.length) return routes;
+
+  // Get destination lines for network analysis
+  const destinationLines = graph.getStationLines(destinationId);
+  console.log(
+    `[Transfer Route] Destination is served by ${destinationLines.length} lines: ${destinationLines.join(', ')}`
+  );
+
+  // Get possible network paths and minimum transfers needed
+  const { paths: networkPaths, minTransfers } = findPossibleNetworkPaths(graph, originLines, destinationLines);
+  console.log(`[Multi Transfer] Network paths found: ${networkPaths.length} with min transfers: ${minTransfers}`);
 
   // Start BFS from each line at the origin
   originLines.forEach((lineId) => {
@@ -339,6 +432,9 @@ function findMultiTransferRoutes(
           (!durationThreshold || route.totalDuration < durationThreshold)
         ) {
           routes.push(route);
+          console.log(
+            `[Transfer Route] Found route to destination with ${transferCount} transfers, duration: ${route.totalDuration}s`
+          );
         }
       }
       continue;
@@ -416,25 +512,55 @@ function findMultiTransferRoutes(
     if (transferCount < maxTransfers) {
       const stationLines = graph.getStationLines(stationId);
 
-      // First check: Are we at an interchange point?
+      // First check: Are we at a transfer station?
       if (!graph.isTransferStation(stationId)) {
         continue; // Skip if not a transfer station
       }
 
+      // Check if the current station is a major interchange defined in MAJOR_INTERCHANGES
+      const isMajorInterchange = graph.interchangePoints.includes(stationId);
+
       // Get line priority for destination
-      const linePriorities: { lineId: string; priority: number }[] = [];
+      const linePriorities: { lineId: string; priority: number; allowTransfer: boolean }[] = [];
 
       // Calculate priority for each line at this station
       for (const nextLineId of stationLines) {
         // Skip current line
         if (nextLineId === lineId) continue;
 
-        // Skip if we've already visited this station-line pair
-        const nextStationLinePair = `${stationId}|${nextLineId}`;
-        if (visitedStationLinePairs.has(nextStationLinePair)) continue;
-
+        // Get the next line
         const nextLine = graph.lines[nextLineId];
         if (!nextLine) continue;
+
+        // Create station-line pair identifier
+        const nextStationLinePair = `${stationId}|${nextLineId}`;
+        const alreadyVisited = visitedStationLinePairs.has(nextStationLinePair);
+        
+        // Determine if we should allow this transfer even if already visited
+        let allowTransfer = !alreadyVisited;
+        
+        // Special handling for major interchange points
+        if (alreadyVisited && isMajorInterchange) {
+          // Get this interchange info
+          const interchangeInfo = graph.getMajorInterchangeInfo(stationId);
+          
+          // Allow transfer if both lines are defined for this interchange
+          if (interchangeInfo && 
+              interchangeInfo.lines.includes(lineId) && 
+              interchangeInfo.lines.includes(nextLineId)) {
+            allowTransfer = true;
+          }
+        }
+        
+        // For complex network routing, be more lenient with restrictions
+        if (alreadyVisited && isOnNetworkPath(nextLineId, networkPaths)) {
+          // If this line is part of a critical network path to the destination,
+          // allow the transfer even if we've visited this line before
+          allowTransfer = true;
+        }
+        
+        // Skip if we've already visited this station-line pair and it's not allowed
+        if (!allowTransfer) continue;
 
         // Check if this line directly contains the destination
         const directStopsToDestination = getStopsToDestination(
@@ -443,49 +569,202 @@ function findMultiTransferRoutes(
           destinationId
         );
 
-        // Assign priority based on destination presence
-        let priority = 0;
+        // Assign priority based on destination presence - LOWER values = HIGHER priority
+        let basePriority = 1000; // Start with a high value (low priority)
 
         if (directStopsToDestination >= 0) {
-          // Highest priority - direct line to destination
-          priority = 100 - directStopsToDestination; // Fewer stops = higher priority
-        } else if (hasCommonInterchange(nextLineId, [destinationId], graph)) {
-          // Medium priority - line connects to destination via transfer
-          priority = 50;
+          // Direct line to destination - highest priority
+          // Lower number for fewer stops = higher priority
+          basePriority = 100 + directStopsToDestination;
+          console.log(
+            `[Transfer Route] Line ${nextLineId} has direct connection to destination with ${directStopsToDestination} stops (priority: ${basePriority})`
+          );
         } else {
-          // Base priority - potentially useful line
-          priority = 10;
+          // Get the minimum transfers from this line to any destination line
+          let minTransfersToDestination = Infinity;
+          
+          for (const destLine of destinationLines) {
+            const transfers = graph.getMinTransfersBetweenLines(nextLineId, destLine);
+            if (transfers < minTransfersToDestination) {
+              minTransfersToDestination = transfers;
+            }
+          }
+          
+          // Assign priority based on how many transfers away we are from the destination
+          if (minTransfersToDestination === 1) {
+            // One transfer away - high priority
+            basePriority = 200;
+            console.log(
+              `[Transfer Route] Line ${nextLineId} needs one more transfer to reach destination (priority: ${basePriority})`
+            );
+          } else if (minTransfersToDestination === 2) {
+            // Two transfers away - medium priority
+            basePriority = 300;
+            console.log(
+              `[Transfer Route] Line ${nextLineId} needs two more transfers to reach destination (priority: ${basePriority})`
+            );
+          } else if (minTransfersToDestination === 3) {
+            // Three transfers away - lower priority
+            basePriority = 400;
+            console.log(
+              `[Transfer Route] Line ${nextLineId} needs three more transfers to reach destination (priority: ${basePriority})`
+            );
+          } else if (minTransfersToDestination !== Infinity) {
+            // More than three but still reachable - low priority
+            basePriority = 500 + minTransfersToDestination * 50;
+            console.log(
+              `[Transfer Route] Line ${nextLineId} needs ${minTransfersToDestination} more transfers to reach destination (priority: ${basePriority})`
+            );
+          } else {
+            // No known path to destination - lowest priority
+            basePriority = 800;
+            console.log(
+              `[Transfer Route] Line ${nextLineId} has no known path to destination (priority: ${basePriority})`
+            );
+          }
         }
 
-        linePriorities.push({ lineId: nextLineId, priority });
+        // Apply priority modifiers - reduce basePriority to increase priority
+
+        // Boost priority for transfers at major interchanges
+        if (isMajorInterchange) {
+          basePriority -= 25;
+          console.log(
+            `[Transfer Route] Boosting priority for line ${nextLineId} as it's at a major interchange (-25 points)`
+          );
+        }
+
+        // Boost for lines that are part of network paths between origin and destination
+        if (isOnNetworkPath(nextLineId, networkPaths)) {
+          basePriority -= 50;
+          console.log(
+            `[Transfer Route] Boosting priority for line ${nextLineId} as it's on a network path to destination (-50 points)`
+          );
+        }
+        
+        // Boost priority if this line is on the optimal transfer path
+        const currentTransferCount = transferCount + 1; // +1 for this transfer
+        const remainingTransfersNeeded = minTransfers - currentTransferCount;
+        
+        // If we're making good progress toward reaching destination with minimum transfers
+        if (minTransfers > 0 && remainingTransfersNeeded >= 0) {
+          // Calculate if this transfer follows the minimum transfer path
+          let minTransfersFromHere = Infinity;
+          for (const destLine of destinationLines) {
+            const transfers = graph.getMinTransfersBetweenLines(nextLineId, destLine);
+            if (transfers === remainingTransfersNeeded) {
+              // This is on an optimal path - significant priority boost
+              basePriority -= 75;
+              console.log(
+                `[Transfer Route] Found optimal transfer to line ${nextLineId} (${remainingTransfersNeeded} remaining transfers needed, -75 points)`
+              );
+              break;
+            } else if (transfers < minTransfersFromHere) {
+              minTransfersFromHere = transfers;
+            }
+          }
+        }
+
+        // Final priority value - lower is better
+        const priority = basePriority;
+        console.log(`[Transfer Route] Final priority for line ${nextLineId}: ${priority}`);
+
+        // Add to priorities list with pre-validation of transfer eligibility 
+        linePriorities.push({ 
+          lineId: nextLineId, 
+          priority,
+          allowTransfer: true  // We've already verified this transfer is allowed
+        });
       }
 
-      // Sort lines by priority (highest first)
-      linePriorities.sort((a, b) => b.priority - a.priority);
+      // Sort lines by priority (lowest first, since lower priority values = higher priority)
+      linePriorities.sort((a, b) => a.priority - b.priority);
 
-      // Process lines in priority order
-      for (const { lineId: nextLineId } of linePriorities) {
+      for (const { lineId: nextLineId, allowTransfer } of linePriorities) {
+        // Skip if the transfer is not allowed (already checked during priority calculation)
+        if (!allowTransfer) continue;
+
         const nextLine = graph.lines[nextLineId];
+        if (!nextLine) continue;
+        
+        const currentStation = graph.stations[stationId];
         const nextStationLinePair = `${stationId}|${nextLineId}`;
 
         // Check if this transfer would be useful
-        const isTransferValuable = hasNewReachableStations(
+        let isTransferValuable = hasNewReachableStations(
           nextLine,
           stationId,
           visitedStations,
           destinationId,
           graph
         );
-
-        if (!isTransferValuable) continue;
+        
+        // If we have connectivity data, also consider valuable if it reduces remaining transfers
+        if (!isTransferValuable && minTransfers > 0) {
+          // Calculate how many transfers remain from current line and from next line
+          let minTransfersFromCurrentLine = Infinity;
+          let minTransfersFromNextLine = Infinity;
+          
+          for (const destLine of destinationLines) {
+            const currentTransfers = graph.getMinTransfersBetweenLines(lineId, destLine);
+            const nextTransfers = graph.getMinTransfersBetweenLines(nextLineId, destLine);
+            
+            minTransfersFromCurrentLine = Math.min(minTransfersFromCurrentLine, currentTransfers);
+            minTransfersFromNextLine = Math.min(minTransfersFromNextLine, nextTransfers);
+          }
+          
+          // If transferring reduces the number of remaining transfers needed, it's valuable
+          if (minTransfersFromNextLine < minTransfersFromCurrentLine) {
+            isTransferValuable = true;
+            console.log(
+              `[Transfer Route] Transfer to ${nextLineId} is valuable because it reduces minimum transfers ` +
+              `from ${minTransfersFromCurrentLine} to ${minTransfersFromNextLine}`
+            );
+          }
+        }
+        
+        // For major interchanges with designated line pairs, consider the transfer more valuable
+        const isValuableInterchangeTransfer = isMajorInterchange && 
+                                             graph.getMajorInterchangeInfo(stationId)?.lines.includes(nextLineId);
+                                     
+        // For critical network path transfers, always consider valuable
+        const isCriticalNetworkTransfer = isOnNetworkPath(nextLineId, networkPaths);
+        
+        if (!isTransferValuable && !isValuableInterchangeTransfer && !isCriticalNetworkTransfer) {
+          console.log(
+            `[Transfer Route] Skipping transfer to line ${nextLineId} at ${currentStation.name} (not valuable)`
+          );
+          continue;
+        }
 
         // Check if this transfer gets us closer to the destination
-        const destinationLines = graph.getStationLines(destinationId);
         const canReachDestination =
           destinationLines.includes(nextLineId) ||
           hasCommonInterchange(nextLineId, destinationLines, graph);
-
-        if (!canReachDestination) continue;
+          
+        // Always consider transfers at major interchanges that lead to lines serving the destination
+        const isValuableDestinationTransfer = isMajorInterchange && 
+                                             destinationLines.includes(nextLineId);
+                                             
+        // With line connectivity data, also check if next line can reach destination lines
+        let canEventuallyReachDestination = false;
+        if (!canReachDestination && !isValuableDestinationTransfer) {
+          for (const destLine of destinationLines) {
+            if (graph.getMinTransfersBetweenLines(nextLineId, destLine) < Infinity) {
+              canEventuallyReachDestination = true;
+              break;
+            }
+          }
+        }
+                                             
+        // For critical network transfers, don't require immediate destination reachability
+        if (!canReachDestination && !isValuableDestinationTransfer && 
+            !isCriticalNetworkTransfer && !canEventuallyReachDestination) {
+          console.log(
+            `[Transfer Route] Skipping transfer to line ${nextLineId} at ${currentStation.name} (can't reach destination)`
+          );
+          continue;
+        }
 
         // Proceed with transfer
         const newVisitedLines = new Set(currentState.visitedLines);
@@ -495,7 +774,6 @@ function findMultiTransferRoutes(
         const newVisitedPairs = new Set(visitedStationLinePairs);
         newVisitedPairs.add(nextStationLinePair);
 
-        // Enqueue the transfer state
         queue.push({
           stationId: stationId,
           lineId: nextLineId,
@@ -518,6 +796,147 @@ function findMultiTransferRoutes(
 
   console.log(`[Transfer Route] Found ${routes.length} multi-transfer routes`);
   return routes;
+}
+
+/**
+ * Find possible network paths between origin and destination
+ */
+export function findPossibleNetworkPaths(
+  graph: TransitGraph,
+  originLines: string[],
+  destinationLines: string[]
+): { paths: string[][], minTransfers: number } {
+  console.log(
+    `[BFS] Finding possible network paths between lines ${originLines.join(
+      ', '
+    )} and ${destinationLines.join(', ')}`
+  );
+
+  let globalMinTransfers = Infinity;
+  
+  // Use line connectivity matrix to get minimum transfers directly
+  for (const originLine of originLines) {
+    for (const destLine of destinationLines) {
+      const minTransfers = graph.getMinTransfersBetweenLines(originLine, destLine);
+      if (minTransfers < globalMinTransfers) {
+        globalMinTransfers = minTransfers;
+        console.log(`[BFS] Found minimum transfers path: ${originLine} -> ${destLine} with ${minTransfers} transfers`);
+      }
+    }
+  }
+
+  // Pre-compute best paths between all origin and destination lines
+  const paths: string[][] = [];
+  
+  // Use the lineConnectivityMatrix from the graph to compute paths using BFS
+  for (const originLine of originLines) {
+    if (destinationLines.includes(originLine)) {
+      // Direct line - no transfers needed
+      paths.push([originLine]);
+      continue;
+    }
+
+    const queue: { line: string; path: string[]; transfers: number }[] = [];
+    const visited = new Set<string>();
+    
+    // Start with the origin line
+    queue.push({ line: originLine, path: [originLine], transfers: 0 });
+    visited.add(originLine);
+    
+    // Keep track of paths reaching each line for pruning duplicates
+    const bestTransfersToLine: Map<string, number> = new Map();
+    bestTransfersToLine.set(originLine, 0);
+    
+    while (queue.length > 0) {
+      const { line, path, transfers } = queue.shift()!;
+      
+      // Only prune paths that exceed the global minimum by more than 1
+      // This ensures we find all optimal and near-optimal paths
+      if (transfers > globalMinTransfers + 1) {
+        continue;
+      }
+      
+      // Check if this path reaches a destination line
+      if (destinationLines.includes(line)) {
+        // Only add the path if it's optimal (matches global min)
+        if (transfers <= globalMinTransfers) {
+          console.log(`[BFS] Found path with ${transfers} transfers: ${path.join(' -> ')}`);
+          paths.push(path);
+          
+          // Update global min transfers if this path is better
+          if (transfers < globalMinTransfers) {
+            globalMinTransfers = transfers;
+          }
+        }
+        continue;
+      }
+      
+      // Get all lines reachable with 1 transfer from current line
+      const reachableLines = graph.getLinesReachableWithNTransfers(line, 1);
+      
+      for (const nextLine of reachableLines) {
+        const nextTransfers = transfers + 1;
+        
+        // Skip if we've found a better path to this line already
+        const bestKnownTransfers = bestTransfersToLine.get(nextLine) ?? Infinity;
+        
+        // Allow equal or better paths 
+        if (nextTransfers <= bestKnownTransfers) {
+          // Calculate minimum transfers from this line to any destination
+          let minTransfersToDestination = Infinity;
+          for (const destLine of destinationLines) {
+            const transfersToDestination = graph.getMinTransfersBetweenLines(nextLine, destLine);
+            minTransfersToDestination = Math.min(minTransfersToDestination, transfersToDestination);
+          }
+          
+          // Only explore if this path could potentially be optimal
+          // Allow one extra transfer to ensure we don't miss near-optimal paths
+          if (nextTransfers + minTransfersToDestination <= globalMinTransfers + 1) {
+            queue.push({
+              line: nextLine,
+              path: [...path, nextLine],
+              transfers: nextTransfers
+            });
+            
+            // Update best transfers to this line
+            bestTransfersToLine.set(nextLine, nextTransfers);
+          }
+        }
+      }
+    }
+  }
+
+  // Ensure we always return at least one path when possible
+  if (paths.length === 0 && globalMinTransfers < Infinity) {
+    console.log(`[BFS] Warning: No complete paths found despite connectivity matrix showing min transfers: ${globalMinTransfers}`);
+    
+    // Fall back to using direct line data from connectivity matrix
+    for (const originLine of originLines) {
+      for (const destLine of destinationLines) {
+        const transfers = graph.getMinTransfersBetweenLines(originLine, destLine);
+        if (transfers === globalMinTransfers) {
+          console.log(`[BFS] Adding fallback path: ${originLine} -> ... -> ${destLine}`);
+          paths.push([originLine, destLine]);
+        }
+      }
+    }
+  }
+
+  // Deduplicate paths while preserving order
+  const uniquePaths = Array.from(new Map(paths.map(path => [path.join('|'), path])).values());
+
+  console.log(
+    `[BFS] Found ${uniquePaths.length} possible network paths with minimum ${globalMinTransfers} transfers`
+  );
+  
+  return { paths: uniquePaths, minTransfers: globalMinTransfers };
+}
+
+/**
+ * Check if a line is part of any network path in possible routes
+ */
+function isOnNetworkPath(lineId: string, networkPaths: string[][]): boolean {
+  return networkPaths.some(path => path.includes(lineId));
 }
 
 /**
@@ -707,6 +1126,33 @@ function hasNewReachableStations(
     return true;
   }
 
+  // Check for path to destination through network
+  // This is critical for finding multi-transfer routes
+  const destinationLines = graph.getStationLines(destinationId);
+  
+  // If this line can reach any line that serves the destination via transfers, consider it valuable
+  if (hasCommonInterchange(line.id, destinationLines, graph)) {
+    return true;
+  }
+  
+  // Check if this line is part of a major interchange that can lead to the destination
+  // This is crucial for complex multi-transfer journeys
+  for (const interchange of graph.getMajorInterchanges()) {
+    // If this line is part of a major interchange
+    if (interchange.lines.includes(line.id)) {
+      // Check if any other line at this interchange can lead to destination
+      for (const interchangeLineId of interchange.lines) {
+        if (interchangeLineId === line.id) continue; // Skip self
+        
+        // If this interchange line connects to destination
+        if (destinationLines.includes(interchangeLineId) || 
+            hasCommonInterchange(interchangeLineId, destinationLines, graph)) {
+          return true;
+        }
+      }
+    }
+  }
+
   // Check for shortest path to destination - is there a direct line?
   const directLineToDestination = graph
     .getStationLines(currentStationId)
@@ -725,8 +1171,10 @@ function hasNewReachableStations(
         // Calculate number of stops
         const stopsCount = Math.abs(destIdx - currentIdx);
 
-        // If there's a direct line with fewer than 3 stops, prefer that
-        return stopsCount <= 3;
+        // More flexible threshold: consider the length of the journey
+        // For longer journeys, we can accept more stops on a direct line
+        const maxAcceptableStops = Math.max(5, Math.ceil(otherLine.stations.length / 4));
+        return stopsCount <= maxAcceptableStops;
       }
 
       return false;

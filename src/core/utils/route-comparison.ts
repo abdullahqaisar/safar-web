@@ -245,6 +245,7 @@ export function processRoutes(routes: Route[], graph?: TransitGraph): Route[] {
     return [];
   }
 
+  console.log(`[Process Routes] Processing ${routes.length} routes`); 
   // Apply validation and optimization to fix bugs
   if (graph) {
     routes = validateAndOptimizeRoutes(routes);
