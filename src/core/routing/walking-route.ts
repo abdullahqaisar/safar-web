@@ -1,8 +1,8 @@
 import { TransitGraph } from '../graph/graph';
 import { Route, RouteStation } from '../types/route';
 
-  import { WALKING_MAX_DISTANCE } from '../utils/constants';
-  
+import { WALKING_MAX_DISTANCE } from '../utils/constants';
+
 import { findDirectRoutes } from './direct-route';
 import { calculateWalkingTime } from '../utils/time-utils';
 import { findNearbyStations, haveCommonLines } from '../utils/station-utils';
